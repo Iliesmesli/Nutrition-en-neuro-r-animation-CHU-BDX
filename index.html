@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="NAR 2026" />
+<meta name="mobile-web-app-capable" content="yes" />
+<title>NAR 2026 — Nutrition</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Crect width='180' height='180' fill='%230B1420'/%3E%3Ctext x='90' y='108' font-family='Arial' font-size='72' font-weight='700' fill='%232FD9C4' text-anchor='middle'%3ENAR%3C/text%3E%3C/svg%3E" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg:#0B1420; --surface:#101C2C; --elevated:#182742; --elevated2:#1E3050;
+    --border:#243450; --borderLight:#324562; --text:#E7EDF6; --textMuted:#8FA1BC; --textFaint:#5E7191;
+    --teal:#2FD9C4; --tealDim:#134E48; --amber:#F2A93B; --amberDim:#4A3512;
+    --red:#EF5D6F; --redDim:#4A1A22; --blue:#5B9BF2; --blueDim:#122A4A; --violet:#A78BFA; --violetDim:#2E2350;
+    --fontDisplay:'Space Grotesk',sans-serif; --fontBody:'Inter',sans-serif; --fontMono:'IBM Plex Mono',monospace;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--fontBody);
+    -webkit-font-smoothing:antialiased; overscroll-behavior-y:none;}
+  body{padding-bottom:env(safe-area-inset-bottom); padding-top:env(safe-area-inset-top);}
+  #app{max-width:720px;margin:0 auto;padding:20px 16px 40px;}
+  h1,h2{font-family:var(--fontDisplay); margin:0;}
+  h1{font-size:22px; font-weight:600;}
+  h2{font-size:17px; font-weight:600;}
+  p{margin:0;}
+  .eyebrow{display:flex; align-items:center; gap:8px; margin-bottom:4px;}
+  .badge{font-family:var(--fontMono); font-size:11px; font-weight:600; letter-spacing:.5px; color:var(--teal); background:var(--tealDim); padding:2px 8px; border-radius:6px;}
+  .subtext{font-size:12px; color:var(--textFaint);}
+  header{margin-bottom:22px;}
+
+  nav{display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:20px; -ms-overflow-style:none; scrollbar-width:none;}
+  nav::-webkit-scrollbar{display:none;}
+  .tab-btn{display:flex; align-items:center; gap:6px; padding:10px 14px; border-radius:10px; font-size:14px; font-weight:500;
+    font-family:var(--fontBody); background:transparent; color:var(--textMuted); border:1px solid transparent; white-space:nowrap; flex-shrink:0;}
+  .tab-btn.active{background:var(--elevated2); color:var(--teal); border-color:var(--borderLight);}
+
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:18px;}
+  .section-title{display:flex; align-items:flex-start; gap:12px; margin-bottom:18px;}
+  .icon-box{display:flex; align-items:center; justify-content:center; width:38px; height:38px; border-radius:10px; background:var(--elevated); color:var(--teal); flex-shrink:0;}
+  .grid{display:grid; gap:12px;}
+  .grid-2{grid-template-columns:1fr 1fr;}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .grid-4{grid-template-columns:repeat(2,1fr);}
+  @media(min-width:520px){ .grid-4{grid-template-columns:repeat(4,1fr);} }
+
+  label.field{display:block;}
+  .field-label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--textFaint); margin-bottom:6px;}
+  .input-wrap{display:flex; align-items:center; border:1px solid var(--borderLight); background:var(--elevated); border-radius:10px; overflow:hidden;}
+  .input-wrap input{flex:1; border:none; background:transparent; color:var(--text); font-family:var(--fontMono); font-size:15px; padding:10px 12px; outline:none; width:100%;}
+  .input-wrap .unit{padding:0 12px; font-size:13px; color:var(--textFaint);}
+  .seg{display:flex; border:1px solid var(--borderLight); border-radius:10px; overflow:hidden;}
+  .seg button{flex:1; padding:10px; font-size:14px; font-weight:500; font-family:var(--fontBody); background:var(--elevated); color:var(--textMuted); border:none;}
+  .seg button.active{background:var(--elevated2); color:var(--teal);}
+
+  .stat{border-radius:12px; padding:14px; background:var(--elevated);}
+  .stat .lbl{font-size:11px; color:var(--textFaint);}
+  .stat .val{font-size:22px; font-family:var(--fontMono); margin-top:4px; color:var(--text);}
+  .stat .sub{font-size:11px; font-family:var(--fontMono); color:var(--textFaint); margin-top:2px;}
+
+  .phase-btn{text-align:left; border-radius:12px; padding:12px; background:var(--elevated); border:1px solid var(--borderLight); cursor:pointer;}
+  .phase-btn .t{font-size:14px; font-weight:600; font-family:var(--fontDisplay);}
+  .phase-btn .s{font-size:11px; color:var(--textFaint); margin-top:3px; line-height:1.3;}
+
+  input[type=range]{width:100%; margin-top:8px; -webkit-appearance:none; height:4px; border-radius:2px; background:var(--elevated2);}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--teal); cursor:pointer;}
+
+  .info-box{display:flex; gap:8px; font-size:12px; padding:10px 12px; border-radius:10px; background:var(--elevated); color:var(--textMuted); line-height:1.5; margin-top:16px;}
+  .warn-box{display:flex; gap:8px; font-size:12px; padding:10px 12px; border-radius:10px; margin-top:14px; line-height:1.5;}
+
+  .row-item{display:flex; align-items:center; justify-content:space-between; gap:12px; border-radius:10px; padding:12px; background:var(--elevated); margin-bottom:8px;}
+  .row-item .t{font-size:14px; font-weight:500;}
+  .row-item .s{font-size:11px; color:var(--textFaint); margin-top:2px;}
+  .row-item .badgeval{font-size:13px; font-weight:600; font-family:var(--fontDisplay); padding:6px 10px; border-radius:8px; text-align:right; flex-shrink:0;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; color:var(--textFaint); font-weight:500; padding-bottom:8px; font-size:11px; text-transform:uppercase;}
+  td{padding:9px 0; border-top:1px solid var(--border); color:var(--textMuted);}
+  td.strong{color:var(--text); font-weight:500;}
+
+  .checkrow{display:flex; align-items:flex-start; gap:10px; border-radius:10px; padding:12px; background:var(--elevated); margin-bottom:8px; cursor:pointer;}
+  .checkrow.checked{background:var(--elevated2);}
+  .checkrow input{width:17px; height:17px; margin-top:2px; accent-color:var(--teal); flex-shrink:0;}
+  .checkrow .t{font-size:14px; font-weight:500;}
+  .checkrow .s{font-size:12px; color:var(--textMuted); margin-top:2px;}
+
+  .step{display:flex; gap:10px; margin-bottom:14px; font-size:14px; line-height:1.5;}
+  .step .n{display:flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:var(--elevated2); color:var(--teal); font-family:var(--fontMono); font-size:12px; font-weight:600; flex-shrink:0; margin-top:1px;}
+
+  .bars{display:flex; gap:5px; flex-wrap:wrap;}
+  .bar-col{width:14.5%; min-width:44px; display:flex; flex-direction:column; align-items:center;}
+  .bar-track{width:100%; height:88px; background:var(--elevated); border-radius:6px 6px 0 0; display:flex; align-items:flex-end; overflow:hidden;}
+  .bar-fill{width:100%;}
+  .bar-day{font-size:9px; font-family:var(--fontMono); color:var(--textFaint); margin-top:5px;}
+  .bar-val{font-size:10px; font-family:var(--fontMono); font-weight:500;}
+
+  .chk-wrap{display:flex; align-items:center; gap:9px; margin-bottom:16px; width:fit-content;}
+  .chk-wrap input{width:16px;height:16px;accent-color:var(--red);}
+  .chk-wrap span{font-size:14px;}
+
+  footer{margin-top:14px; text-align:center; font-size:11px; color:var(--textFaint); line-height:1.5;}
+  .brand-footer{display:flex; align-items:center; justify-content:center; gap:18px; margin-top:34px; padding-top:18px; border-top:1px solid var(--border);}
+  .brand-badge{display:flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:14px; background:var(--surface); border:1px solid var(--border); flex-shrink:0;}
+  .brand-badge img{max-width:42px; max-height:42px; object-fit:contain;}
+  .brand-slot{font-size:8px; line-height:1.2; text-align:center; color:var(--textFaint); font-family:var(--fontBody); border:1px dashed var(--borderLight); border-radius:8px; width:38px; height:38px; display:flex; align-items:center; justify-content:center;}
+  svg.ic{width:18px;height:18px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ---------------- DATA ---------------- */
+const PHASES = {
+  aigue: { label:"Phase aiguë", sub:"Choc, défaillance hémodynamique/respiratoire", kcalMin:10, kcalMax:10, protMin:0.4, protMax:0.4, color:"var(--red)", dim:"var(--redDim)" },
+  stabilisee: { label:"Phase stabilisée", sub:"Patient stable, sevrage des amines en cours", kcalMin:20, kcalMax:20, protMin:0.9, protMax:0.9, color:"var(--blue)", dim:"var(--blueDim)" },
+  rehabilitation: { label:"Réhabilitation", sub:"Kinésithérapie active, reverticalisation, marche", kcalMin:20, kcalMax:25, protMin:1.2, protMax:1.5, color:"var(--teal)", dim:"var(--tealDim)" },
+  postop: { label:"Post-opératoire", sub:"Chirurgie à risque intermédiaire ou élevé", kcalMin:20, kcalMax:25, protMin:1.0, protMax:1.3, color:"var(--violet)", dim:"var(--violetDim)" },
+  eerc: { label:"EERc", sub:"Épuration extra-rénale continue", kcalMin:25, kcalMax:25, protMin:1.5, protMax:1.7, color:"#F26D9B", dim:"#4A1230" },
+  hdi: { label:"HDI", sub:"Hémodialyse intermittente", kcalMin:20, kcalMax:25, protMin:1.3, protMax:1.5, color:"#F2C43B", dim:"#4A3B12" }
+};
+
+const EN_PRODUCTS = [
+  { situation:"Défaillance aiguë (choc / hypoxémie)", produit:"Fresubin Intensive", detail:"Hypocalorique / Hyperprotidique" },
+  { situation:"Phase stabilisée, constipation, diabète", produit:"Nutrison Prot NRJ Multifibres", detail:"Hypercalorique / Hyperprotidique avec fibres" },
+  { situation:"Diarrhée sous NE", produit:"Sondalis T Energy", detail:"Gomme de guar" },
+  { situation:"Restriction hydrique (RH)", produit:"Sondalis 2 kcal Fibres", detail:"Hypercalorique / Hyperosmolaire" },
+  { situation:"Malabsorptions (grêle court, MICI, etc.)", produit:"Peptamen HN", detail:"Semi-élémentaire" },
+  { situation:"Intolérance digestive avec nécessité HC/HP et fibres", produit:"Fresubin Megareal Fibres", detail:"Hypercalorique / Hyperprotidique avec fibres" }
+];
+
+const EN_SANS_FIBRE_NOTE = "Régime sans résidus (poussée de MICI, post-opératoire immédiat d'anastomose digestive) : choisir la variante sans fibre du soluté habituel (Nutrison Prot NRJ, Fresubin original, Fresubin 2 kcal, etc.).";
+
+const NP_PRODUCTS = [
+  { situation:"Phase aiguë", produit:"Olimel N12 / Smofkabiven Prot", detail:"Hypocalorique / Hyperprotidique, sans électrolyte" },
+  { situation:"Phase stabilisée", produit:"Smofkabiven E / Olimel N7E", detail:"Hypercalorique / Hyperprotidique, avec électrolytes" },
+  { situation:"Sur voie veineuse périphérique", produit:"Periolimel N4E / Perikabiven", detail:"< 900 mosM — hypocalorique / hypoprotidique" }
+];
+
+const LIPID_PROFILES = [
+  { nom:"Réanutriflex", profil:"Soja (phytostérols) 50 % / TCM 50 %", omega3:false },
+  { nom:"Olimel", profil:"Olive 80 % / Soja 20 %", omega3:false },
+  { nom:"Smofkabiven", profil:"Soja 30 % / TCM 30 % / Olive 25 % / Poisson 15 %", omega3:true }
+];
+
+const MICRO_ROUTINE = [
+  { nom:"Cernevit", dose:"5 mL/j IVL 2 h", condition:"Tant que NE < 1500 kcal/j" },
+  { nom:"Nutryelt", dose:"10 mL/j IVL 2 h", condition:"Tant que NE < 1500 kcal/j" },
+  { nom:"Alvityl Vitalité", dose:"1 cp/j", condition:"Si NE > 1500 kcal/j ou alimentation orale insuffisante" },
+  { nom:"Vitamine B1", dose:"100–300 mg/j jusqu'à J3–J5", condition:"Tout patient de réanimation / post-op lourd" },
+  { nom:"Sélénium", dose:"100 µg/j pendant 5 j (max 2 sem.)", condition:"Patient grave" }
+];
+
+const TREATMENT_RISKS = [
+  { therapie:"Épuration extra-rénale", risque:"Toutes les vitamines hydrosolubles, carnitine, cuivre, fer, sélénium" },
+  { therapie:"Traitement diurétique", risque:"Thiamine (B1), sélénium" },
+  { therapie:"Inhibiteurs de la pompe à protons", risque:"B12, fer" },
+  { therapie:"Metformine", risque:"B12" },
+  { therapie:"Isoniazide", risque:"B6" },
+  { therapie:"Traitement antirétroviral (VIH)", risque:"Vitamine D" },
+  { therapie:"Antiépileptiques", risque:"B9, B12, vitamine D" },
+  { therapie:"Thymoglobuline (immunosuppression)", risque:"B6" }
+];
+
+const ORAL_SUPPLEMENTS = [
+  { nom:"Alvityl Vitalité", dose:"1 cp/j", indication:"Patient qui mange PO mais ne finit pas ses plateaux repas" },
+  { nom:"CNO (complément nutritionnel oral) HP/HC", dose:"1 à 3/j, entre ou à la fin des repas", indication:"Alimentation PO insuffisante (plateaux non terminés). Préciser sans sucres si diabétique, sans sel si insuffisance cardiaque" },
+  { nom:"Protifar", dose:"1 sachet (11 g de protéines) x 1 à 3/j", indication:"Apports protidiques très inférieurs à la cible. PO : mélanger au repas. SNG : possible si très dilué, avec rinçage soigneux après chaque administration" }
+];
+
+const SRI_CRITERES_MAJEURS = [
+  "Indice de masse corporelle < 16 kg/m²",
+  "Perte de poids involontaire de plus de 15 % dans les 3 à 6 derniers mois",
+  "Apports nutritionnels faibles ou nuls depuis plus de 10 jours",
+  "Hypokaliémie, hypophosphorémie ou hypomagnésémie avant la renutrition"
+];
+const SRI_CRITERES_MINEURS = [
+  "Indice de masse corporelle < 18,5 kg/m²",
+  "Perte de poids involontaire de plus de 10 % dans les 3 à 6 derniers mois",
+  "Apports nutritionnels faibles ou nuls depuis plus de 5 jours",
+  "Alcoolisme chronique",
+  "Traitements en cours (insuline, chimiothérapie, diurétique ou antiacide)"
+];
+
+const MICRO_SPECIFIQUES = [
+  { id:"ethylique", label:"Éthylisme chronique", detail:"Vitamine B1 500 mg/j + B6 250 mg/j pendant 5 jours ; ou PrinciB 2 cp/j si voie orale possible" },
+  { id:"eerc", label:"Épuration extra-rénale continue (EERc)", detail:"Cernevit 10 mL/j, Nutryelt 20 mL/j, B1 200 mg/j, Sélénium 100 µg/j" },
+  { id:"cholestase", label:"Cholestase importante", detail:"Vitamine K1 IV 5 mg x2/semaine (absente du Cernevit, de l'Alvityl et de la NP)" },
+  { id:"cotrimoxazole", label:"Traitement par cotrimoxazole", detail:"Acide folique 5 mg/j pendant toute la durée du traitement" },
+  { id:"escarre", label:"Escarre sévère / cicatrisation difficile", detail:"Zinc 10 à 30 mg/j" },
+  { id:"malabsorption", label:"Malabsorption", detail:"Penser à supplémenter par voie IV" }
+];
+
+// Compositions nutritionnelles (kcal/mL, protéines mg/mL, osmolarité mOsm/L)
+// Source : annexe "Débits" du protocole de nutrition NAR 2026 (calculateur du service).
+const DEBIT_PRODUCTS = {
+  enterale: [
+    { id: "fresubin_intensive", nom: "Fresubin Intensive", kcalPerMl: 1.22, protPer100ml: 10, osmolarite: 600, note: "Défaillance aiguë" },
+    { id: "nutrison_pem", nom: "Nutrison Prot NRJ Multifibres", kcalPerMl: 1.5, protPer100ml: 7.5, osmolarite: 390, note: "Phase stabilisée" },
+    { id: "sondalis_t", nom: "Sondalis T Energy", kcalPerMl: 1.55, protPer100ml: 6, osmolarite: 389, note: "Diarrhée sous NE" },
+    { id: "sondalis_2kcal", nom: "Sondalis 2 kcal Fibres", kcalPerMl: 2.0, protPer100ml: 10, osmolarite: 395, note: "Restriction hydrique (RH)" },
+    { id: "peptamen_hn", nom: "Peptamen HN", kcalPerMl: 1.33, protPer100ml: 6.6, osmolarite: 350, note: "Malabsorptions" },
+    { id: "fresubin_megareal", nom: "Fresubin Megareal Fibres", kcalPerMl: 1.4, protPer100ml: 6.9, osmolarite: 300, note: "Intolérance digestive avec nécessité HC/HP et fibres" }
+  ],
+  parenterale: [
+    { id: "olimel_n12", nom: "Olimel N12", kcalPerMl: 0.95, protPer100ml: 7.6, osmolarite: 1130, note: "Phase aiguë, besoins protéiques accrus, sans électrolytes (VVC)" },
+    { id: "smofkabiven_e", nom: "Smofkabiven E", kcalPerMl: 1.1, protPer100ml: 5.1, osmolarite: 1500, note: "Phase stabilisée, avec électrolytes (VVC)" },
+    { id: "periolimel_n4e", nom: "Periolimel N4E", kcalPerMl: 0.70, protPer100ml: 2.5, osmolarite: 760, note: "Voie veineuse périphérique, osmolarité < 900 mosM" }
+  ]
+};
+
+/* ---------------- STATE ---------------- */
+const state = {
+  tab: "calc",
+  taille: 170, poids: 75, sexe: "H", phaseKey: "stabilisee", kcalRatio: 1, sriRisk: false, eercRehab: false,
+  checked: {},
+  soluteSituation: "",
+  // Débits
+  debitVoie: "enterale",
+  debitProduitId: "nutrison_pem",
+  debitSource: "cible", // "cible" (à partir de la cible calorique) ou "debit" (à partir d'un débit fixé)
+  debitKcalManuel: "", // si vide, utilise la cible calorique calculée
+  debitDureeType: "continu", // "continu" (24h) ou "discontinu"
+  debitDureeH: 12,
+  debitValeur: 80, // mL/h, pour le mode "debit"
+  debitDureeReverse: 12 // h/j, pour le mode "debit"
+};
+
+/* ---------------- HELPERS ---------------- */
+const round = (n, d=0) => { const f = Math.pow(10,d); return Math.round(n*f)/f; };
+const calcIMC = (poids, tailleCm) => { const t = tailleCm/100; return poids/(t*t); };
+const calcPPT = (tailleCm, sexe) => (sexe==="H"?50:45.5) + 0.91*(tailleCm-152.4);
+function calcPoidsNutritionnel(poidsReel, tailleCm, sexe){
+  const imc = calcIMC(poidsReel, tailleCm);
+  const ppt = calcPPT(tailleCm, sexe);
+  if (imc < 30) return { imc, ppt, poidsNutritionnel: poidsReel, ajuste:false };
+  const poidsAjuste = ppt + 0.25*(poidsReel - ppt);
+  return { imc, ppt, poidsNutritionnel: poidsAjuste, ajuste:true };
+}
+function buildProgression(kcalTargetPerKg, sriRisk){
+  const rows = [];
+  const PLATEAU_VALUES = [15, 20]; // paliers maintenus 48h (uniquement si SRI)
+  function pushStep(day, kcal){
+    rows.push({day, kcal});
+    if (sriRisk && PLATEAU_VALUES.includes(kcal)) rows.push({day: day+1, kcal});
+    return (sriRisk && PLATEAU_VALUES.includes(kcal)) ? day+2 : day+1;
+  }
+  if (sriRisk){
+    let day=1;
+    while(day<=3){ rows.push({day, kcal:Math.min(10,kcalTargetPerKg)}); day++; }
+    let current = Math.min(10,kcalTargetPerKg);
+    while(current<kcalTargetPerKg && day<=16){ current=Math.min(current+5,kcalTargetPerKg); day = pushStep(day, current); }
+  } else {
+    let day=1; let current=Math.min(5,kcalTargetPerKg);
+    rows.push({day,kcal:current}); day++;
+    while(current<kcalTargetPerKg && day<=16){ current=Math.min(current+5,kcalTargetPerKg); day = pushStep(day, current); }
+  }
+  return rows;
+}
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ---------------- ICONS (minimal inline SVG) ---------------- */
+const ICONS = {
+  calc: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="11" x2="8" y2="11"/><line x1="12" y1="11" x2="12" y2="11"/><line x1="16" y1="11" x2="16" y2="11"/><line x1="8" y1="15" x2="8" y2="15"/><line x1="12" y1="15" x2="12" y2="15"/><line x1="16" y1="15" x2="16" y2="15"/><line x1="8" y1="19" x2="8" y2="19"/><line x1="12" y1="19" x2="12" y2="19"/></svg>',
+  flask: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6L4 20a1 1 0 0 0 1 2h14a1 1 0 0 0 1-2L15 8V2"/><line x1="8" y1="2" x2="16" y2="2"/><line x1="7" y1="15" x2="17" y2="15"/></svg>',
+  pill: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>',
+  alert: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  activity: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  info: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  clip: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>',
+  syringe: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0-1-1-1-2.5 0-3.4L15.6 5.6"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/></svg>'
+};
+
+// Petit logo original (fun) — réanimation : cœur + poumons
+const FUN_LOGO_SVG = `<svg viewBox="0 0 40 40" width="34" height="34" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(20,21)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-7,-14 C-15,-14 -19,-4 -17,6 C-15,13 -9,15 -6,10 Z" fill="var(--blue)" fill-opacity="0.55" stroke="var(--blue)" stroke-width="1.1"/>
+    <path d="M7,-14 C15,-14 19,-4 17,6 C15,13 9,15 6,10 Z" fill="var(--blue)" fill-opacity="0.55" stroke="var(--blue)" stroke-width="1.1"/>
+    <path d="M0,10 C-9,4 -12,-4 -6,-10 C-3,-13 0,-10 0,-6 C0,-10 3,-13 6,-10 C12,-4 9,4 0,10 Z" fill="var(--red)" stroke="var(--red)" stroke-width="0.8"/>
+  </g>
+</svg>`;
+
+const TABS = [
+  { key:"calc", label:"Calculateur", icon:ICONS.calc },
+  { key:"solutes", label:"Solutés", icon:ICONS.flask },
+  { key:"debit", label:"Débits", icon:ICONS.syringe },
+  { key:"micro", label:"Micronutriments", icon:ICONS.pill },
+  { key:"compl", label:"Complications", icon:ICONS.alert },
+  { key:"sri", label:"SRI", icon:ICONS.activity }
+];
+
+/* ---------------- SHARED: cibles nutritionnelles ---------------- */
+function getTargets(){
+  const tailleN = parseFloat(state.taille)||0;
+  const poidsN = parseFloat(state.poids)||0;
+  const phase = PHASES[state.phaseKey];
+  const result = (tailleN && poidsN) ? calcPoidsNutritionnel(poidsN, tailleN, state.sexe) : null;
+  let kcalPerKg = phase.kcalMin + (phase.kcalMax-phase.kcalMin)*state.kcalRatio;
+  const protPerKg = phase.protMin + (phase.protMax-phase.protMin)*state.kcalRatio;
+  const eercRehabActive = state.phaseKey === "eerc" && state.eercRehab;
+  if (eercRehabActive) kcalPerKg = 30;
+  const kcalTarget = result ? kcalPerKg*result.poidsNutritionnel : 0;
+  const protTarget = result ? protPerKg*result.poidsNutritionnel : 0;
+  return { tailleN, poidsN, phase, result, kcalPerKg, protPerKg, kcalTarget, protTarget, eercRehabActive };
+}
+
+/* ---------------- RENDER: CALCULATEUR ---------------- */
+function renderCalc(){
+  const { phase, result, kcalPerKg, protPerKg, kcalTarget, protTarget, eercRehabActive } = getTargets();
+  const progression = result ? buildProgression(kcalPerKg, state.sriRisk) : [];
+  const fmtRange = (min,max,dec=1) => min===max ? `${round(min,dec)}` : `${round(min,dec)}–${round(max,dec)}`;
+
+  let html = `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.calc}</div>
+      <div><h2>Poids nutritionnel</h2><p class="subtext">Poids réel si IMC &lt; 30, poids ajusté si IMC ≥ 30</p></div></div>
+    <div class="grid grid-3" style="grid-template-columns:1fr 1fr 1fr;">
+      <label class="field"><span class="field-label">Taille</span>
+        <div class="input-wrap"><input type="number" id="f-taille" value="${state.taille}"><span class="unit">cm</span></div></label>
+      <label class="field"><span class="field-label">Poids réel</span>
+        <div class="input-wrap"><input type="number" step="0.5" id="f-poids" value="${state.poids}"><span class="unit">kg</span></div></label>
+      <label class="field"><span class="field-label">Sexe</span>
+        <div class="seg">
+          <button data-act="sexe" data-val="H" class="${state.sexe==='H'?'active':''}">H</button>
+          <button data-act="sexe" data-val="F" class="${state.sexe==='F'?'active':''}">F</button>
+        </div></label>
+    </div>
+    ${result ? `
+    <div class="grid grid-3" style="margin-top:18px;">
+      <div class="stat"><div class="lbl">IMC</div><div class="val">${round(result.imc,1)}</div></div>
+      <div class="stat"><div class="lbl">Poids prédit (PPT)</div><div class="val">${round(result.ppt,1)} <span style="font-size:13px;">kg</span></div></div>
+      <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
+        <div class="lbl" style="color:var(--teal);">Poids nutritionnel${result.ajuste?' (ajusté)':''}</div>
+        <div class="val" style="color:var(--teal);">${round(result.poidsNutritionnel,1)} <span style="font-size:13px;">kg</span></div>
+      </div>
+    </div>` : ''}
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.activity}</div>
+      <div><h2>Cibles caloriques et protéiques</h2><p class="subtext">Sélectionner la phase clinique du patient</p></div></div>
+    <div class="grid grid-4" style="margin-bottom:18px;">
+      ${Object.entries(PHASES).map(([key,p])=>`
+        <div class="phase-btn" data-act="phase" data-val="${key}" style="${state.phaseKey===key?`background:${p.dim};border-color:${p.color};`:''}">
+          <div class="t" style="${state.phaseKey===key?`color:${p.color};`:''}">${p.label}</div>
+          <div class="s">${p.sub}</div>
+          <div class="s" style="margin-top:5px; font-family:var(--fontMono); color:${state.phaseKey===key?p.color:'var(--textFaint)'};">${fmtRange(p.kcalMin,p.kcalMax)} kcal/kg/j · ${fmtRange(p.protMin,p.protMax,2)} g/kg/j</div>
+        </div>`).join('')}
+    </div>
+    ${state.phaseKey==='eerc' ? `
+    <div class="checkrow ${state.eercRehab?'checked':''}" data-act="eercRehab" style="margin-bottom:18px;">
+      <input type="checkbox" ${state.eercRehab?'checked':''} readonly>
+      <div><div class="t">Réhabilitation active</div><div class="s">EERc + réhabilitation active → cible calorique portée à 30 kcal/kg/j (au lieu de 25 kcal/kg/j par défaut)</div></div>
+    </div>` : ''}
+    ${((phase.kcalMin!==phase.kcalMax && !eercRehabActive) || phase.protMin!==phase.protMax) ? `
+    <label class="field" style="margin-bottom:18px; display:block;">
+      <span class="field-label">Position dans la fourchette${(phase.kcalMin!==phase.kcalMax && !eercRehabActive) ? ` (${phase.kcalMin}–${phase.kcalMax} kcal/kg/j)` : ''}${phase.protMin!==phase.protMax ? ` (${phase.protMin}–${phase.protMax} g/kg/j)` : ''}</span>
+      <input type="range" id="f-ratio" min="0" max="1" step="0.01" value="${state.kcalRatio}">
+    </label>` : ''}
+    ${result ? `
+    <div class="grid grid-2">
+      <div class="stat" style="background:${phase.dim}; border:1px solid ${phase.color}44;">
+        <div class="lbl" style="color:${phase.color};">Cible calorique</div>
+        <div class="val" style="color:${phase.color};">${round(kcalTarget)} <span style="font-size:13px;">kcal/j</span></div>
+        <div class="sub">${round(kcalPerKg,1)} kcal/kg/j${phase.kcalMin!==phase.kcalMax ? ` (plage ${phase.kcalMin}–${phase.kcalMax})` : (eercRehabActive ? ' (EERc + réhabilitation)' : '')}</div>
+      </div>
+      <div class="stat" style="background:${phase.dim}; border:1px solid ${phase.color}44;">
+        <div class="lbl" style="color:${phase.color};">Cible protéique</div>
+        <div class="val" style="color:${phase.color};">${round(protTarget)} <span style="font-size:13px;">g/j</span></div>
+        <div class="sub">${round(protPerKg,2)} g/kg/j${phase.protMin!==phase.protMax ? ` (plage ${phase.protMin}–${phase.protMax})` : ''}</div>
+      </div>
+    </div>` : ''}
+    <div class="info-box">${ICONS.info}<span>Éviter la surnutrition : objectifs atteints progressivement après 72 h. Tenir compte des apports non nutritionnels (propofol 1,1 kcal/mL, glucose 4 kcal/g, citrate 0,59 kcal/mmol).</span></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.alert}</div>
+      <div><h2>Progression de l'introduction</h2><p class="subtext">Débit d'introduction jour par jour jusqu'à la cible</p></div></div>
+    <div class="chk-wrap"><input type="checkbox" id="f-sri" ${state.sriRisk?'checked':''}><span>Patient à risque de syndrome de renutrition inappropriée (SRI)</span></div>
+    ${result ? `
+    <div class="bars">
+      ${progression.map(row=>{
+        const pct = Math.max(8,(row.kcal/kcalPerKg)*100);
+        const color = row.kcal>=kcalPerKg ? 'var(--teal)' : (state.sriRisk ? 'var(--amber)' : phase.color);
+        return `<div class="bar-col">
+          <div class="bar-track"><div class="bar-fill" style="height:${pct}%; background:${color};"></div></div>
+          <div class="bar-day">J${row.day}</div>
+          <div class="bar-val">${round(row.kcal)}</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="subtext" style="margin-top:10px;">kcal/kg/j par jour d'hospitalisation · cible atteinte à J${progression[progression.length-1]?.day}</div>
+    ` : ''}
+    ${state.sriRisk ? `<div class="warn-box" style="background:var(--amberDim); color:var(--amber);">${ICONS.alert}<span>Introduction à 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/24–48 h. Vitamine B1 300 mg/j pendant 5 jours. Cible atteinte en 7 à 10 jours.</span></div>` : ''}
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.info}</div>
+      <div><h2>Généralités</h2><p class="subtext">Initiation, contre-indications, apports non nutritionnels</p></div></div>
+    ${step('', "<strong>Initiation</strong> dans les 48 h suivant l'admission si possible, au moins à visée trophique (10-20 mL/h).")}
+    ${step('', "<strong>Différer la NE</strong> en cas de défaillance hémodynamique (ex. NAD &gt; 1 µg/kg/min, lactatémie non clairée) ou respiratoire non contrôlée, hémorragie digestive, fistule intestinale à haut débit, ischémie digestive ou syndrome du compartiment abdominal.")}
+    ${step('', "<strong>NP d'emblée</strong> si contre-indication prolongée à la voie entérale, ou <strong>à J5-J7</strong> en cas d'intolérance à la NE pleine dose (apports entéraux &lt; 70 % de la cible).")}
+    ${step('', "Possibilité d'atteindre les objectifs de J7 plus rapidement en cas d'amélioration clinique rapide.")}
+    <div class="info-box" style="margin-top:4px;">${ICONS.info}<span><strong>Apports non nutritionnels</strong> (jusqu'à 30 % des apports chez un patient sédaté et épuré) : calories endogènes liées au catabolisme 500-1400 kcal/j ; calories exogènes liées aux traitements 400-600 kcal/j en phase aiguë (citrate ≈ 250-350 kcal/j). Propofol : 1,1 kcal/mL — Glucose : 4 kcal/g — Citrate : 0,59 kcal/mmol.</span></div>
+  </div>`;
+  return html;
+}
+
+/* ---------------- RENDER: SOLUTÉS ---------------- */
+function renderSolutes(){
+  // Liste combinée des situations (entérale + parentérale) pour le sélecteur
+  const situationOptions = [
+    ...EN_PRODUCTS.map((p,i) => ({ value:`en:${i}`, label:p.situation, voie:'Nutrition entérale' })),
+    ...NP_PRODUCTS.map((p,i) => ({ value:`np:${i}`, label:p.situation, voie:'Nutrition parentérale' }))
+  ];
+  let selected = null;
+  if (state.soluteSituation){
+    const [voie, idx] = state.soluteSituation.split(':');
+    selected = voie==='en' ? EN_PRODUCTS[idx] : NP_PRODUCTS[idx];
+  }
+
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.clip}</div>
+      <div><h2>Trouver le soluté adapté</h2><p class="subtext">Choisir la situation clinique du patient</p></div></div>
+    <label class="field" style="display:block;">
+      <span class="field-label">Situation clinique</span>
+      <select id="f-solute-situation" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--borderLight); background:var(--elevated); color:var(--text); font-family:var(--fontBody); font-size:14px;">
+        <option value="">— Sélectionner —</option>
+        <optgroup label="Nutrition entérale">
+          ${situationOptions.filter(o=>o.voie==='Nutrition entérale').map(o=>`<option value="${o.value}" ${state.soluteSituation===o.value?'selected':''}>${o.label}</option>`).join('')}
+        </optgroup>
+        <optgroup label="Nutrition parentérale">
+          ${situationOptions.filter(o=>o.voie==='Nutrition parentérale').map(o=>`<option value="${o.value}" ${state.soluteSituation===o.value?'selected':''}>${o.label}</option>`).join('')}
+        </optgroup>
+      </select>
+    </label>
+    ${selected ? `
+    <div class="stat" style="margin-top:16px; background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
+      <div class="lbl" style="color:var(--teal);">${selected.situation}</div>
+      <div class="val" style="color:var(--teal); font-size:22px;">${selected.produit}</div>
+      <div class="sub" style="margin-top:4px;">${selected.detail}</div>
+    </div>` : `
+    <div class="info-box">${ICONS.info}<span>Sélectionner une situation clinique ci-dessus pour afficher le soluté recommandé.</span></div>`}
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.flask}</div>
+      <div><h2>Nutrition entérale</h2><p class="subtext">Choix du soluté selon la situation clinique</p></div></div>
+    ${EN_PRODUCTS.map(p=>`
+      <div class="row-item">
+        <div><div class="t">${p.situation}</div><div class="s">${p.detail}</div></div>
+        <div class="badgeval" style="color:var(--teal); background:var(--tealDim);">${p.produit}</div>
+      </div>`).join('')}
+    <div class="info-box">${ICONS.info}<span>${EN_SANS_FIBRE_NOTE}</span></div>
+  </div>
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.syringe}</div>
+      <div><h2>Nutrition parentérale</h2><p class="subtext">Choix du soluté selon la situation clinique</p></div></div>
+    ${NP_PRODUCTS.map(p=>`
+      <div class="row-item">
+        <div><div class="t">${p.situation}</div><div class="s">${p.detail}</div></div>
+        <div class="badgeval" style="color:var(--blue); background:var(--blueDim);">${p.produit}</div>
+      </div>`).join('')}
+    <div class="field-label" style="margin:18px 0 10px;">Profils lipidiques</div>
+    <table>
+      <thead><tr><th>Soluté</th><th>Composition lipidique</th><th>Oméga-3</th></tr></thead>
+      <tbody>
+        ${LIPID_PROFILES.map(l=>`<tr><td class="strong">${l.nom}</td><td>${l.profil}</td><td>${l.omega3?'<span style="color:var(--teal);font-weight:600;">Oui</span>':'—'}</td></tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="info-box">Réduire la charge en phytostérols améliore la tolérance hépatique (↓ cholestase) : Olimel et Smofkabiven sont mieux tolérés que Réanutriflex. Un ratio oméga-6/oméga-3 faible améliore le profil inflammatoire : Smofkabiven &gt; Olimel &gt; Réanutriflex.</div>
+  </div>`;
+}
+
+/* ---------------- RENDER: MICRONUTRIMENTS ---------------- */
+function renderMicro(){
+  const active = MICRO_SPECIFIQUES.filter(s=>state.checked[s.id]);
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.pill}</div>
+      <div><h2>Micronutriments — en routine</h2><p class="subtext">Administration en IVL sur 2 heures</p></div></div>
+    ${MICRO_ROUTINE.map(m=>`
+      <div class="row-item">
+        <div><div class="t">${m.nom}</div><div class="s">${m.condition}</div></div>
+        <div class="badgeval" style="color:var(--teal); background:var(--tealDim); font-family:var(--fontMono); font-weight:500;">${m.dose}</div>
+      </div>`).join('')}
+    <div class="subtext" style="margin-top:10px;">Pas de dosages plasmatiques en routine. Si EERc &gt; 15 jours ou NPE prolongée : doser B1, B9, B12, Se, Cu, Fe.</div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.syringe}</div>
+      <div><h2>Nutrition parentérale</h2><p class="subtext">Micronutriments et surveillance spécifiques</p></div></div>
+    <div class="row-item"><div><div class="t">Cernevit, Nutryelt, B1, Sélénium</div><div class="s">Tant que NE &lt; 1500 kcal/j</div></div>
+      <div class="badgeval" style="color:var(--teal); background:var(--tealDim); font-family:var(--fontMono); font-weight:500;">5/10/100/100</div></div>
+    <div class="row-item"><div><div class="t">Vitamine K1</div><div class="s">Non contenue dans les mélanges de NP</div></div>
+      <div class="badgeval" style="color:var(--teal); background:var(--tealDim); font-family:var(--fontMono); font-weight:500;">5 mg x2/sem</div></div>
+    <div class="info-box">${ICONS.info}<span><strong>Surveillance :</strong> bilan hépatique (BH) et TP au moins 1x/semaine. En cas de dysfonction hépato-biliaire sévère : diminuer le débit de 25 à 50 %, voire arrêter la NP et réaliser une imagerie (pathologie vésiculaire ou biliaire).</span></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.clip}</div>
+      <div><h2>Situations spécifiques</h2><p class="subtext">Cocher les situations applicables au patient</p></div></div>
+    ${MICRO_SPECIFIQUES.map(s=>`
+      <div class="checkrow ${state.checked[s.id]?'checked':''}" data-act="microcheck" data-val="${s.id}">
+        <input type="checkbox" ${state.checked[s.id]?'checked':''} readonly>
+        <div><div class="t">${s.label}</div><div class="s">${s.detail}</div></div>
+      </div>`).join('')}
+    ${active.length>0 ? `
+    <div class="card" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3); margin-top:16px; margin-bottom:0;">
+      <div class="field-label" style="color:var(--teal); margin-bottom:10px;">Prescription consolidée</div>
+      ${active.map(s=>`<div style="font-size:14px; margin-bottom:6px;"><span style="color:var(--teal);">•</span> ${s.detail}</div>`).join('')}
+    </div>` : ''}
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.alert}</div>
+      <div><h2>Risques liés aux traitements</h2><p class="subtext">Déplétion, carence ou excès de micronutriments (MN) associés à certains traitements</p></div></div>
+    <table>
+      <thead><tr><th>Traitement</th><th>Micronutriment à risque</th></tr></thead>
+      <tbody>
+        ${TREATMENT_RISKS.map(t=>`<tr><td class="strong">${t.therapie}</td><td>${t.risque}</td></tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.pill}</div>
+      <div><h2>Nutrition orale et supplémentation protéique</h2><p class="subtext">Si alimentation PO insuffisante ou apports protidiques bas</p></div></div>
+    ${ORAL_SUPPLEMENTS.map(o=>`
+      <div class="row-item" style="align-items:flex-start;">
+        <div><div class="t">${o.nom}</div><div class="s">${o.indication}</div></div>
+        <div class="badgeval" style="color:var(--blue); background:var(--blueDim); text-align:right;">${o.dose}</div>
+      </div>`).join('')}
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.clip}</div>
+      <div><h2>Surveillance nutritionnelle</h2><p class="subtext">Bilan hebdomadaire</p></div></div>
+    <div class="grid grid-2">
+      <div class="stat"><div class="val" style="font-size:20px;">Pré-albumine</div><div class="sub" style="font-size:12px; margin-top:4px;">t½ ≈ 2 jours</div></div>
+      <div class="stat"><div class="val" style="font-size:20px;">Albumine <span style="font-size:12px; color:var(--textFaint); font-weight:400;">(facultatif)</span></div><div class="sub" style="font-size:12px; margin-top:4px;">t½ ≈ 15-20 jours</div></div>
+    </div>
+  </div>`;
+}
+
+/* ---------------- RENDER: COMPLICATIONS ---------------- */
+function step(n, text){ return `<div class="step"><div class="n">${n}</div><div>${text}</div></div>`; }
+function renderCompl(){
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.alert}</div>
+      <div><h2>Intolérance digestive à la NE</h2><p class="subtext">Vomissements ou régurgitations en dehors des soins</p></div></div>
+    ${step(1,"Vérifier le positionnement de la SNG, la présence de BHA, un transit récent (TR si absent) et l'absence de complication digestive (TDM AP).")}
+    ${step(2,"Pause d'alimentation 2 h, puis reprise à 2/3 du débit.")}
+    ${step(3,"Si récidive : nouvelle pause de 2 h + prokinétiques — <strong>érythromycine 100 mg x4/j</strong> ± <strong>métoclopramide 10 mg x3/j</strong> pendant 2 à 5 jours (mesurer le QT avant introduction).")}
+    ${step(4,"Si réfractaire : discuter une sonde post-pylorique (risque de distension abdominale, ischémie mésentérique).")}
+    <div class="info-box">Décubitus ventral : pas d'arrêt de la NE, 20 kcal/kg/j maximum, lit proclive 20–30°.</div>
+  </div>
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.alert}</div>
+      <div><h2>Diarrhée</h2><p class="subtext">&gt; 3 selles molles / jour</p></div></div>
+    ${step(1,"Éliminer une autre étiologie que la NE : fausse diarrhée sur fécalome, antibiothérapie, ischémie mésentérique, infection à C. difficile (GDH+ et toxine+, ou PCR+ ; à rechercher devant toute diarrhée nosocomiale &gt; 48 h après admission).")}
+    ${step(2,"<strong>Racécadotril (Tiorfan) 100 mg x3/j</strong> + <strong>Lactéol 100 mg x2/j</strong> (pas de lopéramide sans coproculture C. difficile négative).")}
+    ${step(3,"Persistance à 24 h : changer pour un soluté à base de gomme de guar (Sondalis T Energy).")}
+    ${step(4,"Persistance à 24 h : diminuer le débit de nutrition de 25 à 50 %.")}
+    ${step(5,"Si inefficace : changer pour un soluté semi-élémentaire.")}
+    <div class="info-box">La pose d'une sonde rectale (Flexi-Seal) ne s'envisage qu'en cas de lésions cutanées ou de souillures très fréquentes, et doit être gardée le moins longtemps possible (risque d'incontinence). En cas de Flexi-Seal, maintenir les antidiarrhéiques ; les laxatifs pour entretenir la diarrhée ne sont indiqués que pour maintenir la sonde à visée de protection d'une escarre sacrée.</div>
+  </div>
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.alert}</div>
+      <div><h2>Constipation</h2><p class="subtext">&lt; 3 selles / semaine</p></div></div>
+    ${step(1,"Éliminer un fécalome (TR).")}
+    ${step(2,"Soluté à base de fibres mixtes (gomme de guar, amidon, cellulose, pectine) en 1<sup>re</sup> intention : Nutrison Prot NRJ Multifibres.")}
+    ${step(3,"Laxatifs (systématiques d'emblée si morphiniques) : <strong>macrogol</strong> 20 g matin, <strong>trimébutine</strong> (Debridat) 100 mg x3–6/j, <strong>bisacodyl</strong> (Dulcolax) 10 mg matin, pruneaux matin/midi ou jus de pruneaux 200 mL matin/midi ; <strong>naloxégol</strong> (Moventig) 25 mg matin ou <strong>méthylnaltrexone</strong> (Relistor) SC 12 mg/2j si morphiniques dans les 24 dernières heures.")}
+    ${step(4,"Si insuffisant : <strong>Gastrografine</strong> 100 mL une fois, PO ou SNG (ASP inutile).")}
+    ${step(5,"Si insuffisant : <strong>néostigmine</strong> 2–3 mg IVL sur 1 h, possible en IVSE sur plusieurs heures voire 24 h chez les patients fragiles (seulement si scanner objectivant l'absence d'obstacle mécanique).")}
+    <div class="info-box">${ICONS.info}<span>Pour les laxatifs osmotiques (macrogol, lactulose), il est préférable de les administrer <strong>2 par 2</strong> afin de réaliser une charge osmotique.</span></div>
+  </div>
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.alert}</div>
+      <div><h2>Fécalome</h2><p class="subtext">Prise en charge</p></div></div>
+    ${step(1,"<strong>Lavement Normacol</strong>, <strong>suppositoires Eductyl</strong>.")}
+    ${step(2,"Si insuffisant : lavement « paraffine-eau tiède » quotidien = 3 L de <strong>NaCl 0,9 %</strong> tiède contenant 3 <strong>Lansoyl</strong>, à connecter sur une sonde rectale.")}
+  </div>`;
+}
+
+/* ---------------- RENDER: SRI ---------------- */
+function renderSri(){
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.alert}</div>
+      <div><h2>Syndrome de renutrition inappropriée</h2><p class="subtext">Tout patient hospitalisé en réanimation depuis &gt; 48 h est à risque</p></div></div>
+    <div class="grid grid-2">
+      <div class="stat"><div class="field-label" style="margin-bottom:8px;">Conséquences possibles</div>
+        <div style="font-size:13px; line-height:1.6;">Hypophosphorémie, hypomagnésémie, hypokaliémie, hyperglycémie, béri-béri (carence en thiamine), rétention hydrosodée ou défaillances d'organe (cardiaque, neurologique, respiratoire, rénale, hépatique, musculaire, hématologique). L'hypophosphatémie est la conséquence biologique la plus grave.</div></div>
+      <div class="stat"><div class="field-label" style="margin-bottom:8px;">Prévention</div>
+        <div style="font-size:13px; line-height:1.6;">Début à 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/24–48 h jusqu'à la cible (7 à 10 jours). Vitamine B1 300 mg/j pendant 5 jours. Prudence avec les apports caloriques non nutritionnels.</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.clip}</div>
+      <div><h2>Facteurs de risque</h2><p class="subtext">Un seul critère majeur, ou au moins deux critères mineurs, définit un patient à risque</p></div></div>
+    <div class="grid grid-2">
+      <div class="stat" style="background:var(--redDim); border:1px solid rgba(239,93,111,.35);">
+        <div class="field-label" style="color:var(--red); margin-bottom:10px;">Critères majeurs — un seul suffit</div>
+        ${SRI_CRITERES_MAJEURS.map(c=>`<div style="font-size:13px; line-height:1.6; margin-bottom:6px; color:var(--text);">— ${c}</div>`).join('')}
+      </div>
+      <div class="stat" style="background:var(--amberDim); border:1px solid rgba(242,169,59,.35);">
+        <div class="field-label" style="color:var(--amber); margin-bottom:10px;">Critères mineurs — au moins deux</div>
+        ${SRI_CRITERES_MINEURS.map(c=>`<div style="font-size:13px; line-height:1.6; margin-bottom:6px; color:var(--text);">— ${c}</div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.syringe}</div>
+      <div><h2>Correction de l'hypophosphatémie</h2><p class="subtext">Précautions à prendre pendant la renutrition</p></div></div>
+    <div class="warn-box" style="background:var(--amberDim); color:var(--amber); margin-top:0;">${ICONS.alert}<span><strong>Pas de majoration de la nutrition en cas d'hypophosphatémie.</strong></span></div>
+    <div class="row-item" style="margin-top:12px;">
+      <div><div class="t">Phosphatémie &lt; 0,65 mM</div><div class="s">Avant renutrition ou en cours de renutrition</div></div>
+      <div class="badgeval" style="color:var(--amber); background:var(--amberDim); text-align:right;">Réduire à 500 kcal/j x2j, puis +5 kcal/kg/j jusqu'à la cible</div>
+    </div>
+    <div class="row-item">
+      <div><div class="t">Phosphatémie &lt; 0,4 mM</div><div class="s">Hypophosphatémie sévère</div></div>
+      <div class="badgeval" style="color:var(--red); background:var(--redDim); text-align:right;">Suspension de la nutrition</div>
+    </div>
+    <div class="info-box" style="border:1px solid rgba(239,93,111,.35);"><span><strong>Phocytan</strong> 0,66 mM/mL (1800 mOsm/L) : 10 mL = 300 mg de sodium (= SSH 3 %) + 1 g de glucose. Attention aux recharges : <strong style="color:var(--red);">ne pas dépasser 20 mmol/h, soit 30 mL/h</strong>.</span></div>
+    <div class="info-box"><span><strong>Surveillance :</strong> iono plasmatique minimum x2/j si SRI avéré. ECG si trouble ionique sévère.</span></div>
+  </div>`;
+}
+
+/* ---------------- RENDER: DEBITS ---------------- */
+function renderDebit(){
+  const products = DEBIT_PRODUCTS[state.debitVoie];
+  const product = products.find(p => p.id === state.debitProduitId) || products[0];
+  const { result, kcalTarget } = getTargets();
+  const poidsNutri = result ? result.poidsNutritionnel : null;
+
+  const sourceTabs = `
+    <div class="seg" style="margin-bottom:18px;">
+      <button data-act="debitSource" data-val="cible" class="${state.debitSource==='cible'?'active':''}">À partir de la cible calorique</button>
+      <button data-act="debitSource" data-val="debit" class="${state.debitSource==='debit'?'active':''}">À partir d'un débit</button>
+    </div>`;
+
+  const voieSelector = `
+    <div class="seg" style="margin-bottom:16px;">
+      <button data-act="debitVoie" data-val="enterale" class="${state.debitVoie==='enterale'?'active':''}">Entérale</button>
+      <button data-act="debitVoie" data-val="parenterale" class="${state.debitVoie==='parenterale'?'active':''}">Parentérale</button>
+    </div>`;
+
+  const produitSelector = `
+    <label class="field" style="margin-bottom:16px; display:block;">
+      <span class="field-label">Soluté</span>
+      <select id="f-debit-produit" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--borderLight); background:var(--elevated); color:var(--text); font-family:var(--fontBody); font-size:14px;">
+        ${products.map(p => `<option value="${p.id}" ${p.id===product.id?'selected':''}>${p.nom} — ${p.kcalPerMl} kcal/mL, ${p.protPer100ml} g prot/100mL</option>`).join('')}
+      </select>
+      <div class="subtext" style="margin-top:6px;">${product.note} · Osmolarité ${product.osmolarite} mOsm/L</div>
+    </label>`;
+
+  let resultsHtml = "";
+
+  if (state.debitSource === "cible"){
+    const kcalManuel = state.debitKcalManuel !== "" ? parseFloat(state.debitKcalManuel) : kcalTarget;
+
+    resultsHtml = `
+      <label class="field" style="margin-bottom:14px; display:block;">
+        <span class="field-label">Cible calorique (kcal/j)</span>
+        <div class="input-wrap"><input type="number" id="f-debit-kcal" value="${state.debitKcalManuel !== "" ? state.debitKcalManuel : (kcalTarget ? round(kcalTarget) : "")}" placeholder="${kcalTarget ? round(kcalTarget) : 'Renseigner la cible dans Calculateur'}"><span class="unit">kcal/j</span></div>
+        <div class="subtext" style="margin-top:6px;">${kcalTarget ? `Pré-rempli depuis l'onglet Calculateur (${round(kcalTarget)} kcal/j)` : "Renseigner taille/poids dans l'onglet Calculateur pour pré-remplir"}</div>
+      </label>
+      <label class="field" style="margin-bottom:16px; display:block;">
+        <span class="field-label">Mode d'administration</span>
+        <div class="seg">
+          <button data-act="debitDureeType" data-val="continu" class="${state.debitDureeType==='continu'?'active':''}">Continu (sur 24 h)</button>
+          <button data-act="debitDureeType" data-val="discontinu" class="${state.debitDureeType==='discontinu'?'active':''}">Discontinu (3 x 3 h)</button>
+        </div>
+      </label>`;
+
+    if (kcalManuel && !isNaN(kcalManuel) && kcalManuel > 0){
+      const volumeTotal = kcalManuel / product.kcalPerMl;
+      const proteinesJ = volumeTotal * (product.protPer100ml/100);
+      const proteinesKg = poidsNutri ? proteinesJ/poidsNutri : null;
+
+      if (state.debitDureeType === "continu"){
+        const debitH = volumeTotal / 24;
+        resultsHtml += `
+        <div class="grid grid-2" style="margin-top:8px;">
+          <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
+            <div class="lbl" style="color:var(--teal);">Volume total</div>
+            <div class="val" style="color:var(--teal);">${round(volumeTotal)} <span style="font-size:13px;">mL/j</span></div>
+          </div>
+          <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
+            <div class="lbl" style="color:var(--teal);">Débit continu (24 h)</div>
+            <div class="val" style="color:var(--teal);">${round(debitH,1)} <span style="font-size:13px;">mL/h</span></div>
+          </div>
+          <div class="stat">
+            <div class="lbl">Protéines apportées</div>
+            <div class="val">${round(proteinesJ,1)} <span style="font-size:13px;">g/j</span></div>
+          </div>
+          <div class="stat">
+            <div class="lbl">Protéines / kg</div>
+            <div class="val">${proteinesKg ? round(proteinesKg,2) : '—'} <span style="font-size:13px;">g/kg/j</span></div>
+          </div>
+        </div>`;
+      } else {
+        const volumeAdmin = volumeTotal / 3;
+        const debitAdmin = volumeAdmin / 3;
+        resultsHtml += `
+        <div class="subtext" style="margin-bottom:10px;">3 administrations par jour, chacune sur 3 h</div>
+        <div class="grid grid-2" style="margin-top:8px;">
+          <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
+            <div class="lbl" style="color:var(--teal);">Volume par administration</div>
+            <div class="val" style="color:var(--teal);">${round(volumeAdmin)} <span style="font-size:13px;">mL / 3h</span></div>
+          </div>
+          <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
+            <div class="lbl" style="color:var(--teal);">Débit horaire</div>
+            <div class="val" style="color:var(--teal);">${round(debitAdmin,1)} <span style="font-size:13px;">mL/h</span></div>
+          </div>
+          <div class="stat">
+            <div class="lbl">Volume total</div>
+            <div class="val">${round(volumeTotal)} <span style="font-size:13px;">mL/j</span></div>
+          </div>
+          <div class="stat">
+            <div class="lbl">Protéines apportées</div>
+            <div class="val">${round(proteinesJ,1)} <span style="font-size:13px;">g/j</span></div>
+          </div>
+        </div>`;
+      }
+    } else {
+      resultsHtml += `<div class="info-box">${ICONS.info}<span>Renseigner une cible calorique (ou la calculer dans l'onglet Calculateur) pour obtenir le débit.</span></div>`;
+    }
+
+    // Tableau des débits par palier de progression (5, 10, 15... kcal/kg/j)
+    if (poidsNutri){
+      const { kcalPerKg } = getTargets();
+      const progression = buildProgression(kcalPerKg, state.sriRisk);
+      // paliers uniques (évite les doublons quand plusieurs jours partagent le même palier)
+      const paliers = [...new Set(progression.map(r => round(r.kcal,2)))];
+      resultsHtml += `
+      <div class="field-label" style="margin:20px 0 10px;">Débits par palier de progression (${state.sriRisk ? 'protocole SRI' : 'progression standard'})</div>
+      <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Palier</th><th>kcal/j</th><th>Continu 24h</th><th>Discontinu — vol./3h</th><th>Discontinu — débit</th><th>Protéines</th></tr></thead>
+        <tbody>
+          ${paliers.map(palier => {
+            const kcalJ = palier * poidsNutri;
+            const volume = kcalJ / product.kcalPerMl;
+            const debitContinu = volume/24;
+            const volumeAdmin = volume/3;
+            const debitDiscontinu = volumeAdmin/3;
+            const prot = volume * (product.protPer100ml/100);
+            return `<tr>
+              <td class="strong">${palier} kcal/kg/j</td>
+              <td>${round(kcalJ)}</td>
+              <td>${round(debitContinu,1)} mL/h</td>
+              <td>${round(volumeAdmin)} mL</td>
+              <td>${round(debitDiscontinu,1)} mL/h</td>
+              <td>${round(prot,1)} g/j</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      </div>
+      <div class="subtext" style="margin-top:8px;">Discontinu = 3 administrations de 3 h/j. Les protéines apportées par jour ne dépendent pas du mode (continu/discontinu), seul le débit horaire change. Paliers et statut SRI repris de l'onglet Calculateur.</div>`;
+    }
+
+  } else {
+    // Mode "à partir d'un débit"
+    resultsHtml = `
+      <label class="field" style="margin-bottom:16px; display:block;">
+        <span class="field-label">Mode d'administration</span>
+        <div class="seg">
+          <button data-act="debitDureeType" data-val="continu" class="${state.debitDureeType==='continu'?'active':''}">Continu (sur 24 h)</button>
+          <button data-act="debitDureeType" data-val="discontinu" class="${state.debitDureeType==='discontinu'?'active':''}">Discontinu (3 x 3 h)</button>
+        </div>
+      </label>
+      <label class="field" style="margin-bottom:16px; display:block; max-width:260px;">
+        <span class="field-label">Débit ${state.debitDureeType==='continu' ? '(sur 24 h)' : 'par administration (sur 3 h)'}</span>
+        <div class="input-wrap"><input type="number" id="f-debit-valeur" value="${state.debitValeur}" step="1"><span class="unit">mL/h</span></div>
+      </label>`;
+
+    const debitVal = parseFloat(state.debitValeur)||0;
+
+    if (debitVal > 0){
+      let volumeTotal, volumeAdmin;
+      if (state.debitDureeType === "continu"){
+        volumeTotal = debitVal * 24;
+      } else {
+        volumeAdmin = debitVal * 3;
+        volumeTotal = volumeAdmin * 3;
+      }
+      const kcalJ = volumeTotal * product.kcalPerMl;
+      const proteinesJ = volumeTotal * (product.protPer100ml/100);
+      const proteinesKg = poidsNutri ? proteinesJ/poidsNutri : null;
+      const kcalKg = poidsNutri ? kcalJ/poidsNutri : null;
+
+      resultsHtml += `
+      <div class="grid grid-2">
+        ${state.debitDureeType==='discontinu' ? `
+        <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
+          <div class="lbl" style="color:var(--teal);">Volume par administration</div>
+          <div class="val" style="color:var(--teal);">${round(volumeAdmin)} <span style="font-size:13px;">mL / 3h</span></div>
+        </div>` : ``}
+        <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
+          <div class="lbl" style="color:var(--teal);">Volume total</div>
+          <div class="val" style="color:var(--teal);">${round(volumeTotal)} <span style="font-size:13px;">mL/j</span></div>
+        </div>
+        <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
+          <div class="lbl" style="color:var(--teal);">Apport calorique</div>
+          <div class="val" style="color:var(--teal);">${round(kcalJ)} <span style="font-size:13px;">kcal/j</span></div>
+          <div class="sub">${kcalKg ? round(kcalKg,1)+' kcal/kg/j' : ''}</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Protéines apportées</div>
+          <div class="val">${round(proteinesJ,1)} <span style="font-size:13px;">g/j</span></div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Protéines / kg</div>
+          <div class="val">${proteinesKg ? round(proteinesKg,2) : '—'} <span style="font-size:13px;">g/kg/j</span></div>
+        </div>
+      </div>`;
+    }
+  }
+
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.calc}</div>
+      <div><h2>Débits de nutrition</h2><p class="subtext">Continu ou discontinu, selon le soluté choisi</p></div></div>
+    ${sourceTabs}
+    ${voieSelector}
+    ${produitSelector}
+    ${resultsHtml}
+    ${!poidsNutri ? `<div class="info-box" style="margin-top:16px;">${ICONS.info}<span>Renseigner taille/poids dans l'onglet Calculateur pour afficher les apports en g/kg/j.</span></div>` : ''}
+  </div>`;
+}
+
+const PANELS = { calc:renderCalc, solutes:renderSolutes, micro:renderMicro, debit:renderDebit, compl:renderCompl, sri:renderSri };
+
+/* ---------------- MAIN RENDER + EVENTS ---------------- */
+function render(){
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <header>
+      <div class="eyebrow"><span class="badge">NAR 2026</span></div>
+      <h1>Assistant nutrition en réanimation</h1>
+    </header>
+    <nav>
+      ${TABS.map(t=>`<button class="tab-btn ${state.tab===t.key?'active':''}" data-act="tab" data-val="${t.key}">${t.icon}${t.label}</button>`).join('')}
+    </nav>
+    <div id="content">${PANELS[state.tab]()}</div>
+    <div class="brand-footer">
+      <div class="brand-badge" title="CHU de Bordeaux">
+        <img src="data:image/jpeg;base64,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" alt="Logo CHU de Bordeaux">
+      </div>
+      <div class="brand-badge" title="Nutrition &amp; neuro-réanimation">
+        ${FUN_LOGO_SVG}
+      </div>
+    </div>
+    <footer>Outil d'aide à la prescription — ne remplace pas le jugement clinique.<br>D'après le protocole de nutrition en neuro-réanimation du CHU de Bordeaux.</footer>
+  `;
+  bindEvents();
+}
+
+function bindEvents(){
+  document.querySelectorAll('[data-act="tab"]').forEach(el=>el.addEventListener('click', ()=>{ state.tab = el.dataset.val; render(); }));
+  document.querySelectorAll('[data-act="sexe"]').forEach(el=>el.addEventListener('click', ()=>{ state.sexe = el.dataset.val; render(); }));
+  document.querySelectorAll('[data-act="phase"]').forEach(el=>el.addEventListener('click', ()=>{ state.phaseKey = el.dataset.val; state.kcalRatio = 1; state.eercRehab = false; render(); }));
+  document.querySelectorAll('[data-act="microcheck"]').forEach(el=>el.addEventListener('click', ()=>{ const id = el.dataset.val; state.checked[id] = !state.checked[id]; render(); }));
+  document.querySelectorAll('[data-act="eercRehab"]').forEach(el=>el.addEventListener('click', ()=>{ state.eercRehab = !state.eercRehab; render(); }));
+  document.querySelectorAll('[data-act="debitSource"]').forEach(el=>el.addEventListener('click', ()=>{ state.debitSource = el.dataset.val; render(); }));
+  document.querySelectorAll('[data-act="debitVoie"]').forEach(el=>el.addEventListener('click', ()=>{ state.debitVoie = el.dataset.val; state.debitProduitId = DEBIT_PRODUCTS[state.debitVoie][0].id; render(); }));
+  document.querySelectorAll('[data-act="debitDureeType"]').forEach(el=>el.addEventListener('click', ()=>{ state.debitDureeType = el.dataset.val; render(); }));
+
+  const fDebitProduit = document.getElementById('f-debit-produit');
+  if (fDebitProduit) fDebitProduit.addEventListener('change', e=>{ state.debitProduitId = e.target.value; renderPartial(); });
+  const fSoluteSituation = document.getElementById('f-solute-situation');
+  if (fSoluteSituation) fSoluteSituation.addEventListener('change', e=>{ state.soluteSituation = e.target.value; renderPartial(); });
+  const fDebitKcal = document.getElementById('f-debit-kcal');
+  if (fDebitKcal) fDebitKcal.addEventListener('input', e=>{ state.debitKcalManuel = e.target.value; debouncedRenderPartial(); });
+  const fDebitValeur = document.getElementById('f-debit-valeur');
+  if (fDebitValeur) fDebitValeur.addEventListener('input', e=>{ state.debitValeur = e.target.value; debouncedRenderPartial(); });
+
+  const fTaille = document.getElementById('f-taille');
+  if (fTaille) fTaille.addEventListener('input', e=>{ state.taille = e.target.value; debouncedRenderPartial(); });
+  const fPoids = document.getElementById('f-poids');
+  if (fPoids) fPoids.addEventListener('input', e=>{ state.poids = e.target.value; debouncedRenderPartial(); });
+  const fRatio = document.getElementById('f-ratio');
+  if (fRatio) fRatio.addEventListener('input', e=>{ state.kcalRatio = parseFloat(e.target.value); renderPartial(); });
+  const fSri = document.getElementById('f-sri');
+  if (fSri) fSri.addEventListener('change', e=>{ state.sriRisk = e.target.checked; renderPartial(); });
+}
+
+// Reconstruire l'écran immédiatement après une saisie déstabilise le clavier virtuel
+// sur certains navigateurs Android (le champ est détruit puis recréé à chaque frappe).
+// On attend une courte pause dans la frappe avant de reconstruire.
+let renderDebounceTimer = null;
+function debouncedRenderPartial(){
+  clearTimeout(renderDebounceTimer);
+  renderDebounceTimer = setTimeout(renderPartial, 600);
+}
+
+// re-render only the content area, preserving input focus where possible
+function renderPartial(){
+  const content = document.getElementById('content');
+  const activeId = document.activeElement ? document.activeElement.id : null;
+  const selStart = document.activeElement ? document.activeElement.selectionStart : null;
+  content.innerHTML = PANELS[state.tab]();
+  bindEvents();
+  if (activeId){
+    const el = document.getElementById(activeId);
+    if (el){ el.focus(); if (selStart!=null && el.setSelectionRange) { try{ el.setSelectionRange(selStart, selStart); }catch(e){} } }
+  }
+}
+
+render();
+</script>
+</body>
+</html>
