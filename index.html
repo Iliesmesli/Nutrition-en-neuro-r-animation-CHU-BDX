@@ -119,12 +119,18 @@
 <script>
 /* ---------------- DATA ---------------- */
 const PHASES = {
-  aigue: { label:"Phase aiguë", sub:"Choc, défaillance hémodynamique/respiratoire", kcalMin:10, kcalMax:10, protMin:0.4, protMax:0.4, color:"var(--red)", dim:"var(--redDim)" },
-  stabilisee: { label:"Phase stabilisée", sub:"Patient stable, sevrage des amines en cours", kcalMin:20, kcalMax:20, protMin:0.9, protMax:0.9, color:"var(--blue)", dim:"var(--blueDim)" },
-  rehabilitation: { label:"Réhabilitation", sub:"Kinésithérapie active, reverticalisation, marche", kcalMin:20, kcalMax:25, protMin:1.2, protMax:1.5, color:"var(--teal)", dim:"var(--tealDim)" },
-  postop: { label:"Post-opératoire", sub:"Chirurgie à risque intermédiaire ou élevé", kcalMin:20, kcalMax:25, protMin:1.0, protMax:1.3, color:"var(--violet)", dim:"var(--violetDim)" },
-  eerc: { label:"EERc", sub:"Épuration extra-rénale continue", kcalMin:25, kcalMax:25, protMin:1.5, protMax:1.7, color:"#F26D9B", dim:"#4A1230" },
-  hdi: { label:"HDI", sub:"Hémodialyse intermittente", kcalMin:20, kcalMax:25, protMin:1.3, protMax:1.5, color:"#F2C43B", dim:"#4A3B12" }
+  aigue: { label:"Choc / défaillance multiviscérale", sub:"Catécholamines, ventilation et/ou sédation profonde", kcalMin:10, kcalMax:10, protMin:0.4, protMax:0.4, plafond:true, color:"var(--red)", dim:"var(--redDim)" },
+  stabilisee: { label:"Stabilisation", sub:"Défaillances en résolution, sevrage VM/sédation, amines faibles ou sevrées", kcalMin:20, kcalMax:20, protMin:0.9, protMax:0.9, plafond:true, color:"var(--blue)", dim:"var(--blueDim)" },
+  rehabilitation: { label:"Réhabilitation", sub:"Peu défaillant, mobilisation/exercice, reprise PO", kcalMin:20, kcalMax:25, protMin:1.2, protMax:1.5, color:"var(--teal)", dim:"var(--tealDim)" },
+  postop: { label:"Post-opératoire", sub:"Chirurgie à risque intermédiaire ou élevé", kcalMin:20, kcalMax:25, protMin:1.0, protMax:1.3, color:"var(--violet)", dim:"var(--violetDim)" }
+};
+
+// Fonction rénale : modifie la cible protéique uniquement en phase de réhabilitation (RFE SFAR/HAS 2026, R2.5.3–R2.5.4)
+const RENAL = {
+  normale: { label:"Normale" },
+  ira: { label:"IRenA sans EER", protRehab:0.9 },
+  eerc: { label:"EERc", protRehab:1.5 },
+  hdi: { label:"HDI", protRehab:1.5 }
 };
 
 const EN_PRODUCTS = [
@@ -175,18 +181,14 @@ const ORAL_SUPPLEMENTS = [
   { nom:"Protifar", dose:"1 sachet (11 g de protéines) x 1 à 3/j", indication:"Apports protidiques très inférieurs à la cible. PO : mélanger au repas. SNG : possible si très dilué, avec rinçage soigneux après chaque administration" }
 ];
 
-const SRI_CRITERES_MAJEURS = [
-  "Indice de masse corporelle < 16 kg/m²",
-  "Perte de poids involontaire de plus de 15 % dans les 3 à 6 derniers mois",
-  "Apports nutritionnels faibles ou nuls depuis plus de 10 jours",
-  "Hypokaliémie, hypophosphorémie ou hypomagnésémie avant la renutrition"
-];
-const SRI_CRITERES_MINEURS = [
-  "Indice de masse corporelle < 18,5 kg/m²",
-  "Perte de poids involontaire de plus de 10 % dans les 3 à 6 derniers mois",
-  "Apports nutritionnels faibles ou nuls depuis plus de 5 jours",
-  "Alcoolisme chronique",
-  "Traitements en cours (insuline, chimiothérapie, diurétique ou antiacide)"
+// Facteurs de risque de SRI — RFE SFAR/HAS 2026 (Figure 9)
+const SRI_FACTEURS = [
+  "IMC < 18,5 kg/m²",
+  "Perte de poids récente (5–10 %)",
+  "Diminution des ingesta (de 50 à 75 %) ou jeûne prolongé",
+  "Hypokaliémie, hypophosphatémie ou hypomagnésémie",
+  "Maladie chronique : cancer, alcoolisme chronique, malabsorption, maladie neurodégénérative, anorexie",
+  "Polymédication, notamment diurétiques, inhibiteurs de la pompe à protons, reprise ou instauration d'insuline"
 ];
 
 const MICRO_SPECIFIQUES = [
@@ -219,7 +221,9 @@ const DEBIT_PRODUCTS = {
 /* ---------------- STATE ---------------- */
 const state = {
   tab: "calc",
-  taille: 170, poids: 75, sexe: "H", phaseKey: "stabilisee", kcalRatio: 1, sriRisk: false, eercRehab: false,
+  taille: 170, poids: 75, phaseKey: "stabilisee", kcalRatio: 1, sriRisk: false, renal: "normale",
+  // Apports non nutritionnels
+  propofolConc: 1, propofolDebit: "", g25: "", g5: "", g10: "", g30: "", citQsg: "", citDose: "",
   checked: {},
   soluteSituation: "",
   // Débits
@@ -236,33 +240,41 @@ const state = {
 /* ---------------- HELPERS ---------------- */
 const round = (n, d=0) => { const f = Math.pow(10,d); return Math.round(n*f)/f; };
 const calcIMC = (poids, tailleCm) => { const t = tailleCm/100; return poids/(t*t); };
-const calcPPT = (tailleCm, sexe) => (sexe==="H"?50:45.5) + 0.91*(tailleCm-152.4);
-function calcPoidsNutritionnel(poidsReel, tailleCm, sexe){
+// Poids : RFE SFAR/HAS 2026 — poids réel sec (antérieur à l'épisode) ; si IMC > 30 : poids ajusté
+// Poids idéal = 25 × T² ; Poids ajusté = Poids idéal + 0,25 × (Poids réel − Poids idéal)
+const calcPoidsIdeal = (tailleCm) => { const t = tailleCm/100; return 25*t*t; };
+function calcPoidsNutritionnel(poidsReel, tailleCm){
   const imc = calcIMC(poidsReel, tailleCm);
-  const ppt = calcPPT(tailleCm, sexe);
-  if (imc < 30) return { imc, ppt, poidsNutritionnel: poidsReel, ajuste:false };
-  const poidsAjuste = ppt + 0.25*(poidsReel - ppt);
-  return { imc, ppt, poidsNutritionnel: poidsAjuste, ajuste:true };
+  const pi = calcPoidsIdeal(tailleCm);
+  if (imc <= 30) return { imc, pi, poidsNutritionnel: poidsReel, ajuste:false };
+  const poidsAjuste = pi + 0.25*(poidsReel - pi);
+  return { imc, pi, poidsNutritionnel: poidsAjuste, ajuste:true };
 }
+// Progression par paliers de 5 kcal/kg/j (≈ 25 % d'une cible de 20 kcal/kg/j), à partir de 10 kcal/kg/j
+// Sans risque de SRI : palier suivant toutes les 24 h si bonne tolérance.
+// Risque de SRI : 10 kcal/kg/j pendant 3 jours, puis paliers de 48 h à 15 et 20 kcal/kg/j (cible en 7 à 10 jours).
 function buildProgression(kcalTargetPerKg, sriRisk){
   const rows = [];
-  const PLATEAU_VALUES = [15, 20]; // paliers maintenus 48h (uniquement si SRI)
+  const PLATEAU_VALUES = [15, 20];
   function pushStep(day, kcal){
     rows.push({day, kcal});
     if (sriRisk && PLATEAU_VALUES.includes(kcal)) rows.push({day: day+1, kcal});
     return (sriRisk && PLATEAU_VALUES.includes(kcal)) ? day+2 : day+1;
   }
-  if (sriRisk){
-    let day=1;
-    while(day<=3){ rows.push({day, kcal:Math.min(10,kcalTargetPerKg)}); day++; }
-    let current = Math.min(10,kcalTargetPerKg);
-    while(current<kcalTargetPerKg && day<=16){ current=Math.min(current+5,kcalTargetPerKg); day = pushStep(day, current); }
-  } else {
-    let day=1; let current=Math.min(5,kcalTargetPerKg);
-    rows.push({day,kcal:current}); day++;
-    while(current<kcalTargetPerKg && day<=16){ current=Math.min(current+5,kcalTargetPerKg); day = pushStep(day, current); }
-  }
+  let day=1; let current=Math.min(10,kcalTargetPerKg);
+  const firstDays = sriRisk ? 3 : 1;
+  while(day<=firstDays){ rows.push({day, kcal:current}); day++; }
+  while(current<kcalTargetPerKg && day<=16){ current=Math.min(current+5,kcalTargetPerKg); day = pushStep(day, current); }
   return rows;
+}
+// Apports non nutritionnels (kcal/j) — RFE SFAR/HAS 2026, Tableau 2 et Figure 5
+function calcNonNutritionnel(){
+  const num = v => Math.max(0, parseFloat(v)||0);
+  const propofol = num(state.propofolDebit)*24*1.1;           // 1,1 kcal/mL (1 % comme 2 %)
+  const glucose = (num(state.g25)*0.025 + num(state.g5)*0.05 + num(state.g10)*0.10 + num(state.g30)*0.30)*4; // 4 kcal/g
+  // Citrate : Qsg (mL/min) × dose (mmol/L de sang) × 1,44 × 0,5 × 0,59
+  const citrate = state.renal==='eerc' ? num(state.citQsg)*num(state.citDose)*1.44*0.5*0.59 : 0;
+  return { propofol, glucose, citrate, total: propofol+glucose+citrate };
 }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
@@ -301,88 +313,144 @@ function getTargets(){
   const tailleN = parseFloat(state.taille)||0;
   const poidsN = parseFloat(state.poids)||0;
   const phase = PHASES[state.phaseKey];
-  const result = (tailleN && poidsN) ? calcPoidsNutritionnel(poidsN, tailleN, state.sexe) : null;
-  let kcalPerKg = phase.kcalMin + (phase.kcalMax-phase.kcalMin)*state.kcalRatio;
-  const protPerKg = phase.protMin + (phase.protMax-phase.protMin)*state.kcalRatio;
-  const eercRehabActive = state.phaseKey === "eerc" && state.eercRehab;
-  if (eercRehabActive) kcalPerKg = 30;
+  const renal = RENAL[state.renal];
+  const result = (tailleN && poidsN) ? calcPoidsNutritionnel(poidsN, tailleN) : null;
+  const kcalPerKg = phase.kcalMin + (phase.kcalMax-phase.kcalMin)*state.kcalRatio;
+  let protPerKg = phase.protMin + (phase.protMax-phase.protMin)*state.kcalRatio;
+  const renalActive = state.phaseKey==='rehabilitation' && renal.protRehab!=null;
+  if (renalActive) protPerKg = renal.protRehab;
   const kcalTarget = result ? kcalPerKg*result.poidsNutritionnel : 0;
   const protTarget = result ? protPerKg*result.poidsNutritionnel : 0;
-  return { tailleN, poidsN, phase, result, kcalPerKg, protPerKg, kcalTarget, protTarget, eercRehabActive };
+  const nn = calcNonNutritionnel();
+  const kcalNutri = Math.max(0, kcalTarget - nn.total);
+  return { tailleN, poidsN, phase, renal, renalActive, result, kcalPerKg, protPerKg, kcalTarget, protTarget, nn, kcalNutri };
 }
 
 /* ---------------- RENDER: CALCULATEUR ---------------- */
 function renderCalc(){
-  const { phase, result, kcalPerKg, protPerKg, kcalTarget, protTarget, eercRehabActive } = getTargets();
+  const { phase, renal, renalActive, result, kcalPerKg, protPerKg, kcalTarget, protTarget, nn, kcalNutri } = getTargets();
   const progression = result ? buildProgression(kcalPerKg, state.sriRisk) : [];
   const fmtRange = (min,max,dec=1) => min===max ? `${round(min,dec)}` : `${round(min,dec)}–${round(max,dec)}`;
+  const le = p => p.plafond ? '≤ ' : '';
+  const protRangeShown = !renalActive && phase.protMin!==phase.protMax;
+  const poids = result ? result.poidsNutritionnel : null;
+
+  const phaseNote = {
+    aigue: `<div class="warn-box" style="background:var(--redDim); color:var(--red);">${ICONS.alert}<span><strong>Instabilité majeure</strong> (catécholamines à forte dose ou croissantes, hypoperfusion / hyperlactatémie) : <strong>pas de nutrition</strong>.<br>Sinon : <strong>une seule voie, NE ou NP</strong> (équivalentes à cible égale). <strong>Pas d'association NE + NP</strong> pour atteindre la cible.<br>Le plafond de 10 kcal/kg/j inclut les apports non nutritionnels.</span></div>`,
+    stabilisee: `<div class="info-box">${ICONS.info}<span><strong>20 kcal/kg/j est un plafond</strong> : y monter progressivement depuis 10 kcal/kg/j selon la tolérance (cf. progression). NE, NP ou association NE + NP possibles.</span></div>`,
+    rehabilitation: `<div class="info-box">${ICONS.info}<span><strong>Stratégie multimodale</strong> : mobilisation et exercice physique, dépistage et prise en charge de la dysphagie post-extubation, suivi par le diététicien jusqu'après la réanimation.</span></div>`,
+    postop: `<div class="info-box">${ICONS.info}<span>Reprise la plus précoce possible, cible atteinte progressivement. Associer les voies si une seule ne suffit pas (par ordre : orale, entérale, parentérale).</span></div>`
+  }[state.phaseKey];
+
+  const renalNote = state.renal==='normale' ? '' : (renalActive
+    ? `<div class="subtext" style="margin-top:8px;">${renal.label} en réhabilitation → cible protéique <strong>${String(renal.protRehab).replace('.',',')} g/kg/j</strong>${state.renal==='ira' ? ' (pas de bénéfice démontré d\'apports plus élevés)' : ' (compensation des pertes de l\'épuration)'}.</div>`
+    : `<div class="subtext" style="margin-top:8px;">${renal.label} : plafonds inchangés dans cette phase ; la cible protéique n'est adaptée à la fonction rénale qu'en réhabilitation.</div>`);
+
+  const nnField = (id, label, val, unit, ph='') => `
+      <label class="field"><span class="field-label">${label}</span>
+        <div class="input-wrap"><input type="number" inputmode="decimal" id="${id}" value="${val}" placeholder="${ph}"><span class="unit">${unit}</span></div></label>`;
 
   let html = `
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.calc}</div>
-      <div><h2>Poids nutritionnel</h2><p class="subtext">Poids réel si IMC &lt; 30, poids ajusté si IMC ≥ 30</p></div></div>
-    <div class="grid grid-3" style="grid-template-columns:1fr 1fr 1fr;">
+      <div><h2>Poids nutritionnel</h2><p class="subtext">Poids réel sec (avant l'épisode aigu) si IMC ≤ 30, poids ajusté si IMC &gt; 30</p></div></div>
+    <div class="grid grid-2" style="grid-template-columns:1fr 1fr;">
       <label class="field"><span class="field-label">Taille</span>
         <div class="input-wrap"><input type="number" id="f-taille" value="${state.taille}"><span class="unit">cm</span></div></label>
-      <label class="field"><span class="field-label">Poids réel</span>
+      <label class="field"><span class="field-label">Poids réel sec</span>
         <div class="input-wrap"><input type="number" step="0.5" id="f-poids" value="${state.poids}"><span class="unit">kg</span></div></label>
-      <label class="field"><span class="field-label">Sexe</span>
-        <div class="seg">
-          <button data-act="sexe" data-val="H" class="${state.sexe==='H'?'active':''}">H</button>
-          <button data-act="sexe" data-val="F" class="${state.sexe==='F'?'active':''}">F</button>
-        </div></label>
     </div>
     ${result ? `
     <div class="grid grid-3" style="margin-top:18px;">
       <div class="stat"><div class="lbl">IMC</div><div class="val">${round(result.imc,1)}</div></div>
-      <div class="stat"><div class="lbl">Poids prédit (PPT)</div><div class="val">${round(result.ppt,1)} <span style="font-size:13px;">kg</span></div></div>
+      <div class="stat"><div class="lbl">Poids idéal (25 × T²)</div><div class="val">${round(result.pi,1)} <span style="font-size:13px;">kg</span></div></div>
       <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
         <div class="lbl" style="color:var(--teal);">Poids nutritionnel${result.ajuste?' (ajusté)':''}</div>
         <div class="val" style="color:var(--teal);">${round(result.poidsNutritionnel,1)} <span style="font-size:13px;">kg</span></div>
       </div>
     </div>` : ''}
+    ${result && result.ajuste ? `<div class="subtext" style="margin-top:10px;">Poids ajusté = poids idéal + 0,25 × (poids réel − poids idéal)</div>` : ''}
   </div>
 
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.activity}</div>
-      <div><h2>Cibles caloriques et protéiques</h2><p class="subtext">Sélectionner la phase clinique du patient</p></div></div>
+      <div><h2>Cibles caloriques et protéiques</h2><p class="subtext">État clinique du patient (apports totaux, non nutritionnels inclus)</p></div></div>
     <div class="grid grid-4" style="margin-bottom:18px;">
       ${Object.entries(PHASES).map(([key,p])=>`
         <div class="phase-btn" data-act="phase" data-val="${key}" style="${state.phaseKey===key?`background:${p.dim};border-color:${p.color};`:''}">
           <div class="t" style="${state.phaseKey===key?`color:${p.color};`:''}">${p.label}</div>
           <div class="s">${p.sub}</div>
-          <div class="s" style="margin-top:5px; font-family:var(--fontMono); color:${state.phaseKey===key?p.color:'var(--textFaint)'};">${fmtRange(p.kcalMin,p.kcalMax)} kcal/kg/j · ${fmtRange(p.protMin,p.protMax,2)} g/kg/j</div>
+          <div class="s" style="margin-top:5px; font-family:var(--fontMono); color:${state.phaseKey===key?p.color:'var(--textFaint)'};">${le(p)}${fmtRange(p.kcalMin,p.kcalMax)} kcal/kg/j · ${le(p)}${fmtRange(p.protMin,p.protMax,2)} g/kg/j</div>
         </div>`).join('')}
     </div>
-    ${state.phaseKey==='eerc' ? `
-    <div class="checkrow ${state.eercRehab?'checked':''}" data-act="eercRehab" style="margin-bottom:18px;">
-      <input type="checkbox" ${state.eercRehab?'checked':''} readonly>
-      <div><div class="t">Réhabilitation active</div><div class="s">EERc + réhabilitation active → cible calorique portée à 30 kcal/kg/j (au lieu de 25 kcal/kg/j par défaut)</div></div>
-    </div>` : ''}
-    ${((phase.kcalMin!==phase.kcalMax && !eercRehabActive) || phase.protMin!==phase.protMax) ? `
+    <div class="field" style="margin-bottom:18px; display:block;">
+      <span class="field-label">Fonction rénale</span>
+      <div class="seg">
+        ${Object.entries(RENAL).map(([k,r])=>`<button data-act="renal" data-val="${k}" class="${state.renal===k?'active':''}">${r.label}</button>`).join('')}
+      </div>
+      ${renalNote}
+    </div>
+    ${(phase.kcalMin!==phase.kcalMax || protRangeShown) ? `
     <label class="field" style="margin-bottom:18px; display:block;">
-      <span class="field-label">Position dans la fourchette${(phase.kcalMin!==phase.kcalMax && !eercRehabActive) ? ` (${phase.kcalMin}–${phase.kcalMax} kcal/kg/j)` : ''}${phase.protMin!==phase.protMax ? ` (${phase.protMin}–${phase.protMax} g/kg/j)` : ''}</span>
+      <span class="field-label">Position dans la fourchette${phase.kcalMin!==phase.kcalMax ? ` (${phase.kcalMin}–${phase.kcalMax} kcal/kg/j)` : ''}${protRangeShown ? ` (${phase.protMin}–${phase.protMax} g/kg/j)` : ''}</span>
       <input type="range" id="f-ratio" min="0" max="1" step="0.01" value="${state.kcalRatio}">
     </label>` : ''}
     ${result ? `
     <div class="grid grid-2">
       <div class="stat" style="background:${phase.dim}; border:1px solid ${phase.color}44;">
-        <div class="lbl" style="color:${phase.color};">Cible calorique</div>
+        <div class="lbl" style="color:${phase.color};">${phase.plafond?'Plafond calorique':'Cible calorique'} (total)</div>
         <div class="val" style="color:${phase.color};">${round(kcalTarget)} <span style="font-size:13px;">kcal/j</span></div>
-        <div class="sub">${round(kcalPerKg,1)} kcal/kg/j${phase.kcalMin!==phase.kcalMax ? ` (plage ${phase.kcalMin}–${phase.kcalMax})` : (eercRehabActive ? ' (EERc + réhabilitation)' : '')}</div>
+        <div class="sub">${le(phase)}${round(kcalPerKg,1)} kcal/kg/j${phase.kcalMin!==phase.kcalMax ? ` (plage ${phase.kcalMin}–${phase.kcalMax})` : ''}</div>
       </div>
       <div class="stat" style="background:${phase.dim}; border:1px solid ${phase.color}44;">
-        <div class="lbl" style="color:${phase.color};">Cible protéique</div>
+        <div class="lbl" style="color:${phase.color};">${phase.plafond?'Plafond protéique':'Cible protéique'}</div>
         <div class="val" style="color:${phase.color};">${round(protTarget)} <span style="font-size:13px;">g/j</span></div>
-        <div class="sub">${round(protPerKg,2)} g/kg/j${phase.protMin!==phase.protMax ? ` (plage ${phase.protMin}–${phase.protMax})` : ''}</div>
+        <div class="sub">${le(phase)}${round(protPerKg,2)} g/kg/j${protRangeShown ? ` (plage ${phase.protMin}–${phase.protMax})` : ''}${renalActive ? ` (${renal.label})` : ''}</div>
       </div>
     </div>` : ''}
-    <div class="info-box">${ICONS.info}<span>Éviter la surnutrition : objectifs atteints progressivement après 72 h. Tenir compte des apports non nutritionnels (propofol 1,1 kcal/mL, glucose 4 kcal/g, citrate 0,59 kcal/mmol).</span></div>
+    ${phaseNote}
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.syringe}</div>
+      <div><h2>Apports non nutritionnels</h2><p class="subtext">À déduire de la cible · laisser vide si absent</p></div></div>
+    <div class="grid grid-2" style="grid-template-columns:1fr 1fr;">
+      <div class="field"><span class="field-label">Propofol</span>
+        <div class="seg" style="margin-bottom:8px;">
+          <button data-act="propofolConc" data-val="1" class="${state.propofolConc==1?'active':''}">1 %</button>
+          <button data-act="propofolConc" data-val="2" class="${state.propofolConc==2?'active':''}">2 %</button>
+        </div>
+        <div class="input-wrap"><input type="number" inputmode="decimal" id="f-propofol" value="${state.propofolDebit}" placeholder="0"><span class="unit">mL/h</span></div>
+        ${parseFloat(state.propofolDebit)>0 ? `<div class="subtext" style="margin-top:6px;">= ${round(parseFloat(state.propofolDebit)*10*state.propofolConc)} mg/h${state.propofolConc==1 ? ' · en 2 % : moitié moins de calories à dose égale' : ''}</div>` : ''}
+      </div>
+      <div class="grid grid-2" style="grid-template-columns:1fr 1fr; gap:10px;">
+        ${nnField('f-g25','G 2,5 %',state.g25,'mL/j','0')}
+        ${nnField('f-g5','G 5 %',state.g5,'mL/j','0')}
+        ${nnField('f-g10','G 10 %',state.g10,'mL/j','0')}
+        ${nnField('f-g30','G 30 %',state.g30,'mL/j','0')}
+      </div>
+    </div>
+    ${state.renal==='eerc' ? `
+    <div class="grid grid-2" style="grid-template-columns:1fr 1fr; margin-top:14px;">
+      ${nnField('f-citqsg','Citrate — débit sang',state.citQsg,'mL/min','ex. 150')}
+      ${nnField('f-citdose','Citrate — dose',state.citDose,'mmol/L','ex. 3')}
+    </div>
+    <div class="subtext" style="margin-top:6px;">Qsg × dose × 1,44 × 0,5 (50 % du citrate épuré dans l'effluent) × 0,59 kcal/mmol</div>` : `<div class="subtext" style="margin-top:10px;">Citrate : sélectionner « EERc » dans Fonction rénale.</div>`}
+    ${result ? `
+    <div class="grid grid-2" style="margin-top:18px;">
+      <div class="stat"><div class="lbl">Non nutritionnel</div><div class="val">${round(nn.total)} <span style="font-size:13px;">kcal/j</span></div>
+        <div class="sub">${round(nn.total/poids,1)} kcal/kg/j${nn.total>0 ? ` · propofol ${round(nn.propofol)}, glucose ${round(nn.glucose)}${state.renal==='eerc' ? `, citrate ${round(nn.citrate)}` : ''}` : ''}</div></div>
+      <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);"><div class="lbl" style="color:var(--teal);">Nutrition à prescrire</div>
+        <div class="val" style="color:var(--teal);">${round(kcalNutri)} <span style="font-size:13px;">kcal/j</span></div>
+        <div class="sub">${round(kcalNutri/poids,1)} kcal/kg/j · repris dans l'onglet Débits</div></div>
+    </div>
+    ${nn.total>0 && nn.total>=kcalTarget ? `<div class="warn-box" style="background:var(--amberDim); color:var(--amber);">${ICONS.alert}<span>Les apports non nutritionnels atteignent ${phase.plafond?'le plafond':'la cible'} : <strong>différer le support nutritionnel</strong> et réduire ces apports si possible (propofol 2 %).</span></div>` : ''}
+    ` : ''}
   </div>
 
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.alert}</div>
-      <div><h2>Progression de l'introduction</h2><p class="subtext">Débit d'introduction jour par jour jusqu'à la cible</p></div></div>
+      <div><h2>Progression de l'introduction</h2><p class="subtext">Paliers de 5 kcal/kg/j à partir de 10 kcal/kg/j</p></div></div>
     <div class="chk-wrap"><input type="checkbox" id="f-sri" ${state.sriRisk?'checked':''}><span>Patient à risque de syndrome de renutrition inappropriée (SRI)</span></div>
     ${result ? `
     <div class="bars">
@@ -396,19 +464,33 @@ function renderCalc(){
         </div>`;
       }).join('')}
     </div>
-    <div class="subtext" style="margin-top:10px;">kcal/kg/j par jour d'hospitalisation · cible atteinte à J${progression[progression.length-1]?.day}</div>
+    <div class="subtext" style="margin-top:10px;">kcal/kg/j (apports totaux) par jour de nutrition · ${state.phaseKey==='aigue' ? 'phase de choc : rester ≤ 10 kcal/kg/j' : `cible atteinte à J${progression[progression.length-1]?.day} si bonne tolérance`}</div>
     ` : ''}
-    ${state.sriRisk ? `<div class="warn-box" style="background:var(--amberDim); color:var(--amber);">${ICONS.alert}<span>Introduction à 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/24–48 h. Vitamine B1 300 mg/j pendant 5 jours. Cible atteinte en 7 à 10 jours.</span></div>` : ''}
+    <div class="info-box">${ICONS.info}<span>Passer au palier suivant uniquement si la tolérance digestive et métabolique est bonne (K, Ph, Mg quotidiens J1–J5) ; sinon rester au palier. <strong>Si réaggravation</strong> (reprise ou majoration des catécholamines) : revenir aux cibles du choc (≤ 10 kcal/kg/j, ≤ 0,4 g/kg/j).</span></div>
+    ${state.sriRisk ? `<div class="warn-box" style="background:var(--amberDim); color:var(--amber);">${ICONS.alert}<span>Corriger K, Ph, Mg avant de débuter. 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/kg/j toutes les 24–48 h : cible atteinte en 7 à 10 jours. Thiamine (B1) 200–300 mg/j.</span></div>` : ''}
   </div>
 
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.info}</div>
-      <div><h2>Généralités</h2><p class="subtext">Initiation, contre-indications, apports non nutritionnels</p></div></div>
-    ${step('', "<strong>Initiation</strong> dans les 48 h suivant l'admission si possible, au moins à visée trophique (10-20 mL/h).")}
-    ${step('', "<strong>Différer la NE</strong> en cas de défaillance hémodynamique (ex. NAD &gt; 1 µg/kg/min, lactatémie non clairée) ou respiratoire non contrôlée, hémorragie digestive, fistule intestinale à haut débit, ischémie digestive ou syndrome du compartiment abdominal.")}
-    ${step('', "<strong>NP d'emblée</strong> si contre-indication prolongée à la voie entérale, ou <strong>à J5-J7</strong> en cas d'intolérance à la NE pleine dose (apports entéraux &lt; 70 % de la cible).")}
-    ${step('', "Possibilité d'atteindre les objectifs de J7 plus rapidement en cas d'amélioration clinique rapide.")}
-    <div class="info-box" style="margin-top:4px;">${ICONS.info}<span><strong>Apports non nutritionnels</strong> (jusqu'à 30 % des apports chez un patient sédaté et épuré) : calories endogènes liées au catabolisme 500-1400 kcal/j ; calories exogènes liées aux traitements 400-600 kcal/j en phase aiguë (citrate ≈ 250-350 kcal/j). Propofol : 1,1 kcal/mL — Glucose : 4 kcal/g — Citrate : 0,59 kcal/mmol.</span></div>
+      <div><h2>Généralités</h2><p class="subtext">Initiation, contre-indications, voies, surveillance</p></div></div>
+    ${step('', "<strong>Initiation</strong> dans les 48 h suivant l'admission, en l'absence de contre-indication.")}
+    ${step('', "<strong>Pas de nutrition</strong> si défaillance non contrôlée : choc non contrôlé (hyperlactatémie / hypoperfusion persistante, vasopresseurs croissants), hypoxémie ou hypercapnie sévère non stabilisée, acidose métabolique persistante.")}
+    ${step('', "<strong>Contre-indications à la NE</strong> : hémorragie digestive haute non contrôlée, ischémie intestinale suspectée ou avérée, occlusion, syndrome du compartiment abdominal, fistule digestive à haut débit sans accès distal.")}
+    ${step('', "<strong>Voie</strong> : NE ou NP indifféremment à cible égale. <strong>Choc : pas d'association NE + NP.</strong> Une fois stabilisé, NP complémentaire possible si la NE ne permet pas d'atteindre la cible (intolérance).")}
+    ${step('', "<strong>Surveillance</strong> : K, Ph, Mg <strong>tous les jours de J1 à J5</strong> de la nutrition. Si NP ou propofol à dose élevée : bilan hépatique ×2/semaine et triglycérides ×1/semaine ; si TG &gt; 4,5 mmol/L, réduire ou suspendre les lipides / le propofol.")}
+    <div class="info-box" style="margin-top:4px;">${ICONS.info}<span><strong>Apports non nutritionnels</strong> (≈ 3–5 kcal/kg/j en phase initiale) : propofol 1,1 kcal/mL (1 % comme 2 % → préférer le 2 %), glucose 4 kcal/g (1 L : G2,5 % = 100, G5 % = 200, G10 % = 400, G30 % = 1200 kcal), citrate 0,59 kcal/mmol ≈ 3 kcal/g (≈ 200–250 kcal/j).</span></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.activity}</div>
+      <div><h2>Dénutrition</h2><p class="subtext">Diagnostic HAS : ≥ 1 critère phénotypique + ≥ 1 critère étiologique</p></div></div>
+    <div class="grid grid-2">
+      <div><div class="field-label" style="margin-bottom:6px;">Critères phénotypiques</div>
+        <div style="font-size:13px; line-height:1.6;">— Perte de poids ≥ 5 % en 1 mois, ≥ 10 % en 6 mois ou ≥ 10 % du poids habituel<br>— IMC &lt; 18,5 kg/m² (&lt; 22 si ≥ 70 ans)<br>— Réduction de la force (si réalisable) ou de la masse musculaire</div></div>
+      <div><div class="field-label" style="margin-bottom:6px;">Critères étiologiques</div>
+        <div style="font-size:13px; line-height:1.6;">— Réduction de la prise alimentaire<br>— Malabsorption / maldigestion<br>— Situation d'agression (pathologie aiguë critique)</div></div>
+    </div>
+    <div class="info-box">${ICONS.info}<span><strong>Sévérité</strong> (albuminémie) : modérée 30–35 g/L, sévère ≤ 30 g/L. Tout patient admis en soins critiques est à risque nutritionnel.</span></div>
   </div>`;
   return html;
 }
@@ -502,7 +584,7 @@ function renderMicro(){
       <div class="badgeval" style="color:var(--teal); background:var(--tealDim); font-family:var(--fontMono); font-weight:500;">5/10/100/100</div></div>
     <div class="row-item"><div><div class="t">Vitamine K1</div><div class="s">Non contenue dans les mélanges de NP</div></div>
       <div class="badgeval" style="color:var(--teal); background:var(--tealDim); font-family:var(--fontMono); font-weight:500;">5 mg x2/sem</div></div>
-    <div class="info-box">${ICONS.info}<span><strong>Surveillance :</strong> bilan hépatique (BH) et TP au moins 1x/semaine. En cas de dysfonction hépato-biliaire sévère : diminuer le débit de 25 à 50 %, voire arrêter la NP et réaliser une imagerie (pathologie vésiculaire ou biliaire).</span></div>
+    <div class="info-box">${ICONS.info}<span><strong>Surveillance :</strong> bilan hépatique (BH) et TP ×2/semaine, triglycérides ×1/semaine (TG &gt; 4,5 mmol/L : réduire ou suspendre les lipides). En cas de dysfonction hépato-biliaire sévère : diminuer le débit de 25 à 50 %, voire arrêter la NP et réaliser une imagerie (pathologie vésiculaire ou biliaire).</span></div>
   </div>
 
   <div class="card">
@@ -560,8 +642,8 @@ function renderCompl(){
       <div><h2>Intolérance digestive à la NE</h2><p class="subtext">Vomissements ou régurgitations en dehors des soins</p></div></div>
     ${step(1,"Vérifier le positionnement de la SNG, la présence de BHA, un transit récent (TR si absent) et l'absence de complication digestive (TDM AP).")}
     ${step(2,"Pause d'alimentation 2 h, puis reprise à 2/3 du débit.")}
-    ${step(3,"Si récidive : nouvelle pause de 2 h + prokinétiques — <strong>érythromycine 100 mg x4/j</strong> ± <strong>métoclopramide 10 mg x3/j</strong> pendant 2 à 5 jours (mesurer le QT avant introduction).")}
-    ${step(4,"Si réfractaire : discuter une sonde post-pylorique (risque de distension abdominale, ischémie mésentérique).")}
+    ${step(3,"Si récidive : nouvelle pause de 2 h + prokinétiques — <strong>érythromycine 100–250 mg x3/j IVL</strong> (3–7 mg/kg/j) et/ou <strong>métoclopramide 10 mg x3/j IVL</strong>, <strong>pendant 48–72 h</strong> (tachyphylaxie). Mesurer le QT avant introduction.")}
+    ${step(4,"Si échec des prokinétiques : sonde post-pylorique ou jéjunale (risque de distension abdominale, ischémie mésentérique).")}
     <div class="info-box">Décubitus ventral : pas d'arrêt de la NE, 20 kcal/kg/j maximum, lit proclive 20–30°.</div>
   </div>
   <div class="card">
@@ -579,10 +661,21 @@ function renderCompl(){
       <div><h2>Constipation</h2><p class="subtext">&lt; 3 selles / semaine</p></div></div>
     ${step(1,"Éliminer un fécalome (TR).")}
     ${step(2,"Soluté à base de fibres mixtes (gomme de guar, amidon, cellulose, pectine) en 1<sup>re</sup> intention : Nutrison Prot NRJ Multifibres.")}
-    ${step(3,"Laxatifs (systématiques d'emblée si morphiniques) : <strong>macrogol</strong> 20 g matin, <strong>trimébutine</strong> (Debridat) 100 mg x3–6/j, <strong>bisacodyl</strong> (Dulcolax) 10 mg matin, pruneaux matin/midi ou jus de pruneaux 200 mL matin/midi ; <strong>naloxégol</strong> (Moventig) 25 mg matin ou <strong>méthylnaltrexone</strong> (Relistor) SC 12 mg/2j si morphiniques dans les 24 dernières heures.")}
-    ${step(4,"Si insuffisant : <strong>Gastrografine</strong> 100 mL une fois, PO ou SNG (ASP inutile).")}
-    ${step(5,"Si insuffisant : <strong>néostigmine</strong> 2–3 mg IVL sur 1 h, possible en IVSE sur plusieurs heures voire 24 h chez les patients fragiles (seulement si scanner objectivant l'absence d'obstacle mécanique).")}
+    ${step(3,"<strong>Massages abdominaux protocolisés</strong> (cf. ci-dessous), en l'absence de contre-indication.")}
+    ${step(4,"Laxatifs curatifs (<strong>pas de laxatif prophylactique systématique</strong>) : <strong>macrogol</strong> 20 g matin, <strong>trimébutine</strong> (Debridat) 100 mg x3–6/j, <strong>bisacodyl</strong> (Dulcolax) 10 mg matin, pruneaux matin/midi ou jus de pruneaux 200 mL matin/midi ; <strong>naloxégol</strong> (Moventig) 25 mg matin ou <strong>méthylnaltrexone</strong> (Relistor) SC 12 mg/2j si constipation sous morphiniques (pas en systématique).")}
+    ${step(5,"Si insuffisant : <strong>Gastrografine</strong> 100 mL une fois, PO ou SNG (ASP inutile).")}
+    ${step(6,"Si insuffisant : <strong>néostigmine</strong> 2–3 mg IVL sur 1 h, possible en IVSE sur plusieurs heures voire 24 h chez les patients fragiles (seulement si scanner objectivant l'absence d'obstacle mécanique).")}
     <div class="info-box">${ICONS.info}<span>Pour les laxatifs osmotiques (macrogol, lactulose), il est préférable de les administrer <strong>2 par 2</strong> afin de réaliser une charge osmotique.</span></div>
+  </div>
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.activity}</div>
+      <div><h2>Massages abdominaux protocolisés</h2><p class="subtext">Constipation, distension · confort et tolérance de la NE</p></div></div>
+    ${step('','<strong>Préparation</strong> : arrêt de la NE 30 min avant, installation en décubitus dorsal.')}
+    ${step(1,'<strong>Pression et caresse</strong> dans le sens des aiguilles d\'une montre.')}
+    ${step(2,'<strong>Tapotements</strong> à 4 doigts, le long du cadre colique.')}
+    ${step(3,'<strong>Pétrissage</strong> : côlon droit de bas en haut, côlon gauche de haut en bas.')}
+    ${step(4,'<strong>Vibrations</strong> : paroi stimulée par la paume de la main.')}
+    <div class="info-box">${ICONS.info}<span>Matin et soir, 15 min au total (installation + 3 min par étape), <strong>3 jours consécutifs</strong>, par IDE/AS formé. Contre-indications : tumeur abdominale, péritonite, ascite, iléus ou occlusion, hémorragie digestive, chirurgie abdominale récente, traumatisme abdominal, refus du patient.</span></div>
   </div>
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.alert}</div>
@@ -602,22 +695,15 @@ function renderSri(){
       <div class="stat"><div class="field-label" style="margin-bottom:8px;">Conséquences possibles</div>
         <div style="font-size:13px; line-height:1.6;">Hypophosphorémie, hypomagnésémie, hypokaliémie, hyperglycémie, béri-béri (carence en thiamine), rétention hydrosodée ou défaillances d'organe (cardiaque, neurologique, respiratoire, rénale, hépatique, musculaire, hématologique). L'hypophosphatémie est la conséquence biologique la plus grave.</div></div>
       <div class="stat"><div class="field-label" style="margin-bottom:8px;">Prévention</div>
-        <div style="font-size:13px; line-height:1.6;">Début à 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/24–48 h jusqu'à la cible (7 à 10 jours). Vitamine B1 300 mg/j pendant 5 jours. Prudence avec les apports caloriques non nutritionnels.</div></div>
+        <div style="font-size:13px; line-height:1.6;">Corriger K, Ph et Mg <strong>avant</strong> d'initier la nutrition. Début à 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/kg/j toutes les 24–48 h jusqu'à la cible (7 à 10 jours). Thiamine (B1) 200–300 mg/j pendant 5 jours. Micronutriments à dose journalière. Prudence avec les apports caloriques non nutritionnels.</div></div>
     </div>
   </div>
 
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.clip}</div>
-      <div><h2>Facteurs de risque</h2><p class="subtext">Un seul critère majeur, ou au moins deux critères mineurs, définit un patient à risque</p></div></div>
-    <div class="grid grid-2">
-      <div class="stat" style="background:var(--redDim); border:1px solid rgba(239,93,111,.35);">
-        <div class="field-label" style="color:var(--red); margin-bottom:10px;">Critères majeurs — un seul suffit</div>
-        ${SRI_CRITERES_MAJEURS.map(c=>`<div style="font-size:13px; line-height:1.6; margin-bottom:6px; color:var(--text);">— ${c}</div>`).join('')}
-      </div>
-      <div class="stat" style="background:var(--amberDim); border:1px solid rgba(242,169,59,.35);">
-        <div class="field-label" style="color:var(--amber); margin-bottom:10px;">Critères mineurs — au moins deux</div>
-        ${SRI_CRITERES_MINEURS.map(c=>`<div style="font-size:13px; line-height:1.6; margin-bottom:6px; color:var(--text);">— ${c}</div>`).join('')}
-      </div>
+      <div><h2>Facteurs de risque</h2><p class="subtext">RFE SFAR/HAS 2026</p></div></div>
+    <div class="stat" style="background:var(--amberDim); border:1px solid rgba(242,169,59,.35);">
+      ${SRI_FACTEURS.map(c=>`<div style="font-size:13px; line-height:1.6; margin-bottom:6px; color:var(--text);">— ${c}</div>`).join('')}
     </div>
   </div>
 
@@ -634,7 +720,7 @@ function renderSri(){
       <div class="badgeval" style="color:var(--red); background:var(--redDim); text-align:right;">Suspension de la nutrition</div>
     </div>
     <div class="info-box" style="border:1px solid rgba(239,93,111,.35);"><span><strong>Phocytan</strong> 0,66 mM/mL (1800 mOsm/L) : 10 mL = 300 mg de sodium (= SSH 3 %) + 1 g de glucose. Attention aux recharges : <strong style="color:var(--red);">ne pas dépasser 20 mmol/h, soit 30 mL/h</strong>.</span></div>
-    <div class="info-box"><span><strong>Surveillance :</strong> iono plasmatique minimum x2/j si SRI avéré. ECG si trouble ionique sévère.</span></div>
+    <div class="info-box"><span><strong>Surveillance :</strong> K, Ph, Mg tous les jours de J1 à J5 de la nutrition (tout patient) ; iono plasmatique au minimum x2/j si SRI avéré. ECG si trouble ionique sévère.</span></div>
   </div>`;
 }
 
@@ -642,7 +728,7 @@ function renderSri(){
 function renderDebit(){
   const products = DEBIT_PRODUCTS[state.debitVoie];
   const product = products.find(p => p.id === state.debitProduitId) || products[0];
-  const { result, kcalTarget } = getTargets();
+  const { result, kcalNutri: kcalTarget, kcalTarget: kcalBrut, nn } = getTargets();
   const poidsNutri = result ? result.poidsNutritionnel : null;
 
   const sourceTabs = `
@@ -675,7 +761,7 @@ function renderDebit(){
       <label class="field" style="margin-bottom:14px; display:block;">
         <span class="field-label">Cible calorique (kcal/j)</span>
         <div class="input-wrap"><input type="number" id="f-debit-kcal" value="${state.debitKcalManuel !== "" ? state.debitKcalManuel : (kcalTarget ? round(kcalTarget) : "")}" placeholder="${kcalTarget ? round(kcalTarget) : 'Renseigner la cible dans Calculateur'}"><span class="unit">kcal/j</span></div>
-        <div class="subtext" style="margin-top:6px;">${kcalTarget ? `Pré-rempli depuis l'onglet Calculateur (${round(kcalTarget)} kcal/j)` : "Renseigner taille/poids dans l'onglet Calculateur pour pré-remplir"}</div>
+        <div class="subtext" style="margin-top:6px;">${kcalTarget ? `Pré-rempli depuis l'onglet Calculateur : nutrition à prescrire, apports non nutritionnels déduits (${round(kcalTarget)} kcal/j)` : "Renseigner taille/poids dans l'onglet Calculateur pour pré-remplir"}</div>
       </label>
       <label class="field" style="margin-bottom:16px; display:block;">
         <span class="field-label">Mode d'administration</span>
@@ -685,57 +771,44 @@ function renderDebit(){
         </div>
       </label>`;
 
+    // Deux scénarios : avec déduction des apports non nutritionnels (référence) et sans déduction
+    const scenarios = [];
     if (kcalManuel && !isNaN(kcalManuel) && kcalManuel > 0){
-      const volumeTotal = kcalManuel / product.kcalPerMl;
+      const withNN = state.debitKcalManuel === "" && nn.total > 0;
+      scenarios.push({ kcal:kcalManuel, titre: withNN ? `Apports non nutritionnels déduits (${round(nn.total)} kcal/j)` : '', main:true });
+      if (withNN && kcalBrut > 0) scenarios.push({ kcal:kcalBrut, titre:'Sans tenir compte des apports non nutritionnels', main:false });
+    }
+    const statBox = (lbl, val, unit, main) => `
+          <div class="stat" ${main ? 'style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);"' : ''}>
+            <div class="lbl" ${main ? 'style="color:var(--teal);"' : ''}>${lbl}</div>
+            <div class="val" ${main ? 'style="color:var(--teal);"' : ''}>${val} <span style="font-size:13px;">${unit}</span></div>
+          </div>`;
+    scenarios.forEach(sc => {
+      const volumeTotal = sc.kcal / product.kcalPerMl;
       const proteinesJ = volumeTotal * (product.protPer100ml/100);
       const proteinesKg = poidsNutri ? proteinesJ/poidsNutri : null;
-
+      const head = sc.titre ? `<div class="field-label" style="margin:${sc.main?'8px':'22px'} 0 6px; ${sc.main?'color:var(--teal);':''}">${sc.titre} · ${round(sc.kcal)} kcal/j</div>` : '';
       if (state.debitDureeType === "continu"){
-        const debitH = volumeTotal / 24;
-        resultsHtml += `
+        resultsHtml += head + `
         <div class="grid grid-2" style="margin-top:8px;">
-          <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
-            <div class="lbl" style="color:var(--teal);">Volume total</div>
-            <div class="val" style="color:var(--teal);">${round(volumeTotal)} <span style="font-size:13px;">mL/j</span></div>
-          </div>
-          <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
-            <div class="lbl" style="color:var(--teal);">Débit continu (24 h)</div>
-            <div class="val" style="color:var(--teal);">${round(debitH,1)} <span style="font-size:13px;">mL/h</span></div>
-          </div>
-          <div class="stat">
-            <div class="lbl">Protéines apportées</div>
-            <div class="val">${round(proteinesJ,1)} <span style="font-size:13px;">g/j</span></div>
-          </div>
-          <div class="stat">
-            <div class="lbl">Protéines / kg</div>
-            <div class="val">${proteinesKg ? round(proteinesKg,2) : '—'} <span style="font-size:13px;">g/kg/j</span></div>
-          </div>
+          ${statBox('Volume total', round(volumeTotal), 'mL/j', sc.main)}
+          ${statBox('Débit continu (24 h)', round(volumeTotal/24,1), 'mL/h', sc.main)}
+          ${statBox('Protéines apportées', round(proteinesJ,1), 'g/j', false)}
+          ${statBox('Protéines / kg', proteinesKg ? round(proteinesKg,2) : '—', 'g/kg/j', false)}
         </div>`;
       } else {
         const volumeAdmin = volumeTotal / 3;
-        const debitAdmin = volumeAdmin / 3;
-        resultsHtml += `
-        <div class="subtext" style="margin-bottom:10px;">3 administrations par jour, chacune sur 3 h</div>
+        resultsHtml += head + `
+        ${sc.main ? '<div class="subtext" style="margin-bottom:10px;">3 administrations par jour, chacune sur 3 h</div>' : ''}
         <div class="grid grid-2" style="margin-top:8px;">
-          <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
-            <div class="lbl" style="color:var(--teal);">Volume par administration</div>
-            <div class="val" style="color:var(--teal);">${round(volumeAdmin)} <span style="font-size:13px;">mL / 3h</span></div>
-          </div>
-          <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
-            <div class="lbl" style="color:var(--teal);">Débit horaire</div>
-            <div class="val" style="color:var(--teal);">${round(debitAdmin,1)} <span style="font-size:13px;">mL/h</span></div>
-          </div>
-          <div class="stat">
-            <div class="lbl">Volume total</div>
-            <div class="val">${round(volumeTotal)} <span style="font-size:13px;">mL/j</span></div>
-          </div>
-          <div class="stat">
-            <div class="lbl">Protéines apportées</div>
-            <div class="val">${round(proteinesJ,1)} <span style="font-size:13px;">g/j</span></div>
-          </div>
+          ${statBox('Volume par administration', round(volumeAdmin), 'mL / 3h', sc.main)}
+          ${statBox('Débit horaire', round(volumeAdmin/3,1), 'mL/h', sc.main)}
+          ${statBox('Volume total', round(volumeTotal), 'mL/j', false)}
+          ${statBox('Protéines apportées', round(proteinesJ,1), 'g/j', false)}
         </div>`;
       }
-    } else {
+    });
+    if (!scenarios.length){
       resultsHtml += `<div class="info-box">${ICONS.info}<span>Renseigner une cible calorique (ou la calculer dans l'onglet Calculateur) pour obtenir le débit.</span></div>`;
     }
 
@@ -746,8 +819,28 @@ function renderDebit(){
       // paliers uniques (évite les doublons quand plusieurs jours partagent le même palier)
       const paliers = [...new Set(progression.map(r => round(r.kcal,2)))];
       resultsHtml += `
-      <div class="field-label" style="margin:20px 0 10px;">Débits par palier de progression (${state.sriRisk ? 'protocole SRI' : 'progression standard'})</div>
+      <div class="field-label" style="margin:20px 0 10px;">Débits par palier de progression (${state.sriRisk ? 'protocole SRI' : 'progression standard'})${nn.total>0 ? ` · apports non nutritionnels : ${round(nn.total)} kcal/j` : ''}</div>
       <div style="overflow-x:auto;">
+      ${nn.total>0 ? `
+      <table>
+        <thead><tr><th>Palier (total)</th><th>Non nutritionnel déduit</th><th>Sans déduction</th></tr></thead>
+        <tbody>
+          ${paliers.map(palier => {
+            const cell = kcalJ => {
+              const volume = kcalJ / product.kcalPerMl;
+              const debit = state.debitDureeType==='continu' ? volume/24 : volume/9;
+              const prot = volume * (product.protPer100ml/100);
+              return `<strong>${round(debit,1)} mL/h</strong>${state.debitDureeType==='continu' ? '' : ` (${round(volume/3)} mL/3h)`}<br><span class="subtext">${round(kcalJ)} kcal · ${round(prot,1)} g prot</span>`;
+            };
+            return `<tr>
+              <td class="strong">${palier} kcal/kg/j</td>
+              <td>${cell(Math.max(0, palier*poidsNutri - nn.total))}</td>
+              <td>${cell(palier*poidsNutri)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+      <div class="subtext" style="margin-top:8px;">Débit ${state.debitDureeType==='continu' ? 'continu sur 24 h' : 'horaire en discontinu (3 administrations de 3 h/j)'}.</div>` : `
       <table>
         <thead><tr><th>Palier</th><th>kcal/j</th><th>Continu 24h</th><th>Discontinu — vol./3h</th><th>Discontinu — débit</th><th>Protéines</th></tr></thead>
         <tbody>
@@ -768,7 +861,7 @@ function renderDebit(){
             </tr>`;
           }).join('')}
         </tbody>
-      </table>
+      </table>`}
       </div>
       <div class="subtext" style="margin-top:8px;">Discontinu = 3 administrations de 3 h/j. Les protéines apportées par jour ne dépendent pas du mode (continu/discontinu), seul le débit horaire change. Paliers et statut SRI repris de l'onglet Calculateur.</div>`;
     }
@@ -872,10 +965,14 @@ function render(){
 
 function bindEvents(){
   document.querySelectorAll('[data-act="tab"]').forEach(el=>el.addEventListener('click', ()=>{ state.tab = el.dataset.val; render(); }));
-  document.querySelectorAll('[data-act="sexe"]').forEach(el=>el.addEventListener('click', ()=>{ state.sexe = el.dataset.val; render(); }));
-  document.querySelectorAll('[data-act="phase"]').forEach(el=>el.addEventListener('click', ()=>{ state.phaseKey = el.dataset.val; state.kcalRatio = 1; state.eercRehab = false; render(); }));
+  document.querySelectorAll('[data-act="renal"]').forEach(el=>el.addEventListener('click', ()=>{ state.renal = el.dataset.val; render(); }));
+  document.querySelectorAll('[data-act="propofolConc"]').forEach(el=>el.addEventListener('click', ()=>{ state.propofolConc = parseInt(el.dataset.val); render(); }));
+  [['f-propofol','propofolDebit'],['f-g25','g25'],['f-g5','g5'],['f-g10','g10'],['f-g30','g30'],['f-citqsg','citQsg'],['f-citdose','citDose']].forEach(([id,key])=>{
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', e=>{ state[key] = e.target.value; debouncedRenderPartial(); });
+  });
+  document.querySelectorAll('[data-act="phase"]').forEach(el=>el.addEventListener('click', ()=>{ state.phaseKey = el.dataset.val; state.kcalRatio = 1; render(); }));
   document.querySelectorAll('[data-act="microcheck"]').forEach(el=>el.addEventListener('click', ()=>{ const id = el.dataset.val; state.checked[id] = !state.checked[id]; render(); }));
-  document.querySelectorAll('[data-act="eercRehab"]').forEach(el=>el.addEventListener('click', ()=>{ state.eercRehab = !state.eercRehab; render(); }));
   document.querySelectorAll('[data-act="debitSource"]').forEach(el=>el.addEventListener('click', ()=>{ state.debitSource = el.dataset.val; render(); }));
   document.querySelectorAll('[data-act="debitVoie"]').forEach(el=>el.addEventListener('click', ()=>{ state.debitVoie = el.dataset.val; state.debitProduitId = DEBIT_PRODUCTS[state.debitVoie][0].id; render(); }));
   document.querySelectorAll('[data-act="debitDureeType"]').forEach(el=>el.addEventListener('click', ()=>{ state.debitDureeType = el.dataset.val; render(); }));
