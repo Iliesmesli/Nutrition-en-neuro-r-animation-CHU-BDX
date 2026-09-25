@@ -85,6 +85,10 @@
   td{padding:9px 0; border-top:1px solid var(--border); color:var(--textMuted);}
   td.strong{color:var(--text); font-weight:500;}
 
+  summary::-webkit-details-marker{display:none;}
+  .chips{display:flex; flex-wrap:wrap; gap:8px;}
+  .chip{font-size:13px; padding:8px 12px; border-radius:999px; border:1px solid var(--borderLight); background:var(--elevated); color:var(--textMuted); cursor:pointer; font-family:var(--fontBody);}
+  .chip.active{background:var(--tealDim); border-color:var(--teal); color:var(--teal);}
   .checkrow{display:flex; align-items:flex-start; gap:10px; border-radius:10px; padding:12px; background:var(--elevated); margin-bottom:8px; cursor:pointer;}
   .checkrow.checked{background:var(--elevated2);}
   .checkrow input{width:17px; height:17px; margin-top:2px; accent-color:var(--teal); flex-shrink:0;}
@@ -159,7 +163,7 @@ const LIPID_PROFILES = [
 const MICRO_ROUTINE = [
   { nom:"Cernevit", dose:"5 mL/j IVL 2 h", condition:"Tant que NE < 1500 kcal/j" },
   { nom:"Nutryelt", dose:"10 mL/j IVL 2 h", condition:"Tant que NE < 1500 kcal/j" },
-  { nom:"Alvityl Vitalité", dose:"1 cp/j", condition:"Si NE > 1500 kcal/j ou alimentation orale insuffisante" },
+  { nom:"Alvityl Vitalité", dose:"1 cp/j", condition:"Si alimentation orale insuffisante, ou en relais à l'arrêt de la NE (inutile si NE ≥ 1500 kcal/j : le soluté couvre les besoins)" },
   { nom:"Vitamine B1", dose:"100–300 mg/j jusqu'à J3–J5", condition:"Tout patient de réanimation / post-op lourd" },
   { nom:"Sélénium", dose:"100 µg/j pendant 5 j (max 2 sem.)", condition:"Patient grave" }
 ];
@@ -192,12 +196,14 @@ const SRI_FACTEURS = [
 ];
 
 const MICRO_SPECIFIQUES = [
-  { id:"ethylique", label:"Éthylisme chronique", detail:"Vitamine B1 500 mg/j + B6 250 mg/j pendant 5 jours ; ou PrinciB 2 cp/j si voie orale possible" },
-  { id:"eerc", label:"Épuration extra-rénale continue (EERc)", detail:"Cernevit 10 mL/j, Nutryelt 20 mL/j, B1 200 mg/j, Sélénium 100 µg/j" },
-  { id:"cholestase", label:"Cholestase importante", detail:"Vitamine K1 IV 5 mg x2/semaine (absente du Cernevit, de l'Alvityl et de la NP)" },
-  { id:"cotrimoxazole", label:"Traitement par cotrimoxazole", detail:"Acide folique 5 mg/j pendant toute la durée du traitement" },
-  { id:"escarre", label:"Escarre sévère / cicatrisation difficile", detail:"Zinc 10 à 30 mg/j" },
-  { id:"malabsorption", label:"Malabsorption", detail:"Penser à supplémenter par voie IV" }
+  { id:"ethylique", short:"Alcool", label:"Éthylisme chronique", detail:"Vitamine B1 500 mg/j + B6 250 mg/j pendant 5 jours ; ou PrinciB 2 cp/j si voie orale possible ; + Cernevit 5 mL et Nutryelt 10 mL/j tant que les apports sont < 1500 kcal/j" },
+  { id:"sri", short:"Risque de SRI", label:"Risque de syndrome de renutrition inappropriée (SRI)", detail:"Vitamine B1 200–300 mg/j pendant 5 jours + Cernevit 5 mL et Nutryelt 10 mL/j tant que les apports sont < 1500 kcal/j" },
+  { id:"eerc", short:"EERc", label:"Épuration extra-rénale continue (EERc)", detail:"Cernevit 10 mL/j, Nutryelt 20 mL/j, B1 200 mg/j, Sélénium 100 µg/j" },
+  { id:"cholestase", short:"Cholestase", label:"Cholestase importante", detail:"Vitamine K1 IV 5 mg x2/semaine (absente du Cernevit, de l'Alvityl et de la NP)" },
+  { id:"cotrimoxazole", short:"Cotrimoxazole", label:"Traitement par cotrimoxazole", detail:"Acide folique 5 mg/j pendant toute la durée du traitement" },
+  { id:"escarre", short:"Escarre / cicatrisation", label:"Escarre sévère / cicatrisation difficile", detail:"Zinc 10 à 30 mg/j" },
+  { id:"cirrhose", short:"Cirrhose", label:"Cirrhose", detail:"Zinc seulement si carence confirmée ou suspectée : 0,5–1 mg/kg/j de zinc élément PO pendant 3–4 mois" },
+  { id:"malabsorption", short:"Malabsorption", label:"Malabsorption", detail:"Penser à supplémenter par voie IV" }
 ];
 
 // Compositions nutritionnelles (kcal/mL, protéines mg/mL, osmolarité mOsm/L)
@@ -225,6 +231,9 @@ const state = {
   // Apports non nutritionnels
   propofolConc: 1, propofolDebit: "", g25: "", g5: "", g10: "", g30: "", citQsg: "", citDose: "",
   checked: {},
+  microMode: "",
+  survMode: "", survChecked: {},
+  poPoidsHab: "", poAlb: "", poDelai: "6m", poInterv: "", poNonOnco: false, poFdrList: {}, poFdrOpen: false, poMuscle: false, poCfs: 0, poCfsOpen: false, poASA: false, poDiabete: false, poSansSel: false, poApportsNeg: false,
   soluteSituation: "",
   // Débits
   debitVoie: "enterale",
@@ -287,6 +296,7 @@ const ICONS = {
   activity: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
   info: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
   clip: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>',
+  eye: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
   syringe: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0-1-1-1-2.5 0-3.4L15.6 5.6"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/></svg>'
 };
 
@@ -301,11 +311,13 @@ const FUN_LOGO_SVG = `<svg viewBox="0 0 40 40" width="34" height="34" xmlns="htt
 
 const TABS = [
   { key:"calc", label:"Calculateur", icon:ICONS.calc },
+  { key:"preop", label:"Pré-op", icon:ICONS.clip },
   { key:"solutes", label:"Solutés", icon:ICONS.flask },
   { key:"debit", label:"Débits", icon:ICONS.syringe },
   { key:"micro", label:"Micronutriments", icon:ICONS.pill },
   { key:"compl", label:"Complications", icon:ICONS.alert },
-  { key:"sri", label:"SRI", icon:ICONS.activity }
+  { key:"sri", label:"SRI", icon:ICONS.activity },
+  { key:"surv", label:"Surveillance", icon:ICONS.eye }
 ];
 
 /* ---------------- SHARED: cibles nutritionnelles ---------------- */
@@ -466,8 +478,8 @@ function renderCalc(){
     </div>
     <div class="subtext" style="margin-top:10px;">kcal/kg/j (apports totaux) par jour de nutrition · ${state.phaseKey==='aigue' ? 'phase de choc : rester ≤ 10 kcal/kg/j' : `cible atteinte à J${progression[progression.length-1]?.day} si bonne tolérance`}</div>
     ` : ''}
-    <div class="info-box">${ICONS.info}<span>Passer au palier suivant uniquement si la tolérance digestive et métabolique est bonne (K, Ph, Mg quotidiens J1–J5) ; sinon rester au palier. <strong>Si réaggravation</strong> (reprise ou majoration des catécholamines) : revenir aux cibles du choc (≤ 10 kcal/kg/j, ≤ 0,4 g/kg/j).</span></div>
-    ${state.sriRisk ? `<div class="warn-box" style="background:var(--amberDim); color:var(--amber);">${ICONS.alert}<span>Corriger K, Ph, Mg avant de débuter. 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/kg/j toutes les 24–48 h : cible atteinte en 7 à 10 jours. Thiamine (B1) 200–300 mg/j.</span></div>` : ''}
+    <div class="info-box">${ICONS.info}<span>Passer au palier suivant uniquement si la tolérance digestive et métabolique est bonne (K, phosphate, Mg quotidiens J1–J5) ; sinon rester au palier. <strong>Si réaggravation</strong> (reprise ou majoration des catécholamines) : revenir aux cibles du choc (≤ 10 kcal/kg/j, ≤ 0,4 g/kg/j).</span></div>
+    ${state.sriRisk ? `<div class="warn-box" style="background:var(--amberDim); color:var(--amber);">${ICONS.alert}<span>Corriger K, phosphate, Mg avant de débuter. 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/kg/j toutes les 24–48 h : cible atteinte en 7 à 10 jours. Thiamine (B1) 200–300 mg/j.</span></div>` : ''}
   </div>
 
   <div class="card">
@@ -477,7 +489,7 @@ function renderCalc(){
     ${step('', "<strong>Pas de nutrition</strong> si défaillance non contrôlée : choc non contrôlé (hyperlactatémie / hypoperfusion persistante, vasopresseurs croissants), hypoxémie ou hypercapnie sévère non stabilisée, acidose métabolique persistante.")}
     ${step('', "<strong>Contre-indications à la NE</strong> : hémorragie digestive haute non contrôlée, ischémie intestinale suspectée ou avérée, occlusion, syndrome du compartiment abdominal, fistule digestive à haut débit sans accès distal.")}
     ${step('', "<strong>Voie</strong> : NE ou NP indifféremment à cible égale. <strong>Choc : pas d'association NE + NP.</strong> Une fois stabilisé, NP complémentaire possible si la NE ne permet pas d'atteindre la cible (intolérance).")}
-    ${step('', "<strong>Surveillance</strong> : K, Ph, Mg <strong>tous les jours de J1 à J5</strong> de la nutrition. Si NP ou propofol à dose élevée : bilan hépatique ×2/semaine et triglycérides ×1/semaine ; si TG &gt; 4,5 mmol/L, réduire ou suspendre les lipides / le propofol.")}
+    ${step('', "<strong>Surveillance</strong> : K, phosphate, Mg <strong>tous les jours de J1 à J5</strong> de la nutrition. Si NP ou propofol à dose élevée : bilan hépatique ×2/semaine et triglycérides ×1/semaine ; si TG &gt; 4,5 mmol/L, réduire ou suspendre les lipides / le propofol.")}
     <div class="info-box" style="margin-top:4px;">${ICONS.info}<span><strong>Apports non nutritionnels</strong> (≈ 3–5 kcal/kg/j en phase initiale) : propofol 1,1 kcal/mL (1 % comme 2 % → préférer le 2 %), glucose 4 kcal/g (1 L : G2,5 % = 100, G5 % = 200, G10 % = 400, G30 % = 1200 kcal), citrate 0,59 kcal/mmol ≈ 3 kcal/g (≈ 200–250 kcal/j).</span></div>
   </div>
 
@@ -563,43 +575,116 @@ function renderSolutes(){
 }
 
 /* ---------------- RENDER: MICRONUTRIMENTS ---------------- */
+const MICRO_MODES = [
+  { v:"np", label:"Nutrition parentérale (exclusive ou complémentaire)" },
+  { v:"ne_low", label:"Nutrition entérale < 1500 kcal/j" },
+  { v:"ne_high", label:"Nutrition entérale ≥ 1500 kcal/j" },
+  { v:"po_low", label:"Alimentation orale insuffisante" },
+  { v:"po_ok", label:"Alimentation orale suffisante" }
+];
+function microPlan(){
+  const m = state.microMode, c = state.checked;
+  if (!m) return null;
+  const items = [], notes = [];
+  const add = (nom, dose, why, opt=false) => items.push({nom, dose, why, opt});
+  // Polyvitamines / oligo-éléments
+  if (c.eerc){
+    add("Cernevit", "10 mL/j", "EERc : pertes dans l'effluent (dose doublée)");
+    add("Nutryelt", "20 mL/j", "EERc : pertes dans l'effluent (dose doublée)");
+  } else if (m==="np"){
+    add("Cernevit", "5 mL/j", "Toute NP, dès J1");
+    add("Nutryelt", "10 mL/j", "Toute NP, dès J1");
+  } else if (m==="ne_low" || (m==="po_low" && (c.ethylique || c.sri)) || (c.malabsorption && m!=="po_ok")){
+    const why = m==="ne_low" ? "NE < 1500 kcal/j" : (c.malabsorption && m!=="po_low" ? "Malabsorption : voie IV" : "Apports < 1500 kcal/j chez un patient à risque (SRI / alcool)");
+    add("Cernevit", "5 mL/j", why);
+    add("Nutryelt", "10 mL/j", why);
+  } else if (m==="po_low"){
+    add("Alvityl Vitalité", "1 cp/j", "Alimentation orale insuffisante");
+  } else if (m==="ne_high"){
+    notes.push("NE ≥ 1500 kcal/j : le soluté couvre les besoins, pas de polyvitamines ni d'oligo-éléments en plus.");
+  }
+  // Thiamine
+  if (c.ethylique){
+    add("Vitamine B1", "500 mg/j pendant 5 j", "Éthylisme chronique");
+    add("Vitamine B6", "250 mg/j pendant 5 j", "Éthylisme chronique (ou PrinciB 2 cp/j si voie orale possible)");
+  } else if (c.sri){
+    add("Vitamine B1", "200–300 mg/j pendant 5 j", "Risque de SRI");
+  } else if (c.eerc){
+    add("Vitamine B1", "200 mg/j", "EERc");
+  } else {
+    add("Vitamine B1", "100–300 mg/j jusqu'à J3–J5", "Tout patient de réanimation / post-op lourd");
+  }
+  // Sélénium
+  if (c.eerc) add("Sélénium", "100 µg/j", "EERc");
+  else if (m==="np") add("Sélénium", "100 µg/j pendant 5 j", "NP");
+  else if (m==="ne_low" || m==="po_low") add("Sélénium", "100 µg/j pendant 5 j", "Si patient grave (max 2 semaines)", true);
+  // Autres
+  if (m==="np" || c.cholestase) add("Vitamine K1 IV", "5 mg x2/sem", m==="np" ? "Absente des mélanges de NP et du Cernevit" : "Cholestase importante");
+  if (c.cotrimoxazole) add("Acide folique", "5 mg/j", "Pendant toute la durée du cotrimoxazole");
+  if (c.escarre) add("Zinc", "10–30 mg/j", "Escarre sévère / cicatrisation difficile");
+  if (c.cirrhose){
+    const pn = (()=>{ const t=parseFloat(state.taille)||0, pr=parseFloat(state.poids)||0; return (t&&pr) ? calcPoidsNutritionnel(pr,t).poidsNutritionnel : null; })();
+    add("Zinc (élément) PO", "0,5–1 mg/kg/j pendant 3–4 mois" + (pn ? ` (${Math.round(pn*0.5)}–${Math.round(pn)} mg/j)` : ""), "Cirrhose : seulement si carence confirmée ou suspectée", true);
+    notes.push("<strong>Cirrhose – suspecter une carence en zinc</strong> devant : dysgueusie ou agueusie, anorexie, lésions cutanées (dermatite autour de la bouche, du nez et des extrémités), alopécie, retard de cicatrisation, diarrhée, infections répétées. Confirmer par un zinc plasmatique interprété avec la CRP et l'albumine (abaissé par l'hypoalbuminémie). Le zinc n'améliore pas l'encéphalopathie hépatique.");
+  }
+  // Notes
+  if (items.some(i=>i.nom==="Cernevit")) notes.push("Cernevit et Nutryelt : IVL sur 2 h, à l'abri de la lumière.");
+  if (c.eerc){
+    notes.push("EERc &gt; 15 jours : doser B1, B9, vitamine C, Se, Cu, Zn (avec CRP), à répéter toutes les 2 semaines si l'EERc se prolonge. Cuivre bas ou EERc prolongée : ajouter du cuivre IV (l'ESPEN suggère environ 3 mg/j).");
+    notes.push("EERc &gt; 30 jours ou cholestase : Nutryelt ×2 apporte 110 µg/j de manganèse, non épuré par l'EER (risque d'accumulation) : envisager Nutryelt ×1 + sélénium + cuivre.");
+  }
+  if (m==="np") notes.push("NP &gt; 15 jours : doser B1, B9, Se, Cu, Zn (avec CRP et albumine). B12 seulement si anémie macrocytaire. NP &gt; 30 jours avec atteinte hépatique : doser le manganèse.");
+  return { items, notes };
+}
+
 function renderMicro(){
-  const active = MICRO_SPECIFIQUES.filter(s=>state.checked[s.id]);
+  const plan = microPlan();
   return `
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.pill}</div>
-      <div><h2>Micronutriments — en routine</h2><p class="subtext">Administration en IVL sur 2 heures</p></div></div>
+      <div><h2>Que prescrire ?</h2><p class="subtext">Choisir les apports du patient, puis les situations associées</p></div></div>
+    <label class="field" style="display:block; margin-bottom:14px;">
+      <span class="field-label">Apports nutritionnels</span>
+      <select id="f-micro-mode" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--borderLight); background:var(--elevated); color:var(--text); font-family:var(--fontBody); font-size:14px;">
+        <option value="" ${!state.microMode?'selected':''}>— Sélectionner —</option>
+        ${MICRO_MODES.map(o=>`<option value="${o.v}" ${state.microMode===o.v?'selected':''}>${o.label}</option>`).join('')}
+      </select>
+    </label>
+    <span class="field-label">Situations associées</span>
+    <div class="chips" style="margin:8px 0 4px;">
+      ${MICRO_SPECIFIQUES.map(x=>`<button class="chip ${state.checked[x.id]?'active':''}" data-act="microcheck" data-val="${x.id}">${x.short||x.label}</button>`).join('')}
+    </div>
+    ${plan ? `
+    <div class="card" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3); margin:16px 0 0;">
+      <div class="field-label" style="color:var(--teal); margin-bottom:10px;">Prescription</div>
+      ${plan.items.map(i=>`
+      <div class="row-item" style="${i.opt?'opacity:.75;':''}">
+        <div><div class="t">${i.nom}${i.opt?' <span style="font-size:11px; color:var(--textFaint);">(optionnel)</span>':''}</div><div class="s">${i.why}</div></div>
+        <div class="badgeval" style="color:var(--teal); background:var(--bg, rgba(0,0,0,.2)); font-family:var(--fontMono); font-weight:500; flex-shrink:1; max-width:55%; white-space:normal; line-height:1.35;">${i.dose}</div>
+      </div>`).join('')}
+      ${plan.notes.map(n=>`<div class="subtext" style="margin-top:8px;">${n}</div>`).join('')}
+    </div>` : `<div class="info-box">${ICONS.info}<span>Sélectionner les apports du patient pour afficher la prescription.</span></div>`}
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.pill}</div>
+      <div><h2>Repères — micronutriments en routine</h2><p class="subtext">Administration en IVL sur 2 heures</p></div></div>
     ${MICRO_ROUTINE.map(m=>`
       <div class="row-item">
         <div><div class="t">${m.nom}</div><div class="s">${m.condition}</div></div>
         <div class="badgeval" style="color:var(--teal); background:var(--tealDim); font-family:var(--fontMono); font-weight:500;">${m.dose}</div>
       </div>`).join('')}
-    <div class="subtext" style="margin-top:10px;">Pas de dosages plasmatiques en routine. Si EERc &gt; 15 jours ou NPE prolongée : doser B1, B9, B12, Se, Cu, Fe.</div>
+    <div class="subtext" style="margin-top:10px;">Pas de dosages plasmatiques en routine, toujours avec une CRP. EERc &gt; 15 jours : B1, B9, vitamine C, Se, Cu, Zn. NP &gt; 15 jours : B1, B9, Se, Cu, Zn (B12 si anémie macrocytaire ; manganèse si NP &gt; 30 jours avec atteinte hépatique).</div>
   </div>
 
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.syringe}</div>
       <div><h2>Nutrition parentérale</h2><p class="subtext">Micronutriments et surveillance spécifiques</p></div></div>
-    <div class="row-item"><div><div class="t">Cernevit, Nutryelt, B1, Sélénium</div><div class="s">Tant que NE &lt; 1500 kcal/j</div></div>
+    <div class="row-item"><div><div class="t">Cernevit, Nutryelt, B1, Sélénium</div><div class="s">Toute NP (exclusive ou complémentaire), dès J1</div></div>
       <div class="badgeval" style="color:var(--teal); background:var(--tealDim); font-family:var(--fontMono); font-weight:500;">5/10/100/100</div></div>
     <div class="row-item"><div><div class="t">Vitamine K1</div><div class="s">Non contenue dans les mélanges de NP</div></div>
       <div class="badgeval" style="color:var(--teal); background:var(--tealDim); font-family:var(--fontMono); font-weight:500;">5 mg x2/sem</div></div>
     <div class="info-box">${ICONS.info}<span><strong>Surveillance :</strong> bilan hépatique (BH) et TP ×2/semaine, triglycérides ×1/semaine (TG &gt; 4,5 mmol/L : réduire ou suspendre les lipides). En cas de dysfonction hépato-biliaire sévère : diminuer le débit de 25 à 50 %, voire arrêter la NP et réaliser une imagerie (pathologie vésiculaire ou biliaire).</span></div>
-  </div>
-
-  <div class="card">
-    <div class="section-title"><div class="icon-box">${ICONS.clip}</div>
-      <div><h2>Situations spécifiques</h2><p class="subtext">Cocher les situations applicables au patient</p></div></div>
-    ${MICRO_SPECIFIQUES.map(s=>`
-      <div class="checkrow ${state.checked[s.id]?'checked':''}" data-act="microcheck" data-val="${s.id}">
-        <input type="checkbox" ${state.checked[s.id]?'checked':''} readonly>
-        <div><div class="t">${s.label}</div><div class="s">${s.detail}</div></div>
-      </div>`).join('')}
-    ${active.length>0 ? `
-    <div class="card" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3); margin-top:16px; margin-bottom:0;">
-      <div class="field-label" style="color:var(--teal); margin-bottom:10px;">Prescription consolidée</div>
-      ${active.map(s=>`<div style="font-size:14px; margin-bottom:6px;"><span style="color:var(--teal);">•</span> ${s.detail}</div>`).join('')}
-    </div>` : ''}
   </div>
 
   <div class="card">
@@ -693,9 +778,9 @@ function renderSri(){
       <div><h2>Syndrome de renutrition inappropriée</h2><p class="subtext">Tout patient hospitalisé en réanimation depuis &gt; 48 h est à risque</p></div></div>
     <div class="grid grid-2">
       <div class="stat"><div class="field-label" style="margin-bottom:8px;">Conséquences possibles</div>
-        <div style="font-size:13px; line-height:1.6;">Hypophosphorémie, hypomagnésémie, hypokaliémie, hyperglycémie, béri-béri (carence en thiamine), rétention hydrosodée ou défaillances d'organe (cardiaque, neurologique, respiratoire, rénale, hépatique, musculaire, hématologique). L'hypophosphatémie est la conséquence biologique la plus grave.</div></div>
+        <div style="font-size:13px; line-height:1.6;">Hypophosphatémie, hypomagnésémie, hypokaliémie, hyperglycémie, béri-béri (carence en thiamine), rétention hydrosodée ou défaillances d'organe (cardiaque, neurologique, respiratoire, rénale, hépatique, musculaire, hématologique). L'hypophosphatémie est la conséquence biologique la plus grave.</div></div>
       <div class="stat"><div class="field-label" style="margin-bottom:8px;">Prévention</div>
-        <div style="font-size:13px; line-height:1.6;">Corriger K, Ph et Mg <strong>avant</strong> d'initier la nutrition. Début à 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/kg/j toutes les 24–48 h jusqu'à la cible (7 à 10 jours). Thiamine (B1) 200–300 mg/j pendant 5 jours. Micronutriments à dose journalière. Prudence avec les apports caloriques non nutritionnels.</div></div>
+        <div style="font-size:13px; line-height:1.6;">Corriger K, phosphate et Mg <strong>avant</strong> d'initier la nutrition. Début à 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/kg/j toutes les 24–48 h jusqu'à la cible (7 à 10 jours). Thiamine (B1) 200–300 mg/j pendant 5 jours. Micronutriments : Cernevit 5 mL et Nutryelt 10 mL/j tant que les apports sont &lt; 1500 kcal/j. Prudence avec les apports caloriques non nutritionnels.</div></div>
     </div>
   </div>
 
@@ -712,7 +797,7 @@ function renderSri(){
       <div><h2>Correction de l'hypophosphatémie</h2><p class="subtext">Précautions à prendre pendant la renutrition</p></div></div>
     <div class="warn-box" style="background:var(--amberDim); color:var(--amber); margin-top:0;">${ICONS.alert}<span><strong>Pas de majoration de la nutrition en cas d'hypophosphatémie.</strong></span></div>
     <div class="row-item" style="margin-top:12px;">
-      <div><div class="t">Phosphatémie &lt; 0,65 mM</div><div class="s">Avant renutrition ou en cours de renutrition</div></div>
+      <div><div class="t">Phosphatémie &lt; 0,65 mM</div><div class="s">Avant ou en cours de renutrition · <strong>seulement si SRI avéré</strong> (autres critères diagnostiques présents), pas sur une hypophosphatémie isolée</div></div>
       <div class="badgeval" style="color:var(--amber); background:var(--amberDim); text-align:right;">Réduire à 500 kcal/j x2j, puis +5 kcal/kg/j jusqu'à la cible</div>
     </div>
     <div class="row-item">
@@ -720,7 +805,7 @@ function renderSri(){
       <div class="badgeval" style="color:var(--red); background:var(--redDim); text-align:right;">Suspension de la nutrition</div>
     </div>
     <div class="info-box" style="border:1px solid rgba(239,93,111,.35);"><span><strong>Phocytan</strong> 0,66 mM/mL (1800 mOsm/L) : 10 mL = 300 mg de sodium (= SSH 3 %) + 1 g de glucose. Attention aux recharges : <strong style="color:var(--red);">ne pas dépasser 20 mmol/h, soit 30 mL/h</strong>.</span></div>
-    <div class="info-box"><span><strong>Surveillance :</strong> K, Ph, Mg tous les jours de J1 à J5 de la nutrition (tout patient) ; iono plasmatique au minimum x2/j si SRI avéré. ECG si trouble ionique sévère.</span></div>
+    <div class="info-box"><span><strong>Surveillance :</strong> K, phosphate, Mg tous les jours de J1 à J5 de la nutrition (tout patient) ; iono plasmatique au minimum x2/j si SRI avéré. ECG si trouble ionique sévère.</span></div>
   </div>`;
 }
 
@@ -936,7 +1021,324 @@ function renderDebit(){
   </div>`;
 }
 
-const PANELS = { calc:renderCalc, solutes:renderSolutes, micro:renderMicro, debit:renderDebit, compl:renderCompl, sri:renderSri };
+const PANELS = { calc:renderCalc, solutes:renderSolutes, micro:renderMicro, debit:renderDebit, compl:renderCompl, sri:renderSri, surv:renderSurv, preop:renderPreop };
+
+/* ---------------- RENDER: PRÉ-OPÉRATOIRE ---------------- */
+// Diagnostic et sévérité de la dénutrition : HAS 2019 (< 70 ans) et 2021 (≥ 70 ans), repris par la RFE SFAR/HAS 2026 (Figure 1)
+// Groupes nutritionnels (GN) : SFAR 2010, fiche du protocole (facteurs de risque, critères de dénutrition, chirurgies à risque)
+// Chirurgie cardiaque : critères SFAR repris par la RAAC SFAR/SFCTCV 2021 (figure 1)
+const PREOP_FDR_LIST = [
+  { id:"age", label:"Âge > 70 ans" },
+  { id:"cancer", label:"Cancer ou hémopathie maligne" },
+  { id:"sepsis", label:"Sepsis, syndrome inflammatoire" },
+  { id:"chronique", label:"Pathologie chronique", s:"Diabète, pathologie neuromusculaire, polyhandicap, maladie chronique respiratoire, cardiaque, rénale ou digestive, VIH/SIDA" },
+  { id:"atcdchir", label:"Antécédent de chirurgie digestive majeure", s:"Gastrique dont bariatrique, pancréatique, grêle court" },
+  { id:"neuro", label:"Troubles neuropsychiatriques", s:"Troubles cognitifs, démence, syndrome dépressif ou confusionnel" },
+  { id:"symptomes", label:"Symptômes persistants", s:"Douleurs, dyspnée, dysphagie, nausées, vomissements, satiété précoce, diarrhée" },
+  { id:"radio", label:"Radiothérapie" },
+  { id:"chimio", label:"Chimiothérapie" },
+  { id:"cortico", label:"Corticothérapie > 1 mois" },
+  { id:"polymed", label:"Polymédication > 5" },
+  { id:"eva", label:"EVA de l'alimentation < 7/10", s:"0 = aucun apport, 10 = apports habituels" }
+];
+const CFS = [
+  [1,"Très en forme","Robuste, actif, énergique, motivé ; activité physique régulière"],
+  [2,"En forme","Pas de symptôme de maladie active, mais moins en forme que 1 ; activité physique occasionnelle"],
+  [3,"Gère bien ses problèmes de santé","Problèmes médicaux bien contrôlés ; pas d'activité régulière au-delà de la marche"],
+  [4,"Vulnérable (fragilité très légère)","Autonome, mais symptômes qui limitent les activités : ralenti, fatigué"],
+  [5,"Fragilité légère","Aide pour les activités instrumentales : finances, transports, gros travaux ménagers, médicaments"],
+  [6,"Fragilité modérée","Aide pour toutes les activités extérieures et le ménage ; difficultés dans les escaliers ; aide pour la toilette"],
+  [7,"Fragilité sévère","Dépendance complète pour les soins personnels, mais état stable (pas de risque de décès à 6 mois)"],
+  [8,"Fragilité très sévère","Totalement dépendant, approche de la fin de vie"],
+  [9,"Phase terminale","Espérance de vie < 6 mois, sans autre signe de fragilité"]
+];
+const PREOP_INTERV = {
+  risque: [
+    ["oeso","Œsophagectomie"], ["gastr","Gastrectomie partielle ou totale"], ["pancr","DPC, SPG, pancréatectomie totale"],
+    ["ileo","Résection iléo-cæcale"], ["grele","Résection grêlique > 1 mètre"], ["colec","Colectomie totale"],
+    ["procto","Proctectomie"], ["chip","CHIP"], ["aap","AAP, pelvectomie"],
+    ["hep3","Résection hépatique > 3 segments (non cirrhotique)"], ["hepcir","Résection hépatique chez le cirrhotique"], ["paroi","Chirurgie pariétale complexe"]
+  ],
+  // Chirurgie non digestive à risque élevé (> 5 %) : classification ESC/ESAIC 2022, reprise par la RFE 2026 (tableau 1)
+  risqueND: [
+    ["aorte","Chirurgie aortique et vasculaire majeure"], ["mi","Revascularisation du membre inférieur pour ischémie aiguë, amputation"],
+    ["carot","Chirurgie carotidienne symptomatique (stenting)"], ["pneumo","Pneumonectomie"], ["transpl","Transplantation pulmonaire ou hépatique"],
+    ["cysto","Cystectomie totale"], ["surr","Surrénalectomie"], ["perfo","Réparation de perforation intestinale"]
+  ],
+  autres: [["digestive","Autre chirurgie digestive"], ["cardiaque","Chirurgie cardiaque"], ["autre","Autre chirurgie non digestive"]]
+};
+function preopEval(){
+  const t = parseFloat(state.taille)||0, p = parseFloat(state.poids)||0, ph = parseFloat(state.poPoidsHab)||0, alb = parseFloat(state.poAlb)||0;
+  const age70 = !!state.poFdrList.age;
+  if (!t || !p) return null;
+  const imc = p/((t/100)**2);
+  const perte = ph > p ? (ph-p)/ph*100 : 0;
+  const d0 = state.poDelai; // "1m" | "3m" | "6m" | "hab"
+  const d = d0==='3m' ? '6m' : d0;
+  const iv = state.poInterv;
+  const hr = PREOP_INTERV.risque.some(x=>x[0]===iv) || PREOP_INTERV.risqueND.some(x=>x[0]===iv);
+  const cardiac = iv === "cardiaque";
+  const digestive = PREOP_INTERV.risque.some(x=>x[0]===iv) || iv === "digestive" || iv === "perfo";
+  const nonOnco = digestive && state.poNonOnco;
+  // HAS
+  const pheno = [], severe = [];
+  if (imc < (age70 ? 22 : 18.5)) pheno.push(`IMC ${round(imc,1)} &lt; ${age70 ? 22 : 18.5} kg/m²`);
+  if (ph){
+    if (d==="1m" && perte >= 5) pheno.push(`perte de poids ${round(perte,1)} % en 1 mois (≥ 5 %)`);
+    if (d!=="1m" && perte >= 10) pheno.push(`perte de poids ${round(perte,1)} % ${d==="6m" ? "en 6 mois" : "par rapport au poids habituel"} (≥ 10 %)`);
+  }
+  if (state.poMuscle) pheno.push("réduction de la force ou de la masse musculaire");
+  if (age70 ? imc < 20 : imc <= 17) severe.push(`IMC ${age70 ? '&lt; 20' : '≤ 17'} kg/m²`);
+  if (ph && ((d==="1m" && perte >= 10) || (d!=="1m" && perte >= 15))) severe.push(`perte de poids ≥ ${d==="1m" ? 10 : 15} %`);
+  if (alb && (age70 ? alb < 30 : alb <= 30)) severe.push(`albuminémie ${age70 ? '&lt; 30' : '≤ 30'} g/L`);
+  const denutri = pheno.length > 0;
+  const severite = !denutri ? null : (severe.length ? "sévère" : "modérée");
+  // GN (fiche du protocole)
+  const albSeuil = nonOnco ? 35 : 30;
+  const sfar = [];
+  if (imc < (age70 ? 21 : 18.5)) sfar.push(`IMC &lt; ${age70 ? '21' : '18,5'} kg/m²`);
+  if (ph && d==="1m" && perte >= 5) sfar.push("perte de poids ≥ 5 % en 1 mois");
+  if (ph && d==="6m" && perte >= 10) sfar.push("perte de poids ≥ 10 % en 6 mois");
+  if (alb && alb < albSeuil) sfar.push(`albuminémie &lt; ${albSeuil} g/L`);
+  const denutriGN = sfar.length > 0;
+  const nFdr = PREOP_FDR_LIST.filter(f=>state.poFdrList[f.id]).length;
+  const gn = denutriGN ? (hr ? 4 : 3) : ((hr || nFdr) ? 2 : 1);
+  // Chirurgie cardiaque : critères SFAR
+  const card = [], cardSev = [];
+  if (imc <= 24) card.push("IMC ≤ 24 kg/m²");
+  if (ph && d0!=="hab" && perte >= 10) card.push("perte de poids ≥ 10 % sur les 6 derniers mois");
+  if (alb && alb < 37) card.push("albuminémie &lt; 37 g/L");
+  if (imc < 13) cardSev.push("IMC &lt; 13 kg/m²");
+  if (ph && (d0==="1m" || d0==="3m") && perte > 20) cardSev.push("amaigrissement &gt; 20 % en 3 mois");
+  if (state.poApportsNeg) cardSev.push("apports oraux négligeables depuis ≥ 15 jours");
+  return { imc, perte, pheno, severe, denutri, severite, sfar, denutriGN, albSeuil, nFdr, gn, hr, cardiac, digestive, card, cardSev, age70 };
+}
+const GN_CAT = {
+  1: { t:"GN 1", s:"Non dénutri, sans facteur de risque, chirurgie non à risque", cat:"Pas de support nutritionnel spécifique.", color:"var(--teal)", dim:"var(--tealDim)" },
+  2: { t:"GN 2", s:"Non dénutri, avec facteur de risque de dénutrition ou chirurgie à risque", cat:"2 CNO/j.", color:"var(--blue)", dim:"var(--blueDim)" },
+  3: { t:"GN 3", s:"Dénutri, chirurgie non à risque", cat:"3 CNO/j.", color:"var(--amber)", dim:"var(--amberDim)" },
+  4: { t:"GN 4", s:"Dénutri, chirurgie à risque", cat:"Envisager une hospitalisation préopératoire de 7 à 14 jours pour renutrition (PO, NE ou NP). La RFE 2026 suggère une nutrition artificielle préopératoire chez le dénutri (≥ 7 jours dans les études).", color:"var(--red)", dim:"var(--redDim)" }
+};
+function renderPreop(){
+  const ev = preopEval();
+  const chip = (key, label) => `<button class="chip ${state[key]?'active':''}" data-act="potoggle" data-val="${key}">${label}</button>`;
+  const field = (id, label, val, unit, ph='') => `
+      <label class="field"><span class="field-label">${label}</span>
+        <div class="input-wrap"><input type="number" inputmode="decimal" id="${id}" value="${val}" placeholder="${ph}"><span class="unit">${unit}</span></div></label>`;
+  const iv = state.poInterv;
+  const cardiac = iv === "cardiaque";
+  const digestive = PREOP_INTERV.risque.some(x=>x[0]===iv) || iv === "digestive" || iv === "perfo";
+  const nFdr = PREOP_FDR_LIST.filter(f=>state.poFdrList[f.id]).length;
+  const g = ev ? (cardiac ? (ev.cardSev.length ? { t:"Dénutrition sévère", s:"Chirurgie cardiaque", cat:"Report de la chirurgie (hors urgence) selon le rapport bénéfice/risque, prise en charge spécialisée avec nutrition entérale ou parentérale.", color:"var(--red)", dim:"var(--redDim)" } : ev.card.length ? { t:"Supplémentation", s:"Chirurgie cardiaque : ≥ 1 critère SFAR", cat:"Compléments hyperprotéiques 2 à 3/j (≥ 18 g de protéines par dose) pendant 5 à 10 jours avant la chirurgie.", color:"var(--amber)", dim:"var(--amberDim)" } : { t:"Pas de critère", s:"Chirurgie cardiaque", cat:"Pas de supplémentation systématique.", color:"var(--teal)", dim:"var(--tealDim)" }) : GN_CAT[ev.gn]) : null;
+  const prehab = ev && (ev.denutri || ev.denutriGN || ev.age70 || (state.poCfs>=5) || state.poASA || state.poMuscle);
+  const section = (title) => `<div class="field-label" style="margin:18px 0 8px; color:var(--teal);">${title}</div>`;
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.clip}</div>
+      <div><h2>Évaluation nutritionnelle préopératoire</h2><p class="subtext">Chirurgie programmée</p></div></div>
+
+    ${section('1 · Intervention')}
+    <select id="f-po-interv" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--borderLight); background:var(--elevated); color:var(--text); font-family:var(--fontBody); font-size:14px;">
+      <option value="" ${!iv?'selected':''}>— Sélectionner l'intervention —</option>
+      <optgroup label="Chirurgie digestive à risque (fiche du protocole)">
+        ${PREOP_INTERV.risque.map(([v,l])=>`<option value="${v}" ${iv===v?'selected':''}>${l}</option>`).join('')}
+      </optgroup>
+      <optgroup label="Chirurgie non digestive à risque élevé (ESC/ESAIC 2022)">
+        ${PREOP_INTERV.risqueND.map(([v,l])=>`<option value="${v}" ${iv===v?'selected':''}>${l}</option>`).join('')}
+      </optgroup>
+      <optgroup label="Chirurgie non à risque">
+        ${PREOP_INTERV.autres.map(([v,l])=>`<option value="${v}" ${iv===v?'selected':''}>${l}</option>`).join('')}
+      </optgroup>
+    </select>
+    ${digestive || cardiac ? `<div class="chips" style="margin-top:8px;">${digestive ? chip('poNonOnco','Chirurgie non oncologique') : ''}${cardiac ? chip('poApportsNeg','Apports oraux négligeables ≥ 15 j') : ''}</div>` : ''}
+
+    ${section('2 · Poids et biologie')}
+    <div class="grid grid-2" style="grid-template-columns:1fr 1fr;">
+      ${field('f-po-taille','Taille',state.taille,'cm')}
+      ${field('f-po-poids','Poids actuel',state.poids,'kg')}
+      ${field('f-po-hab','Poids habituel',state.poPoidsHab,'kg','avant la maladie')}
+      ${field('f-po-alb','Albuminémie',state.poAlb,'g/L','option')}
+    </div>
+    <div class="field" style="display:block; margin-top:12px;">
+      <span class="field-label">Délai de la perte de poids</span>
+      <div class="seg">
+        <button data-act="podelai" data-val="1m" class="${state.poDelai==='1m'?'active':''}">≤ 1 mois</button>
+        <button data-act="podelai" data-val="3m" class="${state.poDelai==='3m'?'active':''}">≤ 3 mois</button>
+        <button data-act="podelai" data-val="6m" class="${state.poDelai==='6m'?'active':''}">≤ 6 mois</button>
+        <button data-act="podelai" data-val="hab" class="${state.poDelai==='hab'?'active':''}">Poids habituel</button>
+      </div>
+    </div>
+
+    ${section('3 · Facteurs de risque de dénutrition')}
+    <details ${state.poFdrOpen?'open':''} id="po-fdr-details">
+      <summary class="row-item" style="cursor:pointer; list-style:none;"><div><div class="t">${nFdr ? `${nFdr} facteur${nFdr>1?'s':''} de risque coché${nFdr>1?'s':''}` : 'Aucun facteur de risque coché'}</div><div class="s">Toucher pour ${state.poFdrOpen?'replier':'afficher la liste'} · risque si ≥ 1 critère</div></div><div class="badgeval" style="color:var(--teal); background:var(--tealDim);">${state.poFdrOpen?'▲':'▼'}</div></summary>
+      ${PREOP_FDR_LIST.map(f=>`
+      <div class="checkrow ${state.poFdrList[f.id]?'checked':''}" data-act="pofdr" data-val="${f.id}">
+        <input type="checkbox" ${state.poFdrList[f.id]?'checked':''} readonly>
+        <div><div class="t">${f.label}</div>${f.s?`<div class="s">${f.s}</div>`:''}</div>
+      </div>`).join('')}
+    </details>
+
+    ${section('4 · Autres éléments')}
+    <div class="chips">
+      ${chip('poMuscle','Sarcopénie : force ou masse musculaire réduite')}
+      ${chip('poASA','Score ASA ≥ 3')}
+      ${chip('poDiabete','Diabète')}
+      ${chip('poSansSel','Restriction sodée (insuffisance cardiaque, cirrhose décompensée…)')}
+    </div>
+    <details ${state.poCfsOpen?'open':''} id="po-cfs-details" style="margin-top:10px;">
+      <summary class="row-item" style="cursor:pointer; list-style:none;"><div><div class="t">Clinical Frailty Scale : ${state.poCfs ? `${state.poCfs} · ${CFS[state.poCfs-1][1]}${state.poCfs>=5 ? ' → fragile' : ''}` : 'non renseignée'}</div><div class="s">État habituel, 2 semaines avant la maladie actuelle · fragile si ≥ 5 · toucher pour ${state.poCfsOpen?'replier':'choisir'}</div></div><div class="badgeval" style="color:var(--teal); background:var(--tealDim);">${state.poCfsOpen?'▲':'▼'}</div></summary>
+      ${CFS.map(([n,l,d])=>`
+      <div class="checkrow ${state.poCfs===n?'checked':''}" data-act="pocfs" data-val="${n}">
+        <input type="radio" ${state.poCfs===n?'checked':''} readonly>
+        <div><div class="t">${n} · ${l}</div><div class="s">${d}</div></div>
+      </div>`).join('')}
+    </details>
+    <div class="subtext" style="margin-top:6px;">Sarcopénie = critère phénotypique HAS (force de préhension, vitesse de marche, masse musculaire au scanner L3, impédancemétrie, DEXA). Fragilité (CFS ≥ 5), ASA ≥ 3, âge ≥ 65–70 ans et dénutrition/sarcopénie = critères de la RFE 2026 (figure 2) pour proposer une préhabilitation.</div>
+
+    ${!ev ? `<div class="info-box">${ICONS.info}<span>Renseigner la taille et le poids actuel.</span></div>` : !iv ? `<div class="info-box">${ICONS.info}<span>Sélectionner l'intervention pour obtenir le groupe nutritionnel.</span></div>` : `
+    <div class="grid grid-2" style="margin-top:18px;">
+      <div class="stat" style="${ev.denutri ? 'background:var(--amberDim); border:1px solid rgba(242,169,59,.35);' : 'background:var(--tealDim); border:1px solid rgba(47,217,196,.3);'}">
+        <div class="lbl" style="color:${ev.denutri?'var(--amber)':'var(--teal)'};">Dénutrition (HAS)</div>
+        <div class="val" style="color:${ev.denutri?'var(--amber)':'var(--teal)'}; font-size:22px;">${ev.denutri ? (ev.severite==='sévère' ? 'Sévère' : 'Modérée') : 'Non'}</div>
+        <div class="sub">IMC ${round(ev.imc,1)}${ev.perte ? ` · perte ${round(ev.perte,1)} %` : ''}</div>
+      </div>
+      <div class="stat" style="border:1px solid ${g.color}66;">
+        <div class="lbl" style="color:${g.color};">${cardiac ? "Chirurgie cardiaque" : "Groupe nutritionnel"}</div>
+        <div class="val" style="color:${g.color}; font-size:22px;">${g.t}</div>
+        <div class="sub">${g.s}</div>
+      </div>
+    </div>
+    ${cardiac
+      ? `<div class="subtext" style="margin-top:8px;"><strong>Critères SFAR (≥ 1)</strong> : ${ev.card.length ? ev.card.join(' ; ') : 'aucun'}${ev.cardSev.length ? ` · <strong>dénutrition sévère</strong> : ${ev.cardSev.join(' ; ')}` : ''}. Critères : IMC ≤ 24 kg/m², perte ≥ 10 % sur 6 mois, albuminémie &lt; 37 g/L. Dénutrition sévère : IMC &lt; 13, amaigrissement &gt; 20 % en 3 mois, apports oraux négligeables ≥ 15 j.</div>`
+      : `<div class="subtext" style="margin-top:8px;"><strong>Dénutrition pour le GN</strong> : ${ev.denutriGN ? 'oui — ' + ev.sfar.join(' ; ') : 'non'} · <strong>facteurs de risque</strong> : ${ev.nFdr} · <strong>chirurgie</strong> : ${ev.hr ? 'à risque' : 'non à risque'}. Critères de dénutrition (≥ 1) : IMC &lt; 18,5 kg/m² (&lt; 21 si &gt; 70 ans), perte ≥ 5 % en 1 mois ou ≥ 10 % en 6 mois, albuminémie &lt; 30 g/L (&lt; 35 si chirurgie digestive non oncologique).</div>`}
+    ${ev.denutri ? `<div class="subtext" style="margin-top:6px;"><strong>Dénutrition HAS</strong> (diagnostic et codage) : ${ev.pheno.join(' ; ')}${ev.severe.length ? ` · sévérité : ${ev.severe.join(' ; ')}` : ''}.</div>` : ''}
+    `}
+  </div>
+
+  ${ev && iv ? `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.pill}</div>
+      <div><h2>Que faire ?</h2><p class="subtext">Préparation nutritionnelle avant la chirurgie</p></div></div>
+    <div class="row-item" style="border:1px solid ${g.color}55;"><div><div class="t">${g.t}</div><div class="s">${g.cat}</div></div></div>
+    ${(cardiac ? ev.card.length > 0 : ev.gn >= 2) ? `<div class="row-item" style="display:block;"><div class="t">CNO à prescrire</div>
+      <div class="chips" style="margin-top:8px;">
+        <span class="chip active" style="cursor:default;">Hypercaloriques</span>
+        <span class="chip active" style="cursor:default;">Hyperprotidiques</span>
+        ${state.poDiabete ? '<span class="chip active" style="cursor:default;">Index glycémique faible</span>' : ''}
+        ${state.poSansSel ? '<span class="chip active" style="cursor:default;">Sans sel / pauvres en sodium</span>' : ''}
+      </div>
+      <div class="s" style="margin-top:6px;">${cardiac ? '2 à 3/j, ≥ 18 g de protéines par dose, pendant 5 à 10 jours' : (ev.gn===2 ? '2/j' : ev.gn===3 ? '3/j' : 'en complément de la renutrition')}. À préciser sur la prescription.</div></div>` : ''}
+    ${cardiac ? `<div class="row-item"><div><div class="t">Chirurgie cardiaque : jeûne et boisson (RAAC 2021, grade 2+)</div><div class="s">Jeûne limité à 6 h pour les solides et 2 h pour les liquides clairs, avec une boisson glucidique préopératoire.</div></div></div>` : ''}
+    ${prehab ? `<div class="row-item"><div><div class="t">Préhabilitation</div><div class="s">Indiquée ici (${[ev.age70?'âge':'', (state.poCfs>=5)?`fragilité, CFS ${state.poCfs}`:'', state.poASA?'ASA ≥ 3':'', (ev.denutri||ev.denutriGN)?'dénutrition':'', state.poMuscle?'sarcopénie':''].filter(Boolean).join(', ')}). Programme stratifié sur le risque : exercice physique, équilibration des comorbidités, stratégie nutritionnelle (RFE 2026, grade 2).</div></div></div>` : ''}
+    ${ev.denutri || ev.denutriGN || (ev.perte >= 10) ? `<div class="row-item"><div><div class="t">Bilan si amaigrissement important</div><div class="s">Albumine, préalbumine, ± vitamines B1, B9, B12, C, A, D, E.</div></div></div>` : ''}
+    <div class="row-item"><div><div class="t">Charge glucidique</div><div class="s">${state.poDiabete ? 'Diabète : pas de charge glucidique si le diabète est déséquilibré ; sinon ' : ''}200 mL de jus de pomme la veille au soir, 200 mL 2 h avant la chirurgie.</div></div></div>
+    <div class="row-item"><div><div class="t">Diététicien</div><div class="s">À faire intervenir durant tout le parcours périopératoire (RFE 2026, avis d'experts).</div></div></div>
+    <div class="info-box">${ICONS.info}<span><strong>Immunonutrition</strong> (Oral Impact, Enteral Impact) : pas en routine. La RFE 2026 ne peut rien recommander (données non concluantes) ; mauvaise tolérance et coût élevé.</span></div>
+    <div class="info-box">${ICONS.info}<span><strong>Post-opératoire</strong> : reprise orale ou artificielle la plus précoce possible, cible 20–25 kcal/kg/j et 1–1,3 g/kg/j de protéines atteinte progressivement (Calculateur, phase « Post-opératoire »).</span></div>
+  </div>` : ''}
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.info}</div>
+      <div><h2>Rappel : grades nutritionnels</h2><p class="subtext">SFAR 2010 · fiche du protocole</p></div></div>
+    ${(() => {
+      const cur = ev && iv && !cardiac ? ev.gn : 0;
+      const cell = (n) => `<td style="text-align:center; font-weight:600; color:${GN_CAT[n].color}; ${cur===n ? `background:${GN_CAT[n].dim}; outline:2px solid ${GN_CAT[n].color}; outline-offset:-2px;` : ''}">GN ${n}</td>`;
+      return `<div style="overflow-x:auto;"><table>
+        <thead><tr><th></th><th>Non dénutri, 0 FdR</th><th>Non dénutri, ≥ 1 FdR</th><th>Dénutri</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Chirurgie non à risque</td>${cell(1)}${cell(2)}${cell(3)}</tr>
+          <tr><td class="strong">Chirurgie à risque</td>${cell(2)}${cell(2)}${cell(4)}</tr>
+        </tbody></table></div>`;
+    })()}
+    <div style="margin-top:14px;">
+      ${[1,2,3,4].map(n=>`<div class="row-item" style="${ev && iv && !cardiac && ev.gn===n ? `border:1px solid ${GN_CAT[n].color};` : ''}"><div><div class="t" style="color:${GN_CAT[n].color};">GN ${n}</div><div class="s">${GN_CAT[n].cat}</div></div></div>`).join('')}
+    </div>
+    <div class="subtext" style="margin-top:6px;">CNO toujours hypercaloriques et hyperprotidiques (index glycémique faible si diabète, sans sel si restriction sodée). FdR = facteur de risque de dénutrition.</div>
+  </div>`;
+}
+
+/* ---------------- RENDER: SURVEILLANCE ---------------- */
+const SURV_MODES = [
+  { v:"ne", label:"Nutrition entérale" },
+  { v:"np", label:"Nutrition parentérale (exclusive ou complémentaire)" },
+  { v:"po", label:"Alimentation orale" }
+];
+const SURV_SITUATIONS = [
+  { id:"propofol", label:"Propofol à dose élevée" },
+  { id:"sririsk", label:"Risque de SRI" },
+  { id:"sri", label:"SRI avéré" },
+  { id:"eerc", label:"EERc" },
+  { id:"ira", label:"IRenA sans EER" },
+  { id:"long", label:"NP > 15 jours", np:true }
+];
+function survPlan(){
+  const m = state.survMode, c = state.survChecked;
+  if (!m) return null;
+  const items = [], seuils = [];
+  const add = (quoi, freq, why, rank) => { if (!items.some(i=>i.quoi===quoi)) items.push({quoi, freq, why, rank}); };
+  // Biologie
+  if (c.sri) add("Ionogramme (K), phosphate, magnésium", "×2/j", "SRI avéré", 0);
+  if (c.eerc) add("Ionogramme (K), phosphate, magnésium", "1×/j pendant toute l'EERc", "EERc : pertes dans l'effluent", 1);
+  add("Ionogramme (K), phosphate, magnésium", "1×/j de J1 à J5", c.sririsk ? "Risque de SRI : corriger les déficits avant de débuter" : "Début de nutrition : dépistage du SRI", 1);
+  if (c.sri || c.sririsk) add("ECG", "si trouble ionique sévère", "SRI", 2);
+  if (c.ira) add("Urée plasmatique", "1×/j", "IRenA sans EER : charge azotée (cible protéique modérée)", 1);
+  if (m==="np" || c.propofol){
+    const why = m==="np" && c.propofol ? "NP + propofol" : (m==="np" ? "Nutrition parentérale" : "Propofol à dose élevée");
+    add("Bilan hépatique" + (m==="np" ? " et TP" : ""), "×2/semaine", why, 3);
+    add("Triglycérides", "×1/semaine", why, 4);
+    seuils.push("<strong>TG &gt; 4,5 mmol/L</strong> : réduire ou suspendre les lipides / le propofol.");
+  }
+  if (m==="np") seuils.push("<strong>Dysfonction hépato-biliaire sévère</strong> : diminuer le débit de NP de 25 à 50 %, voire l'arrêter, et faire une imagerie (pathologie vésiculaire ou biliaire).");
+  add("Préalbumine et albuminémie", "×1/semaine", "Efficacité du support nutritionnel", 4);
+  const npLong = m==="np" && c.long;
+  if (c.eerc) add("B1, B9, vitamine C, sélénium, cuivre, zinc (+ CRP)", "à J15, puis toutes les 2 semaines si l'EERc se prolonge", "EERc > 15 jours : pertes dans l'effluent (vitamine C : prélèvement à l'abri de la lumière)", 5);
+  if (npLong) add("B1, B9, sélénium, cuivre, zinc (+ CRP, albumine)", "une fois, puis selon résultats", "Nutrition parentérale > 15 jours", 5);
+  if (npLong) add("B12", "si anémie macrocytaire", "Réserves de plusieurs années : inutile en routine", 6);
+  if (npLong) add("Manganèse (sang total)", "si NP > 30 jours avec atteinte hépatique", "Risque d'accumulation", 6);
+  if (c.eerc) seuils.push("<strong>Cuivre bas ou EERc prolongée</strong> : ajouter du cuivre IV (l'ESPEN suggère environ 3 mg/j).");
+  if (c.sri || c.sririsk){
+    seuils.push("<strong>Phosphatémie &lt; 0,65 mmol/L</strong> : pas de majoration de la nutrition. <strong>Seulement si SRI avéré</strong> (autres critères diagnostiques présents, pas sur une hypophosphatémie isolée) : réduire à 500 kcal/j pendant 2 jours, puis +5 kcal/kg/j jusqu'à la cible.");
+    seuils.push("<strong>Phosphatémie &lt; 0,4 mmol/L</strong> : suspendre la nutrition.");
+  }
+  items.sort((a,b)=>a.rank-b.rank);
+  return { items, seuils };
+}
+function renderSurv(){
+  const plan = survPlan();
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.eye}</div>
+      <div><h2>Que surveiller ?</h2><p class="subtext">Choisir le mode de nutrition, puis les situations associées</p></div></div>
+    <label class="field" style="display:block; margin-bottom:14px;">
+      <span class="field-label">Mode de nutrition</span>
+      <select id="f-surv-mode" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--borderLight); background:var(--elevated); color:var(--text); font-family:var(--fontBody); font-size:14px;">
+        <option value="" ${!state.survMode?'selected':''}>— Sélectionner —</option>
+        ${SURV_MODES.map(o=>`<option value="${o.v}" ${state.survMode===o.v?'selected':''}>${o.label}</option>`).join('')}
+      </select>
+    </label>
+    <span class="field-label">Situations associées</span>
+    <div class="chips" style="margin:8px 0 4px;">
+      ${SURV_SITUATIONS.filter(x=>!x.np || state.survMode==="np").map(x=>`<button class="chip ${state.survChecked[x.id]?'active':''}" data-act="survcheck" data-val="${x.id}">${x.label}</button>`).join('')}
+    </div>
+    ${plan ? `
+    <div class="card" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3); margin:16px 0 0;">
+      <div class="field-label" style="color:var(--teal); margin-bottom:10px;">Surveillance</div>
+      ${plan.items.map(i=>`
+      <div class="row-item">
+        <div><div class="t">${i.quoi}</div><div class="s">${i.why}</div></div>
+        <div class="badgeval" style="color:var(--teal); background:var(--bg, rgba(0,0,0,.2)); font-family:var(--fontMono); font-weight:500; flex-shrink:1; max-width:45%; white-space:normal; line-height:1.35;">${i.freq}</div>
+      </div>`).join('')}
+    </div>
+    ${plan.seuils.length ? `
+    <div class="card" style="background:var(--amberDim); border:1px solid rgba(242,169,59,.35); margin:12px 0 0;">
+      <div class="field-label" style="color:var(--amber); margin-bottom:10px;">Seuils d'action</div>
+      ${plan.seuils.map(t=>`<div style="font-size:13px; line-height:1.6; margin-bottom:6px;">— ${t}</div>`).join('')}
+    </div>` : ''}
+    <div class="info-box">${ICONS.info}<span>Dosages de micronutriments : jamais en routine, toujours avec une CRP (interprétation difficile si CRP &gt; 20 mg/L).</span></div>
+    ` : `<div class="info-box">${ICONS.info}<span>Sélectionner le mode de nutrition pour afficher la surveillance.</span></div>`}
+  </div>`;
+}
 
 /* ---------------- MAIN RENDER + EVENTS ---------------- */
 function render(){
@@ -972,13 +1374,32 @@ function bindEvents(){
     if (el) el.addEventListener('input', e=>{ state[key] = e.target.value; debouncedRenderPartial(); });
   });
   document.querySelectorAll('[data-act="phase"]').forEach(el=>el.addEventListener('click', ()=>{ state.phaseKey = el.dataset.val; state.kcalRatio = 1; render(); }));
-  document.querySelectorAll('[data-act="microcheck"]').forEach(el=>el.addEventListener('click', ()=>{ const id = el.dataset.val; state.checked[id] = !state.checked[id]; render(); }));
+  document.querySelectorAll('[data-act="microcheck"]').forEach(el=>el.addEventListener('click', ()=>{ const id = el.dataset.val; state.checked[id] = !state.checked[id]; renderPartial(); }));
   document.querySelectorAll('[data-act="debitSource"]').forEach(el=>el.addEventListener('click', ()=>{ state.debitSource = el.dataset.val; render(); }));
   document.querySelectorAll('[data-act="debitVoie"]').forEach(el=>el.addEventListener('click', ()=>{ state.debitVoie = el.dataset.val; state.debitProduitId = DEBIT_PRODUCTS[state.debitVoie][0].id; render(); }));
   document.querySelectorAll('[data-act="debitDureeType"]').forEach(el=>el.addEventListener('click', ()=>{ state.debitDureeType = el.dataset.val; render(); }));
 
   const fDebitProduit = document.getElementById('f-debit-produit');
   if (fDebitProduit) fDebitProduit.addEventListener('change', e=>{ state.debitProduitId = e.target.value; renderPartial(); });
+  document.querySelectorAll('[data-act="survcheck"]').forEach(el=>el.addEventListener('click', ()=>{ const id = el.dataset.val; state.survChecked[id] = !state.survChecked[id]; renderPartial(); }));
+  document.querySelectorAll('[data-act="potoggle"]').forEach(el=>el.addEventListener('click', ()=>{ const k = el.dataset.val; state[k] = !state[k]; renderPartial(); }));
+  document.querySelectorAll('[data-act="pofdr"]').forEach(el=>el.addEventListener('click', ()=>{ const k = el.dataset.val; state.poFdrList[k] = !state.poFdrList[k]; renderPartial(); }));
+  document.querySelectorAll('[data-act="pocfs"]').forEach(el=>el.addEventListener('click', ()=>{ const n = parseInt(el.dataset.val); state.poCfs = state.poCfs===n ? 0 : n; state.poCfsOpen = false; renderPartial(); }));
+  const cfsDet = document.getElementById('po-cfs-details');
+  if (cfsDet) cfsDet.addEventListener('toggle', ()=>{ if (cfsDet.open !== state.poCfsOpen){ state.poCfsOpen = cfsDet.open; renderPartial(); } });
+  const poDet = document.getElementById('po-fdr-details');
+  if (poDet) poDet.addEventListener('toggle', ()=>{ if (poDet.open !== state.poFdrOpen){ state.poFdrOpen = poDet.open; renderPartial(); } });
+  const fPoInterv = document.getElementById('f-po-interv');
+  if (fPoInterv) fPoInterv.addEventListener('change', e=>{ state.poInterv = e.target.value; renderPartial(); });
+  document.querySelectorAll('[data-act="podelai"]').forEach(el=>el.addEventListener('click', ()=>{ state.poDelai = el.dataset.val; renderPartial(); }));
+  [['f-po-taille','taille'],['f-po-poids','poids'],['f-po-hab','poPoidsHab'],['f-po-alb','poAlb']].forEach(([id,key])=>{
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', e=>{ state[key] = e.target.value; debouncedRenderPartial(); });
+  });
+  const fSurvMode = document.getElementById('f-surv-mode');
+  if (fSurvMode) fSurvMode.addEventListener('change', e=>{ state.survMode = e.target.value; renderPartial(); });
+  const fMicroMode = document.getElementById('f-micro-mode');
+  if (fMicroMode) fMicroMode.addEventListener('change', e=>{ state.microMode = e.target.value; renderPartial(); });
   const fSoluteSituation = document.getElementById('f-solute-situation');
   if (fSoluteSituation) fSoluteSituation.addEventListener('change', e=>{ state.soluteSituation = e.target.value; renderPartial(); });
   const fDebitKcal = document.getElementById('f-debit-kcal');
