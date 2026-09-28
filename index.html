@@ -34,6 +34,8 @@
   .eyebrow{display:flex; align-items:center; gap:8px; margin-bottom:4px;}
   .badge{font-family:var(--fontMono); font-size:11px; font-weight:600; letter-spacing:.5px; color:var(--teal); background:var(--tealDim); padding:2px 8px; border-radius:6px;}
   .subtext{font-size:12px; color:var(--textFaint);}
+  .why{font-size:11.5px; line-height:1.55; color:var(--textMuted); margin-top:8px; padding:8px 10px; border-left:2px solid var(--teal); background:rgba(127,127,127,.06); border-radius:0 8px 8px 0;}
+  .why b{color:var(--teal); font-weight:600;}
   header{margin-bottom:22px;}
 
   nav{display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:20px; -ms-overflow-style:none; scrollbar-width:none;}
@@ -138,20 +140,20 @@ const RENAL = {
 };
 
 const EN_PRODUCTS = [
-  { situation:"Défaillance aiguë (choc / hypoxémie)", produit:"Fresubin Intensive", detail:"Hypocalorique / Hyperprotidique" },
-  { situation:"Phase stabilisée, constipation, diabète", produit:"Nutrison Prot NRJ Multifibres", detail:"Hypercalorique / Hyperprotidique avec fibres" },
-  { situation:"Diarrhée sous NE", produit:"Sondalis T Energy", detail:"Gomme de guar" },
-  { situation:"Restriction hydrique (RH)", produit:"Sondalis 2 kcal Fibres", detail:"Hypercalorique / Hyperosmolaire" },
-  { situation:"Malabsorptions (grêle court, MICI, etc.)", produit:"Peptamen HN", detail:"Semi-élémentaire" },
-  { situation:"Intolérance digestive avec nécessité HC/HP et fibres", produit:"Fresubin Megareal Fibres", detail:"Hypercalorique / Hyperprotidique avec fibres" }
+  { situation:"Défaillance aiguë (choc / hypoxémie)", produit:"Fresubin Intensive", detail:"Hypocalorique / Hyperprotidique", why:"Hypocalorique et hyperprotidique : apporte des protéines sans dépasser le plafond calorique de la phase aiguë." },
+  { situation:"Phase stabilisée, constipation, diabète", produit:"Nutrison Prot NRJ Multifibres", detail:"Hypercalorique / Hyperprotidique avec fibres", why:"Hypercalorique et hyperprotidique pour atteindre la cible une fois stabilisé ; les fibres mixtes régularisent le transit et ralentissent l'absorption du glucose." },
+  { situation:"Diarrhée sous NE", produit:"Sondalis T Energy", detail:"Gomme de guar", why:"La gomme de guar, fibre soluble, est fermentée dans le côlon en acides gras à chaîne courte qui nourrissent la muqueuse et réduisent la diarrhée." },
+  { situation:"Restriction hydrique (RH)", produit:"Sondalis 2 kcal Fibres", detail:"Hypercalorique / Hyperosmolaire", why:"2 kcal/mL : même apport calorique pour un volume moindre." },
+  { situation:"Malabsorptions (grêle court, MICI, etc.)", produit:"Peptamen HN", detail:"Semi-élémentaire", why:"Protéines hydrolysées (peptides) et TCM : absorbés même quand la digestion ou la surface d'absorption sont réduites." },
+  { situation:"Intolérance digestive avec nécessité HC/HP et fibres", produit:"Fresubin Megareal Fibres", detail:"Hypercalorique / Hyperprotidique avec fibres" , why:"Osmolarité basse (285 mOsm/L) et fibres : mieux toléré sur le plan digestif, tout en restant hypercalorique et hyperprotidique." }
 ];
 
 const EN_SANS_FIBRE_NOTE = "Régime sans résidus (poussée de MICI, post-opératoire immédiat d'anastomose digestive) : choisir la variante sans fibre du soluté habituel (Nutrison Prot NRJ, Fresubin original, Fresubin 2 kcal, etc.).";
 
 const NP_PRODUCTS = [
-  { situation:"Phase aiguë", produit:"Olimel N12 / Smofkabiven Prot", detail:"Hypocalorique / Hyperprotidique, sans électrolyte" },
-  { situation:"Phase stabilisée", produit:"Smofkabiven E / Olimel N7E", detail:"Hypercalorique / Hyperprotidique, avec électrolytes" },
-  { situation:"Sur voie veineuse périphérique", produit:"Periolimel N4E / Perikabiven", detail:"< 900 mosM — hypocalorique / hypoprotidique" }
+  { situation:"Phase aiguë", produit:"Olimel N12 / Smofkabiven Prot", detail:"Hypocalorique / Hyperprotidique, sans électrolyte", why:"Plus riche en protéines et moins calorique, sans électrolytes : les ions sont ajustés à part selon le ionogramme, souvent instable en phase aiguë." },
+  { situation:"Phase stabilisée", produit:"Smofkabiven E / Olimel N7E", detail:"Hypercalorique / Hyperprotidique, avec électrolytes", why:"Plus calorique pour atteindre la cible ; électrolytes inclus, la situation ionique étant stable." },
+  { situation:"Sur voie veineuse périphérique", produit:"Periolimel N4E / Perikabiven", detail:"< 900 mosM — hypocalorique / hypoprotidique" , why:"Osmolarité &lt; 900 mOsm/L, tolérée par une veine périphérique (au-delà : risque de phlébite). Apports faibles en contrepartie : solution transitoire." }
 ];
 
 const LIPID_PROFILES = [
@@ -215,7 +217,7 @@ const DEBIT_PRODUCTS = {
     { id: "sondalis_t", nom: "Sondalis T Energy", kcalPerMl: 1.55, protPer100ml: 6, osmolarite: 389, note: "Diarrhée sous NE" },
     { id: "sondalis_2kcal", nom: "Sondalis 2 kcal Fibres", kcalPerMl: 2.0, protPer100ml: 10, osmolarite: 395, note: "Restriction hydrique (RH)" },
     { id: "peptamen_hn", nom: "Peptamen HN", kcalPerMl: 1.33, protPer100ml: 6.6, osmolarite: 350, note: "Malabsorptions" },
-    { id: "fresubin_megareal", nom: "Fresubin Megareal Fibres", kcalPerMl: 1.4, protPer100ml: 6.9, osmolarite: 300, note: "Intolérance digestive avec nécessité HC/HP et fibres" }
+    { id: "fresubin_megareal", nom: "Fresubin Megareal Fibres", kcalPerMl: 1.4, protPer100ml: 6.9, osmolarite: 285, note: "Intolérance digestive avec nécessité HC/HP et fibres" }
   ],
   parenterale: [
     { id: "olimel_n12", nom: "Olimel N12", kcalPerMl: 0.95, protPer100ml: 7.6, osmolarite: 1130, note: "Phase aiguë, besoins protéiques accrus, sans électrolytes (VVC)" },
@@ -233,8 +235,10 @@ const state = {
   checked: {},
   microMode: "",
   survMode: "", survChecked: {},
-  poPoidsHab: "", poAlb: "", poDelai: "6m", poInterv: "", poNonOnco: false, poFdrList: {}, poFdrOpen: false, poMuscle: false, poCfs: 0, poCfsOpen: false, poASA: false, poDiabete: false, poSansSel: false, poApportsNeg: false,
+  poPoidsHab: "", poAlb: "", poDelai: "6m", poInterv: "", poNonOnco: false, poFdrList: {}, poFdrOpen: false, poMuscle: false, poCfs: 0, poCfsOpen: false, poASA: false, poDiabete: false, poSansSel: false, poCnoRenal: false, poCnoDysph: false, poCnoConc: false, poCnoLact: false, poApportsNeg: false,
   soluteSituation: "",
+  // Diabète
+  dbSec: "preop", dbType: "", dbChir: "", dbTtt: {}, dbHba1c: "", dbGly: "", dbUnit: "gl", dbIvseOn: false, dbDebit: "", dbInsSub: "ivse", dbAlim: "po", dbDose24: "", dbStopH: "", dbPostMode: "", egAge: "", egAP: "", egCC: "", egCSA: "", egContenu: "", egGrade: "", egOpenTech: false, adoOpen: {}, egOpenInterp: false, dbRepAlim: false, dbRep12: false, dbClcr: "", dbBasale: "",
   // Débits
   debitVoie: "enterale",
   debitProduitId: "nutrison_pem",
@@ -285,6 +289,7 @@ function calcNonNutritionnel(){
   const citrate = state.renal==='eerc' ? num(state.citQsg)*num(state.citDose)*1.44*0.5*0.59 : 0;
   return { propofol, glucose, citrate, total: propofol+glucose+citrate };
 }
+function why(t){ return t ? `<div class="why"><b>Pourquoi ?</b> ${t}</div>` : ''; }
 function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 
 /* ---------------- ICONS (minimal inline SVG) ---------------- */
@@ -297,6 +302,7 @@ const ICONS = {
   info: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
   clip: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>',
   eye: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+  drop: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.7C9 6.6 6 10 6 14a6 6 0 0 0 12 0c0-4-3-7.4-6-11.3z"/></svg>',
   syringe: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0-1-1-1-2.5 0-3.4L15.6 5.6"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/></svg>'
 };
 
@@ -317,7 +323,8 @@ const TABS = [
   { key:"micro", label:"Micronutriments", icon:ICONS.pill },
   { key:"compl", label:"Complications", icon:ICONS.alert },
   { key:"sri", label:"SRI", icon:ICONS.activity },
-  { key:"surv", label:"Surveillance", icon:ICONS.eye }
+  { key:"surv", label:"Surveillance", icon:ICONS.eye },
+  { key:"diab", label:"Diabète", icon:ICONS.drop }
 ];
 
 /* ---------------- SHARED: cibles nutritionnelles ---------------- */
@@ -382,6 +389,7 @@ function renderCalc(){
       </div>
     </div>` : ''}
     ${result && result.ajuste ? `<div class="subtext" style="margin-top:10px;">Poids ajusté = poids idéal + 0,25 × (poids réel − poids idéal)</div>` : ''}
+    ${result ? why(result.ajuste ? "Au-delà d'un IMC de 30, la masse grasse consomme peu d'énergie : le poids réel surestimerait les besoins. La RFE 2026 retient le poids idéal (25 × T²) plus 25 % de l'excès de poids." : "Poids <strong>sec</strong> d'avant l'épisode aigu : les œdèmes et la surcharge hydrique de réanimation ne sont pas de la masse maigre et ne consomment pas d'énergie.") : ''}
   </div>
 
   <div class="card">
@@ -420,6 +428,7 @@ function renderCalc(){
         <div class="sub">${le(phase)}${round(protPerKg,2)} g/kg/j${protRangeShown ? ` (plage ${phase.protMin}–${phase.protMax})` : ''}${renalActive ? ` (${renal.label})` : ''}</div>
       </div>
     </div>` : ''}
+    ${result ? why(({aigue:"En phase de choc, le foie produit lui-même du glucose, et les apports ne freinent pas cette production : nourrir davantage expose à la suralimentation (hyperglycémie, surcharge) sans bénéfice démontré. Dans NUTRIREA-3, des apports bas en phase aiguë ont été associés à une récupération plus rapide qu'une cible standard. D'où un plafond ≤ 10 kcal/kg/j et ≤ 0,4 g/kg/j, apports non nutritionnels compris.",stabilisee:"La production endogène de glucose diminue et la tolérance s'améliore : on augmente par paliers, avec 20 kcal/kg/j et 0,9 g/kg/j comme plafonds pour ne pas basculer dans la suralimentation.",rehabilitation:"Phase anabolique : les apports servent alors à reconstruire le muscle, surtout s'ils sont associés à la mobilisation. Les cibles deviennent des objectifs à atteindre, et non plus des plafonds.",postop:"Après une chirurgie, l'agression est moins intense qu'en choc : la cible est d'emblée de 20–25 kcal/kg/j et 1–1,3 g/kg/j, atteinte progressivement pour limiter le catabolisme postopératoire."})[state.phaseKey] + (renalActive ? (state.renal==='ira' ? ' <br>IRA sans EER : les protéines produisent de l\'urée que le rein n\'élimine plus ; dans EFFORT Protein, des apports protéiques élevés étaient associés à une évolution moins favorable en cas d\'IRA.' : ' <br>EER : les acides aminés passent dans l\'effluent (de l\'ordre de 10–15 g/j en EERc), d\'où une cible protéique plus haute.') : '')) : ''}
     ${phaseNote}
   </div>
 
@@ -456,6 +465,7 @@ function renderCalc(){
         <div class="val" style="color:var(--teal);">${round(kcalNutri)} <span style="font-size:13px;">kcal/j</span></div>
         <div class="sub">${round(kcalNutri/poids,1)} kcal/kg/j · repris dans l'onglet Débits</div></div>
     </div>
+    ${why("Le propofol (émulsion lipidique, 1,1 kcal/mL), le glucose (4 kcal/g) et le citrate (0,59 kcal/mmol) apportent de vraies calories. Si on ne les déduit pas, on dépasse le plafond sans le savoir : c'est la principale cause de suralimentation en phase aiguë.")}
     ${nn.total>0 && nn.total>=kcalTarget ? `<div class="warn-box" style="background:var(--amberDim); color:var(--amber);">${ICONS.alert}<span>Les apports non nutritionnels atteignent ${phase.plafond?'le plafond':'la cible'} : <strong>différer le support nutritionnel</strong> et réduire ces apports si possible (propofol 2 %).</span></div>` : ''}
     ` : ''}
   </div>
@@ -478,6 +488,7 @@ function renderCalc(){
     </div>
     <div class="subtext" style="margin-top:10px;">kcal/kg/j (apports totaux) par jour de nutrition · ${state.phaseKey==='aigue' ? 'phase de choc : rester ≤ 10 kcal/kg/j' : `cible atteinte à J${progression[progression.length-1]?.day} si bonne tolérance`}</div>
     ` : ''}
+    ${why("Monter par paliers permet de vérifier la tolérance digestive et de dépister un SRI (chute du phosphate, du potassium, du magnésium) avant d'augmenter. " + (state.sriRisk ? "À risque de SRI, on part plus bas et plus lentement : la renutrition déclenche une sécrétion d'insuline qui fait entrer brutalement P, K et Mg dans les cellules." : ""))}
     <div class="info-box">${ICONS.info}<span>Passer au palier suivant uniquement si la tolérance digestive et métabolique est bonne (K, phosphate, Mg quotidiens J1–J5) ; sinon rester au palier. <strong>Si réaggravation</strong> (reprise ou majoration des catécholamines) : revenir aux cibles du choc (≤ 10 kcal/kg/j, ≤ 0,4 g/kg/j).</span></div>
     ${state.sriRisk ? `<div class="warn-box" style="background:var(--amberDim); color:var(--amber);">${ICONS.alert}<span>Corriger K, phosphate, Mg avant de débuter. 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/kg/j toutes les 24–48 h : cible atteinte en 7 à 10 jours. Thiamine (B1) 200–300 mg/j.</span></div>` : ''}
   </div>
@@ -541,7 +552,7 @@ function renderSolutes(){
       <div class="lbl" style="color:var(--teal);">${selected.situation}</div>
       <div class="val" style="color:var(--teal); font-size:22px;">${selected.produit}</div>
       <div class="sub" style="margin-top:4px;">${selected.detail}</div>
-    </div>` : `
+    </div>${why(selected.why)}` : `
     <div class="info-box">${ICONS.info}<span>Sélectionner une situation clinique ci-dessus pour afficher le soluté recommandé.</span></div>`}
   </div>
 
@@ -634,7 +645,13 @@ function microPlan(){
     notes.push("EERc &gt; 30 jours ou cholestase : Nutryelt ×2 apporte 110 µg/j de manganèse, non épuré par l'EER (risque d'accumulation) : envisager Nutryelt ×1 + sélénium + cuivre.");
   }
   if (m==="np") notes.push("NP &gt; 15 jours : doser B1, B9, Se, Cu, Zn (avec CRP et albumine). B12 seulement si anémie macrocytaire. NP &gt; 30 jours avec atteinte hépatique : doser le manganèse.");
-  return { items, notes };
+  const w = [];
+  if (m==="np") w.push("Les mélanges de NP ne contiennent ni vitamines ni oligo-éléments : sans ajout, carence dès les premiers jours.");
+  if (m==="ne_low") w.push("Sous 1500 kcal/j, le volume de soluté entéral ne couvre pas les apports journaliers en vitamines et oligo-éléments.");
+  if (m==="ne_high") w.push("À partir de 1500 kcal/j, le soluté apporte les apports journaliers recommandés : supplémenter n'apporte rien.");
+  w.push("Thiamine (B1) : cofacteur du métabolisme du glucose, réserves faibles, consommée par la renutrition (risque d'encéphalopathie, d'acidose lactique, de défaillance cardiaque).");
+  if (c.eerc) w.push("EERc : les micronutriments hydrosolubles et certains oligo-éléments passent dans l'effluent.");
+  return { items, notes, why: w.join(' ') };
 }
 
 function renderMicro(){
@@ -663,6 +680,7 @@ function renderMicro(){
         <div class="badgeval" style="color:var(--teal); background:var(--bg, rgba(0,0,0,.2)); font-family:var(--fontMono); font-weight:500; flex-shrink:1; max-width:55%; white-space:normal; line-height:1.35;">${i.dose}</div>
       </div>`).join('')}
       ${plan.notes.map(n=>`<div class="subtext" style="margin-top:8px;">${n}</div>`).join('')}
+      ${why(plan.why)}
     </div>` : `<div class="info-box">${ICONS.info}<span>Sélectionner les apports du patient pour afficher la prescription.</span></div>`}
   </div>
 
@@ -897,6 +915,7 @@ function renderDebit(){
       resultsHtml += `<div class="info-box">${ICONS.info}<span>Renseigner une cible calorique (ou la calculer dans l'onglet Calculateur) pour obtenir le débit.</span></div>`;
     }
 
+    if (scenarios.length) resultsHtml += why("Débit = calories à apporter ÷ densité du soluté (kcal/mL) ÷ durée d'administration. Les calories non nutritionnelles déjà reçues (propofol, glucose, citrate) sont retirées de la cible pour ne pas la dépasser ; la ligne « sans déduction » montre ce qu'on prescrirait en les ignorant.");
     // Tableau des débits par palier de progression (5, 10, 15... kcal/kg/j)
     if (poidsNutri){
       const { kcalPerKg } = getTargets();
@@ -1009,6 +1028,7 @@ function renderDebit(){
     }
   }
 
+  if (state.debitSource !== 'cible' && (parseFloat(state.debitValeur)||0) > 0) resultsHtml += why("Calories = débit × durée × densité du soluté. À comparer à la cible de l'onglet Calculateur, en tenant compte des apports non nutritionnels.");
   return `
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.calc}</div>
@@ -1021,7 +1041,7 @@ function renderDebit(){
   </div>`;
 }
 
-const PANELS = { calc:renderCalc, solutes:renderSolutes, micro:renderMicro, debit:renderDebit, compl:renderCompl, sri:renderSri, surv:renderSurv, preop:renderPreop };
+const PANELS = { calc:renderCalc, solutes:renderSolutes, micro:renderMicro, debit:renderDebit, compl:renderCompl, sri:renderSri, surv:renderSurv, preop:renderPreop, diab:renderDiab };
 
 /* ---------------- RENDER: PRÉ-OPÉRATOIRE ---------------- */
 // Diagnostic et sévérité de la dénutrition : HAS 2019 (< 70 ans) et 2021 (≥ 70 ans), repris par la RFE SFAR/HAS 2026 (Figure 1)
@@ -1183,8 +1203,6 @@ function renderPreop(){
     <div class="chips">
       ${chip('poMuscle','Sarcopénie : force ou masse musculaire réduite')}
       ${chip('poASA','Score ASA ≥ 3')}
-      ${chip('poDiabete','Diabète')}
-      ${chip('poSansSel','Restriction sodée (insuffisance cardiaque, cirrhose décompensée…)')}
     </div>
     <details ${state.poCfsOpen?'open':''} id="po-cfs-details" style="margin-top:10px;">
       <summary class="row-item" style="cursor:pointer; list-style:none;"><div><div class="t">Clinical Frailty Scale : ${state.poCfs ? `${state.poCfs} · ${CFS[state.poCfs-1][1]}${state.poCfs>=5 ? ' → fragile' : ''}` : 'non renseignée'}</div><div class="s">État habituel, 2 semaines avant la maladie actuelle · fragile si ≥ 5 · toucher pour ${state.poCfsOpen?'replier':'choisir'}</div></div><div class="badgeval" style="color:var(--teal); background:var(--tealDim);">${state.poCfsOpen?'▲':'▼'}</div></summary>
@@ -1220,20 +1238,42 @@ function renderPreop(){
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.pill}</div>
       <div><h2>Que faire ?</h2><p class="subtext">Préparation nutritionnelle avant la chirurgie</p></div></div>
-    <div class="row-item" style="border:1px solid ${g.color}55;"><div><div class="t">${g.t}</div><div class="s">${g.cat}</div></div></div>
-    ${(cardiac ? ev.card.length > 0 : ev.gn >= 2) ? `<div class="row-item" style="display:block;"><div class="t">CNO à prescrire</div>
-      <div class="chips" style="margin-top:8px;">
-        <span class="chip active" style="cursor:default;">Hypercaloriques</span>
-        <span class="chip active" style="cursor:default;">Hyperprotidiques</span>
-        ${state.poDiabete ? '<span class="chip active" style="cursor:default;">Index glycémique faible</span>' : ''}
-        ${state.poSansSel ? '<span class="chip active" style="cursor:default;">Sans sel / pauvres en sodium</span>' : ''}
+    ${(() => {
+      const needCno = cardiac ? ev.card.length > 0 : ev.gn >= 2;
+      const nCno = cardiac ? (ev.cardSev.length ? 'NE / NP' : ev.card.length ? '2 à 3/j' : '—') : ({1:'—',2:'2/j',3:'3/j',4:'Renutrition'})[ev.gn];
+      const prehabWhy = [ev.age70?'âge':'', (state.poCfs>=5)?`CFS ${state.poCfs}`:'', state.poASA?'ASA ≥ 3':'', (ev.denutri||ev.denutriGN)?'dénutrition':'', state.poMuscle?'sarcopénie':''].filter(Boolean).join(', ');
+      const tile = (lbl, val, sub, color, dim) => `<div class="stat" style="background:${dim}; border:1px solid ${color}; "><div class="lbl" style="color:${color};">${lbl}</div><div class="val" style="color:${color}; font-size:20px;">${val}</div><div class="sub">${sub}</div></div>`;
+      const on = ['var(--teal)','var(--tealDim)'], off = ['var(--textFaint)','var(--elevated)'];
+      const tags = [['Hypercaloriques',true],['Hyperprotidiques',true],['Index glycémique faible',state.poDiabete],['Sans sel',state.poSansSel],['Pauvres en K et P (insuffisance rénale)',state.poCnoRenal],['Texture adaptée (crème, eau gélifiée)',state.poCnoDysph],['Concentrés, petit volume (2 kcal/mL)',state.poCnoConc],['Sans lactose',state.poCnoLact]].filter(t=>t[1]);
+      const adapt = (key,label) => `<button class="chip ${state[key]?'active':''}" data-act="potoggle" data-val="${key}">${label}</button>`;
+      return `
+    <div class="row-item" style="border:1px solid ${g.color}; background:${g.dim || 'var(--elevated)'};"><div><div class="t" style="font-size:16px; color:${g.color};">${g.t}</div><div class="s" style="font-size:13px; color:var(--text);">${g.cat}</div></div></div>
+    ${why((cardiac ? "En chirurgie cardiaque, la dénutrition augmente les complications et la mortalité ; une supplémentation courte (5–10 jours) améliore l'état nutritionnel avant l'agression." : "La dénutrition préopératoire augmente les infections, les fistules et la mortalité. Plus le patient est dénutri et la chirurgie lourde, plus la préparation doit être intense (CNO, puis nutrition artificielle).") + " Préhabilitation : augmenter la réserve fonctionnelle (muscle, capacité cardiorespiratoire) des patients fragiles avant l'agression. Charge glucidique : limite l'insulinorésistance et le catabolisme liés au jeûne.")}
+    <div class="grid grid-2" style="margin:12px 0;">
+      ${tile('CNO', nCno, needCno ? (cardiac ? '≥ 18 g de protéines/dose, 5 à 10 j' : 'avant la chirurgie') : 'pas de CNO', ...(needCno ? on : off))}
+      ${tile('Préhabilitation', prehab ? 'Oui' : 'Non', prehab ? prehabWhy : 'pas de critère', ...(prehab ? on : off))}
+      ${tile('Charge glucidique', state.poDiabete ? 'Si équilibré' : '200 + 200 mL', 'jus de pomme : veille au soir, puis 2 h avant', ...on)}
+      ${tile('Diététicien', 'Oui', 'tout le parcours', ...on)}
+    </div>
+    ${needCno ? `
+    <div class="row-item" style="display:block;"><div class="t">CNO à prescrire</div>
+      <div class="chips" style="margin-top:8px;">${tags.map(t=>`<span class="chip active" style="cursor:default; font-size:14px;">${t[0]}</span>`).join('')}</div>
+      <div class="field-label" style="margin:12px 0 6px;">Adapter les CNO</div>
+      <div class="chips">
+        ${adapt('poDiabete','Diabète')}
+        ${adapt('poSansSel','Restriction sodée (IC, cirrhose décompensée…)')}
+        ${adapt('poCnoRenal','Insuffisance rénale')}
+        ${adapt('poCnoDysph','Dysphagie')}
+        ${adapt('poCnoConc','Satiété précoce / restriction hydrique')}
+        ${adapt('poCnoLact','Intolérance au lactose')}
       </div>
-      <div class="s" style="margin-top:6px;">${cardiac ? '2 à 3/j, ≥ 18 g de protéines par dose, pendant 5 à 10 jours' : (ev.gn===2 ? '2/j' : ev.gn===3 ? '3/j' : 'en complément de la renutrition')}. À préciser sur la prescription.</div></div>` : ''}
+      <div class="subtext" style="margin-top:6px;">Varier les textures et les goûts (boissons lactées ou fruitées, crèmes, potages) pour l'observance ; à prendre entre les repas.</div>
+    </div>` : `<div class="chips" style="margin-bottom:8px;">${adapt('poDiabete','Diabète')}</div>`}
     ${cardiac ? `<div class="row-item"><div><div class="t">Chirurgie cardiaque : jeûne et boisson (RAAC 2021, grade 2+)</div><div class="s">Jeûne limité à 6 h pour les solides et 2 h pour les liquides clairs, avec une boisson glucidique préopératoire.</div></div></div>` : ''}
-    ${prehab ? `<div class="row-item"><div><div class="t">Préhabilitation</div><div class="s">Indiquée ici (${[ev.age70?'âge':'', (state.poCfs>=5)?`fragilité, CFS ${state.poCfs}`:'', state.poASA?'ASA ≥ 3':'', (ev.denutri||ev.denutriGN)?'dénutrition':'', state.poMuscle?'sarcopénie':''].filter(Boolean).join(', ')}). Programme stratifié sur le risque : exercice physique, équilibration des comorbidités, stratégie nutritionnelle (RFE 2026, grade 2).</div></div></div>` : ''}
+    ${prehab ? `<div class="row-item"><div><div class="t">Préhabilitation</div><div class="s">Programme stratifié sur le risque : exercice physique, équilibration des comorbidités, stratégie nutritionnelle (RFE 2026, grade 2).</div></div></div>` : ''}
     ${ev.denutri || ev.denutriGN || (ev.perte >= 10) ? `<div class="row-item"><div><div class="t">Bilan si amaigrissement important</div><div class="s">Albumine, préalbumine, ± vitamines B1, B9, B12, C, A, D, E.</div></div></div>` : ''}
-    <div class="row-item"><div><div class="t">Charge glucidique</div><div class="s">${state.poDiabete ? 'Diabète : pas de charge glucidique si le diabète est déséquilibré ; sinon ' : ''}200 mL de jus de pomme la veille au soir, 200 mL 2 h avant la chirurgie.</div></div></div>
-    <div class="row-item"><div><div class="t">Diététicien</div><div class="s">À faire intervenir durant tout le parcours périopératoire (RFE 2026, avis d'experts).</div></div></div>
+    <div class="row-item"><div><div class="t">Charge glucidique</div><div class="s">${state.poDiabete ? 'Diabète : pas de charge glucidique si le diabète est déséquilibré ; sinon ' : ''}200 mL de jus de pomme la veille au soir, 200 mL 2 h avant la chirurgie.</div></div></div>`;
+    })()}
     <div class="info-box">${ICONS.info}<span><strong>Immunonutrition</strong> (Oral Impact, Enteral Impact) : pas en routine. La RFE 2026 ne peut rien recommander (données non concluantes) ; mauvaise tolérance et coût élevé.</span></div>
     <div class="info-box">${ICONS.info}<span><strong>Post-opératoire</strong> : reprise orale ou artificielle la plus précoce possible, cible 20–25 kcal/kg/j et 1–1,3 g/kg/j de protéines atteinte progressivement (Calculateur, phase « Post-opératoire »).</span></div>
   </div>` : ''}
@@ -1340,6 +1380,799 @@ function renderSurv(){
   </div>`;
 }
 
+/* ---------------- RENDER: DIABÈTE ---------------- */
+// Sources : fiches simplifiées SFAR/SFD version 2025 (Cheisson et al.) ; mise au point Cheisson, Prat Anesth Réa 2025 ;
+// livret des protocoles NAR 2025. Cible glycémique en réanimation : choix du service (1,2–1,8 g/L).
+const DB_TYPES = [
+  { v:"dt1", label:"DT1", s:"ou pancréatectomie totale" },
+  { v:"dt2i", label:"DT2 sous insuline", s:"" },
+  { v:"dt2", label:"DT2 sans insuline", s:"" }
+];
+const DB_CHIR = [
+  { v:"amb", label:"Courte", s:"≤ 1 repas jeûné" },
+  { v:"maj", label:"Mineure ou majeure", s:"et/ou ≥ 2 repas jeûnés" },
+  { v:"urg", label:"Urgente", s:"" }
+];
+// [id, libellé, exemples, courte ≤1 repas, mineure/majeure, urgente] — fiches SFAR/SFD 2025
+const DB_TTT = [
+  ["metf","Metformine","Glucophage, Stagid, associations (Janumet, Eucreas…)","Pas d'arrêt","Pas de prise le matin","Arrêt"],
+  ["su","Sulfamides, glinides","Amarel, Diamicron, Novonorm","Pas d'arrêt","Pas de prise le matin","Arrêt"],
+  ["dpp4","iDPP-4, inhibiteurs des α-glucosidases","Januvia, Xelevia, Galvus, Onglyza, acarbose","Pas d'arrêt","Pas de prise le matin","Arrêt"],
+  ["glp1","Agonistes du GLP-1 (quotidiens ou hebdomadaires)","Victoza, Ozempic, Trulicity, Mounjaro","Pas d'arrêt (échographie gastrique ± séquence rapide)","Pas d'arrêt, y compris le matin de l'intervention (échographie gastrique ± séquence rapide)","Arrêt"],
+  ["sglt2","iSGLT2 (gliflozines)","Forxiga, Jardiance, Invokana","Dernière prise 3 jours avant","Dernière prise 3 jours avant","Arrêt ; cétonémie si arrêt < 3 j"],
+  ["ins","Insulines SC","lente, rapide, mélanges","Pas d'arrêt","Pas d'injection le matin (sauf basale dans le DT1)","Arrêt et relais IVSE"],
+  ["pompe","Pompe à insuline","","Pas d'arrêt","Arrêt à l'arrivée au bloc (maintien possible, voir critères)","Arrêt et relais IVSE"]
+];
+// Seuils [mmol/L, g/L] des fiches SFAR/SFD
+const DB_T = { h22:[2.2,0.4], h33:[3.3,0.6], n5:[5,0.9], n6:[6,1.1], n10:[10,1.8], n12:[12,2.2], n14:[14,2.5], n165:[16.5,3] };
+function dbT(k){ return DB_T[k][state.dbUnit==='mmol' ? 0 : 1]; }
+function dbGlyVal(){ const v = parseFloat(String(state.dbGly).replace(',','.')); return isNaN(v) || v<=0 ? null : v; }
+function dbFmt(k){ const [m,g] = DB_T[k]; return state.dbUnit==='mmol' ? `${String(m).replace('.',',')} mmol/L` : `${String(g).replace('.',',')} g/L`; }
+function dbBin(v){
+  if (v==null) return null;
+  if (v < dbT('h22')) return 0;
+  if (v < dbT('h33')) return 1;
+  if (v < dbT('n5')) return 2;
+  if (v < dbT('n6')) return 3;
+  if (v <= dbT('n10')) return 4;
+  if (v < dbT('n14')) return 5;
+  if (v < dbT('n165')) return 6;
+  return 7;
+}
+const DB_BIN_LABEL = ["< 2,2 mmol/L (0,4 g/L)","2,2–3,3 mmol/L (0,4–0,6 g/L)","3,3–5 mmol/L (0,6–0,9 g/L)","5–6 mmol/L (0,9–1,1 g/L)","6–10 mmol/L (1,1–1,8 g/L)","10–14 mmol/L (1,8–2,5 g/L)","14–16,5 mmol/L (2,5–3 g/L)","≥ 16,5 mmol/L (≥ 3 g/L)"];
+// Protocole IVSE SFAR/SFD : initiation [bolus, débit DT1, débit DT2, G30, contrôle] ; adaptation [delta ou action, G30, contrôle]
+const DB_IVSE_INIT = [
+  { bolus:0, d1:0, d2:0, g30:"2 ampoules (6 g) IVD, prévenir le médecin", ctl:"15 min" },
+  { bolus:0, d1:0, d2:0, g30:"1 ampoule (3 g) IVD", ctl:"30 min" },
+  { bolus:0, d1:0, d2:0, g30:"", ctl:"1 h" },
+  { bolus:0, d1:1, d2:0, g30:"", ctl:"1 h" },
+  { bolus:0, d1:1, d2:0, g30:"", ctl:"2 h" },
+  { bolus:3, d1:2, d2:2, g30:"", ctl:"1 h" },
+  { bolus:4, d1:3, d2:3, g30:"", ctl:"1 h" },
+  { bolus:6, d1:4, d2:4, g30:"", ctl:"1 h", med:true }
+];
+const DB_IVSE_ADAPT = [
+  { stop:true, g30:"2 ampoules (6 g) IVD, prévenir le médecin", ctl:"15 min" },
+  { stop:true, g30:"1 ampoule (3 g) IVD", ctl:"30 min" },
+  { delta:-1, ctl:"1 h" },
+  { delta:-1, ctl:"1 h" },
+  { delta:0, ctl:"2 h" },
+  { delta:1, ctl:"1 h" },
+  { delta:2, ctl:"1 h" },
+  { bolus6:true, ctl:"1 h" }
+];
+// Bolus correcteur SC (basal-bolus)
+function dbCorrection(v){
+  if (v==null) return null;
+  if (v < dbT('h33')) return { u:0, txt:"Hypoglycémie : 1 ampoule de G30 % IV ou 15 g de sucre PO (voir Hypo / hyper)" };
+  if (v <= dbT('n10')) return { u:0, txt:"Pas de bolus correcteur" };
+  if (v < dbT('n12')) return { u:3, txt:"+ 3 UI SC" };
+  if (v < dbT('n165')) return { u:4, txt:"+ 4 UI SC" };
+  return { u:6, txt:"+ 6 UI SC et recherche de cétose" };
+}
+const DB_CARBS = [
+  // [nom, kcal/100 mL, protéines g/100 mL, glucides g/100 mL, sucres g/100 mL, diabète ?]
+  ["Fresubin DB Control", 105, 4.5, 9.3, 2.4, true],
+  ["Nutrison Advanced Diason", 103, 4.3, 11.3, 2.3, true],
+  ["Sondalis HP 2 kcal Fibre", 200, 10, 20, 1.5, false],
+  ["Fresubin Intensive", 122, 10, 12.9, 8, false],
+  ["Fresubin Megareal Fibre", 140, 6.9, 15, 1, false],
+  ["Nutrison Protein Plus Energy", 150, 7.5, 16.9, null, false],
+  ["Peptamen HN", 133, 6.6, 15.6, null, false]
+];
+
+function renderDiab(){
+  const sec = state.dbSec;
+  const t = state.dbType;
+  const seg = (act, cur, opts) => `<div class="seg">${opts.map(o=>`<button data-act="${act}" data-val="${o.v}" class="${cur===o.v?'active':''}">${o.label}</button>`).join('')}</div>`;
+  const section = (title) => `<div class="field-label" style="margin:18px 0 8px; color:var(--teal);">${title}</div>`;
+  const row = (tt, s, badge, color) => `<div class="row-item"><div><div class="t">${tt}</div>${s?`<div class="s">${s}</div>`:''}</div>${badge?`<div class="badgeval" style="color:${color||'var(--teal)'}; background:${color==='var(--red)'?'var(--redDim)':color==='var(--amber)'?'var(--amberDim)':'var(--tealDim)'}; white-space:normal; max-width:45%; line-height:1.35;">${badge}</div>`:''}</div>`;
+  const field = (id, label, val, unit, ph='') => `
+      <label class="field"><span class="field-label">${label}</span>
+        <div class="input-wrap"><input type="number" inputmode="decimal" id="${id}" value="${val}" placeholder="${ph}"><span class="unit">${unit}</span></div></label>`;
+  const box = (title, color, dim, body) => `<div class="card" style="background:${dim}; border:1px solid ${color}; margin:12px 0 0;"><div class="field-label" style="color:${color}; margin-bottom:10px;">${title}</div>${body}</div>`;
+  const line = (txt) => `<div style="font-size:13px; line-height:1.6; margin-bottom:6px;">— ${txt}</div>`;
+
+  let body = '';
+  if (sec === 'preop') body = renderDiabPreop({seg, section, row, field, box, line});
+  else if (sec === 'postop') body = renderDiabPostop({seg, section, row, field, box, line});
+  else body = renderDiabInsuline({seg, section, row, field, box, line});
+
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.drop}</div>
+      <div><h2>Patient diabétique</h2><p class="subtext">Fiches simplifiées SFAR/SFD 2025</p></div></div>
+    ${seg('dbsec', sec, [{v:'preop',label:'Pré-op'},{v:'postop',label:'Post-op / réa'},{v:'ins',label:'Insuline'}])}
+    ${section('Type de diabète')}
+    <div class="chips">${DB_TYPES.map(o=>`<button class="chip ${t===o.v?'active':''}" data-act="dbtype" data-val="${o.v}">${o.label}${o.s?` <span style="opacity:.7;">(${o.s})</span>`:''}</button>`).join('')}</div>
+    ${t==='dt1' ? `<div class="warn-box" style="background:var(--redDim); color:var(--text);">${ICONS.alert}<span><strong>DT1 : ne jamais arrêter l'insuline basale</strong> (acidocétose en quelques heures). Même conduite après pancréatectomie totale (besoins souvent plus faibles : carence associée en glucagon).</span></div>` : ''}
+  </div>
+  ${body}`;
+}
+
+/* ---------------- ÉCHOGRAPHIE GASTRIQUE ---------------- */
+// Perlas 2011 (grades 0-2), Perlas 2013 (volume = 27 + 14,6 × CSA DLD − 1,28 × âge), Bouvet 2011 (CSA semi-assis 340 mm²),
+// Van de Putte 2017, Kruisselbrink 2019, Pan 2024 (méta-analyse). Schémas originaux (non issus d'images publiées).
+const EG_SVG_SONDE = `
+<svg viewBox="0 0 320 170" width="100%" style="max-width:420px; display:block; margin:0 auto;" role="img" aria-label="Position de la sonde">
+  <rect x="0" y="0" width="320" height="170" rx="12" fill="var(--elevated)"/>
+  <line x1="20" y1="138" x2="300" y2="138" stroke="var(--borderLight)" stroke-width="3"/>
+  <!-- patient en décubitus latéral droit, vu de face (tête à gauche) -->
+  <circle cx="58" cy="92" r="20" fill="none" stroke="var(--textMuted)" stroke-width="2"/>
+  <path d="M78 96 C110 70, 190 66, 250 84 C272 90, 282 108, 276 124 C270 134, 250 136, 230 136 L96 136 C82 134, 74 118, 78 96 Z" fill="none" stroke="var(--textMuted)" stroke-width="2"/>
+  <path d="M250 84 C262 70, 286 72, 292 92" fill="none" stroke="var(--textMuted)" stroke-width="2"/>
+  <!-- repère : rebord costal et xiphoïde -->
+  <path d="M150 74 C160 92, 170 104, 186 110" fill="none" stroke="var(--textFaint)" stroke-dasharray="4 3"/>
+  <text x="120" y="126" font-size="9" fill="var(--textFaint)">rebord costal</text>
+  <!-- sonde en position sagittale sur l'épigastre -->
+  <g transform="translate(176 58) rotate(-8)">
+    <rect x="-9" y="-30" width="18" height="34" rx="4" fill="var(--teal)" opacity=".9"/>
+    <rect x="-12" y="2" width="24" height="7" rx="3" fill="var(--teal)"/>
+    <circle cx="0" cy="-22" r="3" fill="var(--bg, #0b1220)"/>
+  </g>
+  <path d="M186 32 L198 24" stroke="var(--teal)" stroke-width="1.5"/>
+  <text x="200" y="20" font-size="9" fill="var(--teal)">Sonde convexe 2–5 MHz</text>
+  <text x="200" y="31" font-size="9" fill="var(--textMuted)">sagittale, épigastre</text>
+  <text x="200" y="42" font-size="9" fill="var(--textMuted)">repère vers la tête</text>
+  <text x="14" y="20" font-size="11" font-weight="600" fill="var(--text)">Décubitus latéral droit</text>
+  <text x="14" y="33" font-size="9" fill="var(--textMuted)">+ dorsal tête à 45° (grade)</text>
+  <text x="44" y="156" font-size="9" fill="var(--textFaint)">tête</text>
+  <text x="262" y="156" font-size="9" fill="var(--textFaint)">jambes</text>
+</svg>`;
+const EG_SVG_COUPE = `
+<svg viewBox="0 0 320 220" width="100%" style="max-width:420px; display:block; margin:0 auto;" role="img" aria-label="Coupe échographique de l'antre">
+  <defs>
+    <pattern id="egspeck" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="#3a3f47"/><circle cx="2" cy="2" r=".9" fill="#6b717a"/><circle cx="5" cy="4.5" r=".7" fill="#555b63"/></pattern>
+    <clipPath id="egfan"><path d="M160 10 L300 160 A190 190 0 0 1 20 160 Z"/></clipPath>
+  </defs>
+  <path d="M160 10 L300 160 A190 190 0 0 1 20 160 Z" fill="#0d0f12"/>
+  <g clip-path="url(#egfan)">
+    <!-- lobe gauche du foie -->
+    <path d="M40 40 C90 30, 170 30, 230 44 L220 88 C180 96, 120 98, 60 92 Z" fill="url(#egspeck)"/>
+    <!-- antre (cible / oeil de boeuf) -->
+    <ellipse cx="160" cy="118" rx="40" ry="24" fill="#23272c" stroke="#9aa1aa" stroke-width="3"/>
+    <ellipse cx="160" cy="118" rx="31" ry="16" fill="none" stroke="#1a1c20" stroke-width="5"/>
+    <ellipse cx="160" cy="118" rx="22" ry="9" fill="#5a6068"/>
+    <!-- pancréas -->
+    <path d="M70 158 C120 150, 200 150, 260 160 L256 176 C200 168, 120 168, 74 174 Z" fill="#4b5058"/>
+    <!-- aorte longitudinale + AMS -->
+    <path d="M40 196 L290 196 L290 212 L40 212 Z" fill="#000"/>
+    <line x1="40" y1="196" x2="290" y2="196" stroke="#8b929b" stroke-width="2"/>
+    <path d="M150 196 C170 186, 200 182, 250 184" stroke="#000" stroke-width="7" fill="none"/>
+    <!-- mesures AP et CC -->
+    <line x1="160" y1="92" x2="160" y2="144" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <line x1="118" y1="118" x2="202" y2="118" stroke="var(--amber)" stroke-width="1.5" stroke-dasharray="4 3"/>
+  </g>
+  <text x="44" y="70" font-size="10" fill="#e6e8eb">Foie (lobe G)</text>
+  <text x="206" y="112" font-size="10" fill="var(--teal)" font-weight="600">Antre</text>
+  <text x="166" y="100" font-size="9" fill="var(--amber)">AP</text>
+  <text x="104" y="121" font-size="9" fill="var(--amber)">CC</text>
+  <text x="84" y="190" font-size="9" fill="#e6e8eb">Pancréas</text>
+  <text x="48" y="208" font-size="9" fill="#e6e8eb">Aorte (ou VCI)</text>
+  <text x="226" y="180" font-size="9" fill="#e6e8eb">AMS</text>
+  <text x="8" y="18" font-size="9" fill="var(--textFaint)">tête ←</text>
+  <text x="270" y="18" font-size="9" fill="var(--textFaint)">→ pieds</text>
+</svg>`;
+const EG_SVG_ASPECTS = `
+<svg viewBox="0 0 330 120" width="100%" style="max-width:460px; display:block; margin:0 auto;" role="img" aria-label="Aspects de l'antre">
+  <defs>
+    <pattern id="egfrost" width="5" height="5" patternUnits="userSpaceOnUse"><rect width="5" height="5" fill="#8a9098"/><circle cx="1.5" cy="1.5" r=".8" fill="#c9ced4"/></pattern>
+    <pattern id="egmix" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="#3b4047"/><circle cx="2" cy="2" r="1.6" fill="#9aa1aa"/><circle cx="6" cy="6" r="1.2" fill="#1b1e22"/></pattern>
+  </defs>
+  <g>
+    <rect x="4" y="4" width="102" height="92" rx="8" fill="#0d0f12"/>
+    <ellipse cx="55" cy="50" rx="24" ry="13" fill="#23272c" stroke="#9aa1aa" stroke-width="3"/>
+    <ellipse cx="55" cy="50" rx="12" ry="5" fill="#5a6068"/>
+    <text x="55" y="112" font-size="10" text-anchor="middle" fill="var(--text)">Vide (cible)</text>
+  </g>
+  <g>
+    <rect x="114" y="4" width="102" height="92" rx="8" fill="#0d0f12"/>
+    <circle cx="165" cy="50" r="32" fill="#050607" stroke="#9aa1aa" stroke-width="2"/>
+    <circle cx="156" cy="40" r="1.5" fill="#cfd4da"/><circle cx="172" cy="56" r="1.2" fill="#cfd4da"/><circle cx="162" cy="62" r="1" fill="#cfd4da"/>
+    <text x="165" y="112" font-size="10" text-anchor="middle" fill="var(--text)">Liquide clair</text>
+  </g>
+  <g>
+    <rect x="224" y="4" width="102" height="92" rx="8" fill="#0d0f12"/>
+    <circle cx="275" cy="46" r="32" fill="url(#egmix)" stroke="#9aa1aa" stroke-width="2"/>
+    <path d="M247 30 A32 32 0 0 1 303 30 L303 36 A40 22 0 0 0 247 36 Z" fill="url(#egfrost)"/>
+    <rect x="248" y="78" width="54" height="16" fill="#050607"/>
+    <text x="275" y="112" font-size="10" text-anchor="middle" fill="var(--text)">Solide</text>
+  </g>
+</svg>`;
+
+function egCalc(){
+  const num = x => { const v = parseFloat(String(x).replace(',','.')); return isNaN(v) ? null : v; };
+  const age = num(state.egAge), poids = num(state.poids), ap = num(state.egAP), cc = num(state.egCC);
+  let csa = num(state.egCSA);
+  if (csa==null && ap!=null && cc!=null) csa = Math.PI * ap * cc / 4; // cm²
+  if (csa==null || age==null) return { csa };
+  const vol = Math.max(0, 27 + 14.6*csa - 1.28*age);
+  return { csa, vol, perkg: poids ? vol/poids : null };
+}
+function egDecision(){
+  const c = state.egContenu, g = state.egGrade, calc = egCalc();
+  if (!c) return null;
+  if (c==='nc') return { t:'Examen non concluant', s:'Considérer l\'estomac comme plein : induction en séquence rapide (ou report si chirurgie programmée).', col:'var(--amber)' };
+  if (c==='solide') return { t:'Estomac plein (solide ou liquide épais)', s:'Chirurgie programmée : reporter. Urgence : induction en séquence rapide.', col:'var(--red)' };
+  if (c==='vide' || g==='0') return { t:'Estomac vide (grade 0)', s:'Risque d\'inhalation bas : induction habituelle.', col:'var(--teal)' };
+  const pk = calc.perkg;
+  if (pk!=null){
+    return pk > 1.5 ? { t:`Liquide > 1,5 mL/kg (${pk.toFixed(1).replace('.',',')} mL/kg)`, s:'Estomac « plein » : séquence rapide ou report.', col:'var(--red)' }
+                    : { t:`Liquide ≤ 1,5 mL/kg (${pk.toFixed(1).replace('.',',')} mL/kg)`, s:'Volume compatible avec un estomac à jeun : induction habituelle.', col:'var(--teal)' };
+  }
+  if (g==='1') return { t:'Liquide clair, grade 1', s:'Habituellement ≤ 1,5 mL/kg (volume de jeûne). Confirmer avec le calcul du volume.', col:'var(--teal)' };
+  if (g==='2') return { t:'Liquide clair, grade 2', s:'Habituellement > 1,5 mL/kg : estomac « plein » probable. Calculer le volume.', col:'var(--amber)' };
+  return { t:'Liquide clair', s:'Préciser le grade et calculer le volume.', col:'var(--amber)' };
+}
+
+function renderEchoGastrique(h){
+  const {section, row, field, box, line} = h;
+  const calc = egCalc();
+  const dec = egDecision();
+  const chip = (act, cur, v, label) => `<button class="chip ${cur===v?'active':''}" data-act="${act}" data-val="${v}">${label}</button>`;
+  const fmt = (x, d=0) => x.toFixed(d).replace('.',',');
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.eye}</div>
+      <div><h2>Échographie gastrique</h2><p class="subtext">Agonistes du GLP-1, gastroparésie, jeûne incertain</p></div></div>
+
+    <details ${state.egOpenTech?'open':''} id="eg-tech">
+      <summary class="row-item" style="cursor:pointer; list-style:none;"><div><div class="t">1 · Technique et image à obtenir</div><div class="s">Position, sonde, repères</div></div><div class="badgeval" style="color:var(--teal); background:var(--tealDim);">${state.egOpenTech?'▲':'▼'}</div></summary>
+      ${EG_SVG_SONDE}
+      <div style="height:10px;"></div>
+      ${EG_SVG_COUPE}
+      ${line('Sonde convexe basse fréquence, coupe <strong>sagittale ou parasagittale épigastrique</strong>, repère vers la tête.')}
+      ${line('Repères : lobe gauche du foie en avant, pancréas en arrière, <strong>aorte ou VCI</strong> et AMS en profondeur. L\'antre est entre le foie et le pancréas.')}
+      ${line('Examen en décubitus dorsal (tête à 45°), puis en <strong>décubitus latéral droit</strong> (DLD) : le contenu migre vers l\'antre, plus sensible. La mesure de surface pour le volume se fait en DLD.')}
+      ${line('Surface antrale (CSA) : diamètres antéropostérieur (AP) et craniocaudal (CC) de séreuse à séreuse, entre deux contractions ; CSA = π × AP × CC / 4 (ou contour manuel).')}
+      <div class="subtext" style="margin-top:6px;">Schémas simplifiés, non à l'échelle.</div>
+    </details>
+
+    <details ${state.egOpenInterp?'open':''} id="eg-interp" style="margin-top:8px;">
+      <summary class="row-item" style="cursor:pointer; list-style:none;"><div><div class="t">2 · Interprétation</div><div class="s">Nature du contenu et grade de Perlas</div></div><div class="badgeval" style="color:var(--teal); background:var(--tealDim);">${state.egOpenInterp?'▲':'▼'}</div></summary>
+      ${EG_SVG_ASPECTS}
+      <div style="overflow-x:auto; margin-top:8px;"><table>
+        <thead><tr><th>Aspect</th><th>Contenu</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Antre plat, parois épaisses, aspect en « cible » ou « œil de bœuf »</td><td>Vide</td></tr>
+          <tr><td class="strong">Antre distendu, rond, anéchogène (± bulles « ciel étoilé » si ingestion récente)</td><td>Liquide clair</td></tr>
+          <tr><td class="strong">Contenu homogène hyperéchogène</td><td>Liquide épais (lait, CNO) : comme un solide</td></tr>
+          <tr><td class="strong">« Verre dépoli » avec ombre postérieure (air), puis aspect hétérogène</td><td>Solide</td></tr>
+        </tbody></table></div>
+      <div style="overflow-x:auto; margin-top:10px;"><table>
+        <thead><tr><th>Grade (liquide clair)</th><th>Définition</th><th>Volume attendu</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">0</td><td>Antre vide en décubitus dorsal et en DLD</td><td>Estomac vide</td></tr>
+          <tr><td class="strong">1</td><td>Liquide visible seulement en DLD</td><td>Faible (≈ 16 ± 36 mL), compatible avec le jeûne</td></tr>
+          <tr><td class="strong">2</td><td>Liquide visible dans les deux positions</td><td>Élevé (≈ 180 ± 83 mL), souvent &gt; 1,5 mL/kg</td></tr>
+        </tbody></table></div>
+      <div class="subtext" style="margin-top:6px;">Seuils : volume de liquide clair ≤ 1,5 mL/kg = volume de jeûne habituel. Bouvet 2011 (position semi-assise) : CSA &gt; 340 mm² (3,4 cm²) → estomac à risque (solide et/ou &gt; 0,8 mL/kg).</div>
+    </details>
+
+    ${section('3 · Calculateur de volume (liquide clair, CSA en DLD)')}
+    <div class="grid grid-2" style="grid-template-columns:1fr 1fr;">
+      ${field('f-eg-age','Âge',state.egAge,'ans')}
+      ${field('f-eg-poids','Poids',state.poids,'kg')}
+      ${field('f-eg-ap','Diamètre AP',state.egAP,'cm')}
+      ${field('f-eg-cc','Diamètre CC',state.egCC,'cm')}
+    </div>
+    <div style="margin-top:10px;">${field('f-eg-csa','ou CSA mesurée (prioritaire)',state.egCSA,'cm²')}</div>
+    ${calc.vol!=null ? `
+    <div class="grid grid-3" style="margin-top:12px;">
+      <div class="stat"><div class="lbl">CSA</div><div class="val" style="font-size:18px;">${fmt(calc.csa,1)} cm²</div><div class="sub">${fmt(calc.csa*100,0)} mm²</div></div>
+      <div class="stat"><div class="lbl">Volume</div><div class="val" style="font-size:18px;">${fmt(calc.vol,0)} mL</div></div>
+      <div class="stat" style="${calc.perkg!=null ? (calc.perkg>1.5 ? 'background:var(--redDim); border:1px solid var(--red);' : 'background:var(--tealDim); border:1px solid var(--teal);') : ''}"><div class="lbl">mL/kg</div><div class="val" style="font-size:18px; color:${calc.perkg!=null ? (calc.perkg>1.5?'var(--red)':'var(--teal)') : 'var(--text)'};">${calc.perkg!=null ? fmt(calc.perkg,1) : '—'}</div><div class="sub">seuil 1,5</div></div>
+    </div>` : `<div class="info-box">${ICONS.info}<span>Renseigner l'âge et la CSA (ou les deux diamètres).</span></div>`}
+    <div class="subtext" style="margin-top:6px;">Volume (mL) = 27,0 + 14,6 × CSA<sub>DLD</sub> (cm²) − 1,28 × âge (Perlas 2013). Valide de 0 à 500 mL, adulte non enceinte, IMC &lt; 40 (bonne concordance aussi si IMC &gt; 35). Non applicable si contenu solide ou épais.</div>
+
+    ${section('4 · Algorithme décisionnel')}
+    <span class="field-label">Contenu</span>
+    <div class="chips">
+      ${chip('egcont', state.egContenu, 'vide', 'Vide')}
+      ${chip('egcont', state.egContenu, 'liquide', 'Liquide clair')}
+      ${chip('egcont', state.egContenu, 'solide', 'Solide / liquide épais')}
+      ${chip('egcont', state.egContenu, 'nc', 'Non concluant')}
+    </div>
+    ${state.egContenu==='liquide' ? `<span class="field-label" style="margin-top:10px;">Grade</span><div class="chips">${chip('eggrade', state.egGrade, '1', 'Grade 1 (DLD seul)')}${chip('eggrade', state.egGrade, '2', 'Grade 2 (deux positions)')}</div>` : ''}
+    ${dec ? `<div class="row-item" style="border:1px solid ${dec.col}; margin-top:12px;"><div><div class="t" style="color:${dec.col};">${dec.t}</div><div class="s" style="font-size:13px; color:var(--text);">${dec.s}</div></div></div>` : ''}
+    ${dec ? why("Jusqu'à 1,5 mL/kg de liquide clair, c'est le volume habituel d'un estomac à jeun, sans sur-risque d'inhalation. Un contenu solide ou épais signe un estomac plein, quel que soit le volume. Un examen non concluant ne permet pas d'exclure un estomac plein : on se protège comme s'il l'était.") : ''}
+    <div style="overflow-x:auto; margin-top:10px;"><table>
+      <tbody>
+        <tr><td class="strong">Solide ou épais</td><td style="color:var(--red);">Estomac plein → report ou séquence rapide</td></tr>
+        <tr><td class="strong">Liquide clair &gt; 1,5 mL/kg</td><td style="color:var(--red);">Estomac plein → report ou séquence rapide</td></tr>
+        <tr><td class="strong">Liquide clair ≤ 1,5 mL/kg</td><td style="color:var(--teal);">Induction habituelle</td></tr>
+        <tr><td class="strong">Vide (grade 0)</td><td style="color:var(--teal);">Induction habituelle</td></tr>
+        <tr><td class="strong">Non concluant</td><td style="color:var(--amber);">Considérer comme plein</td></tr>
+      </tbody></table></div>
+
+    <details style="margin-top:12px;"><summary class="row-item" style="cursor:pointer; list-style:none;"><div><div class="t">Performances diagnostiques et références</div><div class="s">Toucher pour afficher</div></div></summary>
+      <div style="overflow-x:auto;"><table style="font-size:12px;">
+        <thead><tr><th>Étude</th><th>Critère</th><th>Se</th><th>Sp</th><th>VPP</th><th>VPN</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Kruisselbrink 2019 (volontaires, prévalence 50 %)</td><td>Solide ou &gt; 1,5 mL/kg</td><td>100 %</td><td>97,5 %</td><td>97,6 %</td><td>100 %</td></tr>
+          <tr><td class="strong">Bouvet 2011 (180 patients)</td><td>CSA &gt; 340 mm² → solide et/ou &gt; 0,8 mL/kg</td><td>91 %</td><td>71 %</td><td>—</td><td>—</td></tr>
+          <tr><td class="strong">Pan 2024 (méta-analyse, 9 études, 523 sujets)</td><td>Nature et volume du contenu</td><td>95 %</td><td>88 %</td><td>—</td><td>—</td></tr>
+        </tbody></table></div>
+      <div class="subtext" style="margin-top:6px; line-height:1.5;">Ces valeurs portent sur la détection d'un <strong>estomac à risque</strong> (critère de substitution), pas sur l'inhalation elle-même, trop rare pour être étudiée directement. Kruisselbrink : RV+ 40, RV− 0. Pan : AUC 0,97, forte hétérogénéité. Van de Putte 2017 : 6,2 % d'estomacs pleins chez des patients à jeun, 5 % d'examens non concluants.</div>
+      <div class="subtext" style="margin-top:8px; line-height:1.6;">
+        Perlas A et al. Anesth Analg 2011;113:93-7 · doi:10.1213/ANE.0b013e31821b98c0<br>
+        Perlas A et al. Anesth Analg 2013;116:357-63 · doi:10.1213/ANE.0b013e318274fc19<br>
+        Bouvet L et al. Anesthesiology 2011;114:1086-92 · doi:10.1097/ALN.0b013e31820dee48<br>
+        Kruisselbrink R et al. Br J Anaesth 2017;118:77-82 · doi:10.1093/bja/aew400<br>
+        Van de Putte P et al. Br J Anaesth 2017;118:363-71 · doi:10.1093/bja/aew435<br>
+        Kruisselbrink R et al. Anesth Analg 2019;128:89-95 · doi:10.1213/ANE.0000000000003372<br>
+        Pan X et al. Insights Imaging 2024;15:98 · doi:10.1186/s13244-024-01665-0
+      </div>
+    </details>
+  </div>`;
+}
+
+function renderDiabPreop(h){
+  const {seg, section, row, field, box, line} = h;
+  const c = state.dbChir;
+  const hb = parseFloat(String(state.dbHba1c).replace(',','.'));
+  const sel = DB_TTT.filter(x=>state.dbTtt[x[0]]);
+  const col = c==='amb' ? 3 : c==='maj' ? 4 : c==='urg' ? 5 : null;
+  const hbC = isNaN(hb) ? null : hb < 5 ? ['Différer','HbA1c < 5 %','var(--red)','var(--redDim)'] : hb < 6 ? ['Avis médecin généraliste / diabétologue','HbA1c 5–6 %','var(--amber)','var(--amberDim)'] : hb <= 8 ? ['Intervention possible','HbA1c 6–8 %','var(--teal)','var(--tealDim)'] : hb <= 9 ? ['Avis médecin généraliste / diabétologue','HbA1c 8–9 %','var(--amber)','var(--amberDim)'] : ['Différer la chirurgie programmée','HbA1c > 9 %','var(--red)','var(--redDim)'];
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.clip}</div>
+      <div><h2>Évaluation préopératoire</h2><p class="subtext">Consultation d'anesthésie</p></div></div>
+    ${section('Stratégie préopératoire')}
+    <div class="grid grid-2" style="grid-template-columns:1fr 1fr;">
+      ${field('f-db-hba1c','HbA1c',state.dbHba1c,'%')}
+      <div></div>
+    </div>
+    ${hbC ? `<div class="row-item" style="border:1px solid ${hbC[2]}; background:${hbC[3]}; margin-top:12px;"><div><div class="t" style="color:${hbC[2]};">${hbC[0]}</div><div class="s">${hbC[1]} · stratégie préopératoire SFAR/SFD 2025</div></div></div>` : ''}
+    ${hbC ? why("L'HbA1c reflète la glycémie des 3 derniers mois. Élevée : l'hyperglycémie chronique augmente les infections du site opératoire et les complications, et l'équilibrer avant une chirurgie programmée réduit ce risque. Très basse chez un diabétique traité : fait suspecter des hypoglycémies répétées, qui se majorent avec le jeûne.") : ''}
+    <div class="subtext" style="margin-top:6px;">HbA1c : récupérer le dernier dosage, ou doser si aucun depuis plus de 3 mois ou si le diabète est déséquilibré. &lt; 5 % ou &gt; 9 % : différer ; 5–6 % ou 8–9 % : avis du médecin généraliste ou du diabétologue ; 6–8 % : intervention possible.</div>
+
+    ${section('Diabète en CPA')}
+    ${row('Gastroparésie', '± cimétidine 400 mg avant l\'induction ; échographie gastrique ; ± induction en séquence rapide (crush).')}
+    ${row('Dysautonomie', 'Hypotension orthostatique : ± monitorage hémodynamique, SIPO.')}
+    ${row('Micro- et macroangiopathie', 'Rétinopathie, néphropathie, neuropathie ; AOMI, coronaropathie (ischémie silencieuse), AVC.')}
+    ${row('Signe du prieur', 'Facteur de risque d\'intubation difficile.')}
+    ${row('Bilan minimum', 'HbA1c &lt; 3 mois, bilan électrolytique (créatinine), ECG de repos.')}
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.pill}</div>
+      <div><h2>Gestion des traitements</h2><p class="subtext">Choisir la chirurgie et cocher les traitements du patient</p></div></div>
+    <div class="chips">${DB_CHIR.map(o=>`<button class="chip ${c===o.v?'active':''}" data-act="dbchir" data-val="${o.v}">${o.label}${o.s?` <span style="opacity:.7;">(${o.s})</span>`:''}</button>`).join('')}</div>
+    ${section('Traitements')}
+    ${DB_TTT.map(x=>`
+      <div class="checkrow ${state.dbTtt[x[0]]?'checked':''}" data-act="dbttt" data-val="${x[0]}">
+        <input type="checkbox" ${state.dbTtt[x[0]]?'checked':''} readonly>
+        <div><div class="t">${x[1]}</div>${x[2]?`<div class="s">${x[2]}</div>`:''}</div>
+      </div>`).join('')}
+    ${col && sel.length ? box('Conduite à tenir', 'var(--teal)', 'var(--tealDim)', sel.map(x=>{
+        let v = x[col];
+        const red = /Arrêt/.test(v) && x[0]==='sglt2';
+        return row(x[1], '', v, red ? 'var(--red)' : undefined);
+      }).join('')) : `<div class="info-box">${ICONS.info}<span>Choisir le type de chirurgie et cocher au moins un traitement.</span></div>`}
+    ${col && sel.length ? why(sel.map(x=>({
+        metf:"<strong>Metformine</strong> : inutile sans repas, et risque d'acidose lactique si hypoperfusion ou insuffisance rénale aiguë périopératoire.",
+        su:"<strong>Sulfamides, glinides</strong> : stimulent la sécrétion d'insuline même à jeun, donc hypoglycémie si le patient ne mange pas.",
+        dpp4:"<strong>Gliptines, acarbose</strong> : agissent sur la glycémie des repas, sans intérêt à jeun.",
+        glp1:"<strong>Agonistes du GLP-1</strong> : action prolongée (l'arrêt la veille ne change rien) et bénéfice glycémique ; le risque est l'estomac plein, qu'on recherche à l'échographie.",
+        sglt2:"<strong>iSGLT2</strong> : la perte urinaire de glucose et la cétogenèse persistent plusieurs jours ; avec le jeûne et le stress chirurgical, risque d'acidocétose à glycémie normale.",
+        ins:"<strong>Insulines</strong> : rapides et mélanges sans repas = hypoglycémie ; la basale du DT1 ne s'arrête jamais (acidocétose en quelques heures sans insuline).",
+        pompe:"<strong>Pompe</strong> : au bloc, difficile à surveiller et à ajuster (champ, position, déconnexion) ; l'IVSE est plus maniable."
+      })[x[0]]).join(' ') + (col===5 ? ' <strong>Urgence</strong> : apports et fonction rénale imprévisibles, donc arrêt des antidiabétiques oraux et relais par insuline.' : '')) : ''}
+    ${state.dbTtt.sglt2 ? `<div class="warn-box" style="background:var(--redDim); color:var(--text);">${ICONS.alert}<span><strong>iSGLT2 : acidocétose euglycémique.</strong> Si la dernière prise date de moins de 3 jours (urgence) : cétonémie (plutôt que cétonurie) et algorithme dédié (Insuline › Hypo / hyper). Reprise après vérification de la fonction rénale et reprise alimentaire.</span></div>` : ''}
+    ${state.dbTtt.glp1 ? `<div class="warn-box" style="background:var(--amberDim); color:var(--text);">${ICONS.alert}<span><strong>Agonistes du GLP-1 : poursuivis</strong>, y compris le matin d'une intervention majeure. Vidange gastrique ralentie (surtout en phase d'augmentation de dose ou si symptômes digestifs) : <strong>échographie gastrique</strong> (voir plus bas) ; si doute, induction en séquence rapide.</span></div>` : ''}
+    ${state.dbTtt.pompe ? `<div class="info-box">${ICONS.info}<span><strong>Maintien possible de la pompe si :</strong> intervention courte (&lt; 2 h) ; pas de perturbation attendue du contrôle glycémique ; dispositifs visibles et à distance du champ ; glycémies artérielles, veineuses ou capillaires (plutôt que le glucose interstitiel) en peropératoire ; accord du patient et de l'équipe d'anesthésie ; gestion par le patient précocement en post-opératoire ; avis du diabétologue pour les débits. Sinon : arrêt au bloc, IVSE, reprise en SSPI (livret NAR).</span></div>` : ''}
+  </div>
+
+  ${renderEchoGastrique(h)}
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.info}</div>
+      <div><h2>Jeûne et veille de l'intervention</h2><p class="subtext">DT1 et DT2</p></div></div>
+    ${row('La veille', 'Repas du soir normal et traitement habituel, insulines comprises, aux mêmes posologies.')}
+    ${row('Jeûne', 'Solides jusqu\'à H-6, liquides clairs jusqu\'à H-2. Charge glucidique seulement si le diabète est équilibré.')}
+    ${row('Soluté glucosé', 'G10 % 40 mL/h à partir du premier repas jeûné <strong>si et seulement si</strong> insuline lente injectée (matin ou soir) ou pompe en cours. Jeûne prolongé : 100 à 150 g de glucose par jour.')}
+    ${row('Le matin', 'Pas de prise des antidiabétiques non insuliniques (sauf chirurgie courte).')}
+    ${row('Glycémies capillaires', 'Avant le dîner, au coucher, à 6 h, puis toutes les 3 h avant le bloc.')}
+    <div style="overflow-x:auto; margin-top:8px;"><table>
+      <thead><tr><th>Glycémie</th><th>Veille et nuit</th><th>Matin avant le bloc</th></tr></thead>
+      <tbody>
+        <tr><td class="strong">&lt; 5 mmol/L (0,9 g/L)</td><td>15 g de sucre PO, contrôle à 15 min, prévenir le médecin</td><td>G10 % 60 mL/h, prévenir le médecin</td></tr>
+        <tr><td class="strong">5–10 (0,9–1,8)</td><td>Rien</td><td>Rien</td></tr>
+        <tr><td class="strong">10–12 (1,8–2,2)</td><td>3 UI SC d'analogue rapide</td><td>3 UI SC</td></tr>
+        <tr><td class="strong">12–16,5 (2,2–3)</td><td>4 UI SC</td><td>4 UI SC</td></tr>
+        <tr><td class="strong">≥ 16,5 (≥ 3)</td><td>6 UI SC + recherche de cétose, prévenir le médecin (ou IVSE en réa la nuit)</td><td style="color:var(--red);">6–7 h : VVP NaCl 0,9 %. Avant le bloc : IVSE en réa, différer le bloc</td></tr>
+      </tbody></table></div>
+    <div class="info-box">${ICONS.info}<span>Objectif périopératoire : <strong>5–10 mmol/L (0,9–1,8 g/L)</strong>. Prévention des NVPO : dexaméthasone 4 mg + dropéridol ou sétron ; reprise alimentaire rapide.</span></div>
+  </div>`;
+}
+
+/* ---------------- ANTIDIABÉTIQUES NON INSULINIQUES ---------------- */
+// Posologies et adaptations rénales d'après les RCP (ANSM/EMA). hypo : 'non' seul, 'oui' = risque propre.
+const DB_ADO = [
+  { id:"metf", cls:"Metformine", ex:"Glucophage, Stagid ; associations Janumet, Velmetia, Eucreas", hypo:"non",
+    poso:"Glucophage : début 500 ou 850 mg × 2–3/j, pendant ou à la fin des repas ; max 3 g/j en 3 prises. Stagid 700 mg : habituellement 1 cp × 3/j, max 8 cp/j.",
+    rein:"DFG 45–59 : max 2 g/j (Stagid 5 cp) ; 30–44 : max 1 g/j (Stagid 2 cp) ; &lt; 30 : contre-indiquée. Si DFG 30–59, débuter à la moitié de la dose maximale au plus.",
+    ei:"Troubles digestifs (très fréquents) ; carence en B12 (fréquente) ; acidose lactique : dégradation aiguë de la fonction rénale, déshydratation, sepsis, hypoxie, maladie cardiorespiratoire, insuffisance hépatique, alcool, jeûne prolongé, cétose.",
+    surv:"DFG avant l'initiation puis au moins 1 fois/an, tous les 3–6 mois chez le sujet âgé ou si risque d'aggravation. B12 si suspicion de carence (anémie, neuropathie). <strong>Chirurgie</strong> : pas de prise le matin (intervention mineure ou majeure) ; reprise selon la fiche SFAR/SFD 2025 : alimentation orale suffisante, glycémie &lt; 12 mmol/L (2,2 g/L) depuis plus de 24 h et clairance &gt; 60 mL/min. <strong>Contraste iodé IV</strong> : arrêt avant ou au moment de l'examen, quel que soit le DFG ; reprise après 48 h au moins si la fonction rénale est stable." },
+  { id:"su", cls:"Sulfamides hypoglycémiants", ex:"Gliclazide (Diamicron 60 mg LM : 30–120 mg/j), glimépiride (Amarel : 1–6 mg/j), glibenclamide (Daonil 5 mg, Hémi-Daonil 2,5 mg, Daonil faible 1,25 mg : max 15 mg/j)", hypo:"oui",
+    poso:"Gliclazide LM et glimépiride : 1 prise au petit-déjeuner. Glibenclamide : début ½ cp avant le petit-déjeuner, max 3 cp/j en 2–3 prises.",
+    rein:"Contre-indiqués en insuffisance rénale ou hépatique sévère (pas de seuil de DFG dans les RCP). Gliclazide : même posologie en IR légère à modérée, avec surveillance attentive. Glibenclamide : risque d'hypoglycémie sévère et prolongée en cas d'IR.",
+    ei:"<strong>Hypoglycémies</strong>, parfois sévères et prolongées (sujet âgé, IR, apports irréguliers, alcool) : hospitalisation parfois nécessaire, resucrage à poursuivre plusieurs jours. Interactions : miconazole contre-indiqué (gliclazide, glibenclamide) ; fluconazole et bêtabloquants (masquent les signes) en précaution d'emploi.",
+    surv:"Glycémies capillaires ; ne pas donner à jeun (pas de prise le matin d'une intervention) ; fonction rénale." },
+  { id:"glin", cls:"Glinides", ex:"Répaglinide (Novonorm 0,5 / 1 / 2 mg)", hypo:"oui",
+    poso:"Début 0,5 mg dans les 15 min avant chaque repas ; max 4 mg par prise et 16 mg/j. Repas sauté = dose supprimée.",
+    rein:"Pas de contre-indication rénale (8 % d'excrétion rénale) ; prudence lors de la titration en IR. <strong>Contre-indiqué en insuffisance hépatique sévère.</strong>",
+    ei:"Hypoglycémies (fréquentes). <strong>Gemfibrozil : contre-indiqué.</strong> Clopidogrel : association à éviter ; si indispensable, surveillance glycémique et médicale attentive.",
+    surv:"Glycémies capillaires ; interactions (métabolisme par le CYP2C8 et le CYP3A4)." },
+  { id:"dpp4", cls:"Inhibiteurs de la DPP-4 (gliptines)", ex:"Sitagliptine (Januvia, Xelevia, génériques), vildagliptine (Galvus, génériques), saxagliptine (Onglyza)", hypo:"non",
+    poso:"Sitagliptine 100 mg/j. Vildagliptine 50 mg × 2/j avec la metformine, 50 mg/j en une prise le matin avec un sulfamide. Saxagliptine 5 mg/j.",
+    rein:"Sitagliptine : 50 mg/j si DFG 30–44 ; 25 mg/j si &lt; 30, dialyse comprise. Vildagliptine : 50 mg/j si ClCr &lt; 50 (expérience limitée en hémodialyse). Saxagliptine : 2,5 mg/j si DFG &lt; 45 ; non recommandée en hémodialyse.",
+    ei:"Pancréatite aiguë : arrêter si suspectée, ne pas réintroduire si confirmée. Pemphigoïde bulleuse ; arthralgies. <strong>Vildagliptine</strong> : hépatites rares ; ne pas utiliser en cas d'insuffisance hépatique ou si ALAT/ASAT &gt; 3 × N avant traitement.",
+    surv:"DFG pour adapter la dose ; douleur abdominale intense et persistante = penser à la pancréatite. Vildagliptine : bilan hépatique avant, puis tous les 3 mois la 1<sup>re</sup> année, puis régulièrement." },
+  { id:"sglt2", cls:"Inhibiteurs de SGLT2 (gliflozines)", ex:"Dapagliflozine (Forxiga 10 mg), empagliflozine (Jardiance 10 / 25 mg), canagliflozine (Invokana 100 / 300 mg)", hypo:"non",
+    poso:"Dapagliflozine 10 mg/j dans toutes les indications. Empagliflozine 10 mg/j ; 25 mg possible dans le DT2 seulement si DFG ≥ 60 (10 mg max si &lt; 60 ; 10 mg dans l'insuffisance cardiaque et la MRC).",
+    rein:"Efficacité glycémique réduite si DFG &lt; 45. Initiation non recommandée si DFG &lt; 25 (dapagliflozine) ou &lt; 20 (empagliflozine) ; poursuite possible en dessous pour la protection cardio-rénale (pas d'arrêt systématique en dialyse dans les RCP, mais aucun effet glycémique). Baisse initiale modérée et transitoire du DFG.",
+    ei:"<strong>Acidocétose, y compris euglycémique</strong> (apports réduits, déshydratation, baisse de l'insuline, chirurgie, maladie aiguë, alcool) ; infections génitales et urinaires ; déplétion volémique, hypotension (≥ 75 ans) ; gangrène de Fournier.",
+    surv:"Chirurgie : dernière prise 3 jours avant l'intervention (SFAR/SFD 2025) ; si arrêt &lt; 3 jours, cétonémie (plutôt que cétonurie). Reprise une fois l'alimentation et l'équilibre glycémique retrouvés, cétonémie normale." },
+  { id:"glp1", cls:"Agonistes du GLP-1 (et GIP/GLP-1)", ex:"Liraglutide (Victoza ; Xultophy avec la dégludec), dulaglutide (Trulicity), sémaglutide (Ozempic SC, Rybelsus PO), tirzépatide (Mounjaro)", hypo:"non",
+    poso:"Liraglutide 0,6 mg/j ≥ 1 sem → 1,2 → 1,8 mg/j max. Dulaglutide : 0,75 mg/sem en monothérapie, 1,5 mg/sem en association, puis 3 et 4,5 mg (paliers ≥ 4 sem). Ozempic : 0,25 mg/sem 4 sem → 0,5 → 1 → 2 mg/sem. Rybelsus : 1,5 (ou 3) mg/j 1 mois → 4 (ou 7) → 9 (ou 14) → 25 → 50 mg/j, à jeun avec ≤ 120 mL d'eau, 30 min avant tout repas. Tirzépatide : 2,5 mg/sem 4 sem, puis +2,5 mg toutes les 4 sem, max 15 mg/sem.",
+    rein:"Pas d'adaptation en IR légère à sévère. IR terminale : liraglutide et dulaglutide non recommandés ; sémaglutide : expérience limitée, prudence ; tirzépatide : pas d'ajustement, prudence.",
+    ei:"Nausées, vomissements, diarrhée → déshydratation et IRA ; vidange gastrique ralentie : <strong>pneumopathies d'inhalation rapportées sous AG ou sédation profonde</strong> (RCP 4.4) ; pancréatite (arrêter si suspectée) ; lithiase biliaire ; sémaglutide : aggravation transitoire d'une rétinopathie si baisse rapide de la glycémie.",
+    surv:"Poursuivis en périopératoire avec échographie gastrique (SFAR/SFD 2025) ; hydratation et fonction rénale si troubles digestifs. Hypoglycémie faible en monothérapie, accrue avec un sulfamide ou l'insuline (réduire leur dose)." },
+  { id:"agi", cls:"Inhibiteurs des α-glucosidases", ex:"Acarbose (génériques ; Glucor n'est plus commercialisé)", hypo:"non",
+    poso:"Début 50 mg × 3/j au début des repas, puis 100 mg × 3/j (exceptionnellement 200 mg × 3/j).",
+    rein:"Contre-indiqué si ClCr &lt; 25 mL/min ; aussi en insuffisance hépatique sévère, MICI, ulcérations coliques, occlusion.",
+    ei:"Flatulences (très fréquentes), diarrhée, douleurs abdominales. En association (sulfamide, insuline) : <strong>resucrer avec du glucose</strong>, pas du saccharose.",
+    surv:"Transaminases à envisager pendant les 6–12 premiers mois (surtout si insuffisance hépatique) ; arrêter si élévation." }
+];
+function renderAdo(h){
+  const {row} = h;
+  const hypoTag = x => x==='oui' ? `<span class="badgeval" style="color:var(--red); background:var(--redDim); font-size:11px;">Hypo : oui</span>` : `<span class="badgeval" style="color:var(--teal); background:var(--tealDim); font-size:11px;">Hypo : non (seul)</span>`;
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.pill}</div>
+      <div><h2>Antidiabétiques non insuliniques</h2><p class="subtext">Posologies, fonction rénale, effets indésirables, surveillance</p></div></div>
+    ${DB_ADO.map(a=>`
+    <details ${state.adoOpen[a.id]?'open':''} data-ado="${a.id}" style="margin-bottom:8px;">
+      <summary class="row-item" style="cursor:pointer; list-style:none; margin-bottom:0;"><div><div class="t">${a.cls}</div><div class="s">${a.ex}</div></div>${hypoTag(a.hypo)}</summary>
+      <div style="padding:10px 4px 4px;">
+        <div style="font-size:13px; line-height:1.6; margin-bottom:6px;"><strong>Posologie</strong> : ${a.poso}</div>
+        <div style="font-size:13px; line-height:1.6; margin-bottom:6px;"><strong>Fonction rénale</strong> : ${a.rein}</div>
+        <div style="font-size:13px; line-height:1.6; margin-bottom:6px;"><strong>Effets indésirables</strong> : ${a.ei}</div>
+        <div style="font-size:13px; line-height:1.6;"><strong>Surveillance</strong> : ${a.surv}</div>
+      </div>
+    </details>`).join('')}
+    <div class="subtext" style="margin-top:6px;">Classes sans hypoglycémie propre : risque d'hypoglycémie si associées à un sulfamide, un glinide ou de l'insuline (réduire ces derniers). D'après les RCP (BDPM, EMA) vérifiés en septembre 2026 ; délais périopératoires : fiches SFAR/SFD 2025.</div>
+  </div>`;
+}
+
+function renderDiabPostop(h){
+  const {seg, section, row, field, box, line} = h;
+  const m = state.dbPostMode;
+  const insulinPrev = state.dbType==='dt1' || state.dbType==='dt2i';
+  const clcr = parseFloat(state.dbClcr);
+  const bas = parseFloat(state.dbBasale);
+  // Algorithme de reprise DT2
+  let rep = null;
+  if (state.dbType==='dt2' || state.dbType==='dt2i'){
+    if (!state.dbRepAlim) rep = { t:'Continuer et adapter le basal-bolus', s:'Alimentation orale insuffisante.', c:'var(--amber)' };
+    else if (!state.dbRep12) rep = { t:'Continuer et adapter le basal-bolus', s:'Glycémies pas encore < 12 mmol/L (2,2 g/L) depuis plus de 24 h.', c:'var(--amber)' };
+    else {
+      const ad = isNaN(clcr) ? 'Renseigner la clairance de la créatinine.' : clcr > 60 ? 'Reprise de tous les antidiabétiques non insuliniques.' : clcr >= 30 ? 'Reprise des antidiabétiques non insuliniques <strong>sauf metformine</strong>.' : '<strong>Pas de reprise</strong> des antidiabétiques non insuliniques.';
+      let ins;
+      if (state.dbType==='dt2i') ins = 'Reprise des insulines antérieures (adaptées). Retour à domicile avec compte rendu au médecin traitant.';
+      else if (isNaN(bas)) ins = 'Renseigner la dose d\'insuline lente actuelle.';
+      else if (bas >= 16) ins = '<strong>Insuline lente ≥ 16 UI/j</strong> : continuer le basal-bolus et appeler l\'équipe d\'endocrinologie avant la sortie.';
+      else ins = 'Insuline lente &lt; 16 UI/j : arrêter le basal-bolus. Retour à domicile avec compte rendu au médecin traitant.';
+      rep = { t:'Reprise possible', s:`${ad}<br>${ins}`, c:'var(--teal)' };
+    }
+  }
+  const modes = [{v:'ne',label:'NE continue'},{v:'np',label:'NP'},{v:'po',label:'Orale'},{v:'jeun',label:'À jeun'}];
+  const insByMode = {
+    ne: 'Pas de bolus « repas ». Instable ou glycémies hors cible répétées : IVSE. Stabilisé : insuline lente + bolus correcteurs toutes les 4 h.',
+    np: 'Pas de bolus « repas ». IVSE en réanimation si glycémies hors cible ; stabilisé : insuline lente + bolus correcteurs.',
+    po: 'Basal-bolus : insuline lente + bolus avant chaque repas (0,1 UI/kg ; moitié si les apports sont insuffisants) + bolus correcteurs.',
+    jeun: 'Insuline lente maintenue (jamais d\'arrêt chez le DT1) + bolus correcteurs. Apport glucosé indispensable.'
+  };
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.activity}</div>
+      <div><h2>Cibles et insuline selon la nutrition</h2><p class="subtext">Post-opératoire et réanimation</p></div></div>
+    <div class="grid grid-2">
+      <div class="stat" style="background:var(--tealDim); border:1px solid var(--teal);"><div class="lbl" style="color:var(--teal);">Cible en réanimation (NAR)</div><div class="val" style="color:var(--teal); font-size:20px;">1,2–1,8 g/L</div><div class="sub">6,7–10 mmol/L</div></div>
+      <div class="stat"><div class="lbl">Bloc / SSPI (SFAR/SFD)</div><div class="val" style="font-size:20px;">0,9–1,8 g/L</div><div class="sub">5–10 mmol/L</div></div>
+    </div>
+    <div class="subtext" style="margin-top:6px;">Hypoglycémie : &lt; 0,6 g/L (3,3 mmol/L). Hyperglycémie &gt; 1,8 g/L associée à une surmorbidité.</div>
+    ${section('Mode de nutrition')}
+    ${seg('dbpost', m, modes)}
+    ${m ? box('Insuline', 'var(--teal)', 'var(--tealDim)', `<div style="font-size:13px; line-height:1.6;">${insByMode[m]}</div>`) : ''}
+    ${m ? why(({ne:"La NE continue apporte du glucose en permanence : il n'y a pas de pic de repas à couvrir. La basale et les corrections suffisent ; l'IVSE s'impose si les besoins varient beaucoup (instabilité, corticoïdes, sepsis).",
+      np:"La NP apporte du glucose en continu, souvent en grande quantité : même raisonnement que la NE continue, avec IVSE si les glycémies restent hors cible.",
+      po:"Les repas créent des pics de glycémie : le bolus avant le repas les couvre, la basale couvre le reste de la journée.",
+      jeun:"Même à jeun, l'organisme a besoin d'insuline basale (production hépatique de glucose) ; sans glucose apporté, cette basale expose à l'hypoglycémie."})[m]) : ''}
+    ${m==='ne' || m==='np' ? `<div class="warn-box" style="background:var(--amberDim); color:var(--text);">${ICONS.alert}<span><strong>Arrêt imprévu de la ${m==='ne'?'NE':'NP'} sous insuline</strong> (transport, bloc, intolérance) : risque d'hypoglycémie. Apport glucosé de relais (G10 % 40 mL/h) et contrôle glycémique ; IVSE : reprendre l'algorithme.</span></div>` : ''}
+    ${m==='jeun' ? `<div class="info-box">${ICONS.info}<span>Jeûne prolongé : 100 à 150 g de glucose par jour (par exemple G10 % 40 mL/h ≈ 100 g/j).</span></div>` : ''}
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.flask}</div>
+      <div><h2>Solutés</h2><p class="subtext">Apports glucidiques</p></div></div>
+    ${row('Nutrition entérale', 'Formule standard hyperprotéinée adaptée à la phase (onglet Solutés). Aucune recommandation ne justifie une formule « diabète » en réanimation : l\'équilibre glycémique repose sur l\'insuline.')}
+    ${row('Formule « diabète »', 'Option chez le patient stabilisé à glycémie difficile à équilibrer : moins de glucides, plus de lipides mono-insaturés et de fibres. <strong>Pauvre en protéines</strong> (≈ 4,5 g/100 mL) : cible protéique difficile à atteindre.')}
+    ${row('Apports non nutritionnels', 'G5, G10, G30 et citrate comptent dans les calories (Calculateur, rubrique « Apports non nutritionnels »).')}
+    ${row('CNO', 'Index glycémique faible (formules « DB », « Diabet »).')}
+    <div style="overflow-x:auto; margin-top:8px;"><table>
+      <thead><tr><th>Soluté</th><th>kcal/100 mL</th><th>Prot.</th><th>Glucides</th><th>g gluc./1000 kcal</th></tr></thead>
+      <tbody>${DB_CARBS.map(p=>`<tr><td class="strong" style="${p[5]?'color:var(--teal);':''}">${p[0]}${p[5]?' ★':''}</td><td>${p[1]}</td><td>${String(p[2]).replace('.',',')} g</td><td>${String(p[3]).replace('.',',')} g</td><td>${Math.round(p[3]*1000/p[1])}</td></tr>`).join('')}</tbody>
+    </table></div>
+    <div class="subtext" style="margin-top:6px;">★ formule « diabète » (disponibilité au livret à vérifier). Données fabricants pour 100 mL.</div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.pill}</div>
+      <div><h2>Micronutriments</h2><p class="subtext">En plus de l'onglet Micronutriments</p></div></div>
+    ${row('Chrome', 'Insulinorésistance sévère en réanimation : test thérapeutique possible, 3–20 µg/h sur 10 h pendant 4 jours.')}
+    ${row('Vitamine B12', 'Metformine au long cours : risque de carence. Doser si anémie macrocytaire ou neuropathie.')}
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.eye}</div>
+      <div><h2>Surveillance</h2><p class="subtext">Patient diabétique ou hyperglycémique</p></div></div>
+    ${row('Glycémie', 'Sang total (artériel ou veineux), si possible sur gaz du sang.', 'IVSE : 15 min–2 h · SC : /4–8 h')}
+    ${row('Kaliémie sous IVSE', 'Objectif 4–4,5 mmol/L.', '/4 h ou à chaque changement de débit')}
+    ${row('Cétonémie', 'Glycémie ≥ 16,5 mmol/L (3 g/L) ; iSGLT2 arrêté depuis moins de 3 jours ou acidose sous iSGLT2 (acidocétose euglycémique). Préférer la cétonémie à la cétonurie.', 'selon contexte', 'var(--amber)')}
+    ${row('Créatinine / DFG', 'Avant la reprise de <strong>tous</strong> les antidiabétiques non insuliniques : metformine contre-indiquée si DFG &lt; 30, sulfamides (accumulation, hypoglycémies), gliptines (dose à adapter), gliflozines (efficacité réduite). Détail par classe plus bas.', 'avant reprise')}
+    ${row('HbA1c', 'À l\'admission si non connue, et chez tout patient hyperglycémique non connu diabétique.', '1 fois')}
+    ${row('Phosphate, magnésium, potassium', 'L\'insuline les fait entrer dans les cellules : surveillance renforcée en début de nutrition (onglets SRI et Surveillance).', 'cf. Surveillance')}
+  </div>
+
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.clip}</div>
+      <div><h2>Reprise des traitements</h2><p class="subtext">Sortie de réanimation ou d'hospitalisation</p></div></div>
+    ${state.dbType==='dt1' ? row('DT1', 'Reprendre le schéma basal-bolus (ou la pompe) antérieur, adapté.') :
+      !state.dbType ? `<div class="info-box">${ICONS.info}<span>Choisir le type de diabète.</span></div>` : `
+    <div class="chips">
+      <button class="chip ${state.dbRepAlim?'active':''}" data-act="dbtoggle" data-val="dbRepAlim">Alimentation orale suffisante</button>
+      <button class="chip ${state.dbRep12?'active':''}" data-act="dbtoggle" data-val="dbRep12">Glycémie &lt; 12 mmol/L (2,2 g/L) depuis &gt; 24 h</button>
+    </div>
+    <div class="grid grid-2" style="grid-template-columns:1fr 1fr; margin-top:12px;">
+      ${field('f-db-clcr','Clairance créatinine',state.dbClcr,'mL/min')}
+      ${state.dbType==='dt2' ? field('f-db-basale','Lente SC du basal-bolus',state.dbBasale,'UI/j') : '<div></div>'}
+    </div>
+    ${rep ? `<div class="row-item" style="border:1px solid ${rep.c}; margin-top:12px;"><div><div class="t" style="color:${rep.c};">${rep.t}</div><div class="s" style="font-size:13px; color:var(--text);">${rep.s}</div></div></div>` : ''}
+    ${rep ? why("On ne reprend les comprimés que si le patient mange suffisamment (sinon hypoglycémies sous sulfamides ou glinides), si la glycémie est stable (sinon ils seront insuffisants) et selon la fonction rénale (élimination des médicaments). Plus de 16 UI/j de lente chez un patient qui n'était pas sous insuline signe un besoin insulinique durable : avis endocrinologique.") : ''}
+    <div class="subtext" style="margin-top:6px;">Le seuil de 16 UI/j porte sur la dose d'<strong>insuline lente SC</strong> du basal-bolus (fiche SFAR/SFD 2025), pas sur le débit d'IVSE : les seuils d'IVSE (≤ 4 UI/h ; ≤ 0,5 UI/h chez le non-insulinotraité) servent au relais IVSE → SC, étape précédente (onglet Insuline). iSGLT2 et agonistes du GLP-1 : reprise une fois l'équilibre glycémique et l'alimentation retrouvés. Diabète découvert pendant le séjour : avis diabétologique avant la sortie.</div>`}
+    ${(() => {
+      const k = isNaN(clcr) ? null : clcr > 60 ? 0 : clcr >= 30 ? 1 : 2;
+      // [classe, statut >60, 30–60, <30, pourquoi]
+      const R = [
+        ['Metformine', 'Oui', 'Non', 'Non', 'Élimination rénale exclusive : accumulation → <strong>acidose lactique</strong>, favorisée en post-opératoire par l\'hypoperfusion, l\'hypoxie, le sepsis et les produits de contraste. Contre-indiquée si DFG &lt; 30 ; la fiche SFAR/SFD ne la reprend pas dès 30–60 (fonction rénale encore instable).'],
+        ['Sulfamides', 'Oui', 'Oui (prudence)', 'Non', 'Métabolites actifs éliminés par le rein → <strong>hypoglycémies sévères et prolongées</strong>, d\'autant plus que les apports restent irréguliers. Contre-indiqués en insuffisance rénale sévère ; glibenclamide : pharmacocinétique modifiée dès l\'IR modérée.'],
+        ['Glinides', 'Oui', 'Oui', 'Non', 'Élimination surtout hépatique, mais risque d\'hypoglycémie si les repas sont irréguliers ; la fiche arrête tous les AD si DFG &lt; 30.'],
+        ['Gliptines', 'Oui', 'Oui, dose adaptée', 'Non', 'Élimination rénale (sauf linagliptine) : dose à réduire ; la fiche privilégie l\'insuline si DFG &lt; 30 (reprise possible à dose réduite sur avis).'],
+        ['Gliflozines', 'Oui', 'Oui (effet ↓ si &lt; 45)', 'Non', 'Effet glycémique réduit si DFG &lt; 45, nul si très bas ; initiation non recommandée si DFG &lt; 25 (dapagliflozine) ou &lt; 20 (empagliflozine) ; <strong>acidocétose euglycémique</strong> si reprise avant une alimentation suffisante ; déplétion volémique et baisse du DFG.'],
+        ['Agonistes du GLP-1', 'Oui', 'Oui', 'Non', 'Nausées, vomissements, iléus → déshydratation et IRA. IR terminale : liraglutide et dulaglutide non recommandés, sémaglutide et tirzépatide avec prudence.']
+      ];
+      const col = st => /^Non/.test(st) ? 'var(--red)' : /prudence|adapt|effet/.test(st) ? 'var(--amber)' : 'var(--teal)';
+      return `<details style="margin-top:12px;" ${k!=null?'open':''}><summary class="row-item" style="cursor:pointer; list-style:none;"><div><div class="t">Pourquoi (ne pas) reprendre chaque antidiabétique ?</div><div class="s">${k==null ? 'Renseigner la clairance pour voir la conduite par classe' : 'Clairance ' + (k===0 ? '&gt; 60' : k===1 ? '30–60' : '&lt; 30') + ' mL/min · une fois les conditions de reprise réunies'}</div></div></summary>
+        ${R.map(r=>{ const st = k==null ? '' : r[1+k]; return `<div class="row-item" style="display:block;"><div style="display:flex; justify-content:space-between; gap:10px; align-items:center;"><div class="t">${r[0]}</div>${st?`<div class="badgeval" style="color:${col(st)}; background:var(--elevated2);">${st}</div>`:''}</div><div class="s" style="font-size:12px; line-height:1.5; margin-top:4px; color:var(--textMuted);">${r[4]}</div></div>`; }).join('')}
+        <div class="subtext" style="margin-top:6px;">Conditions communes (fiche SFAR/SFD 2025) : alimentation orale suffisante et glycémies &lt; 12 mmol/L (2,2 g/L) depuis plus de 24 h. Clairance idéalement mesurée. Tant que ces conditions ne sont pas remplies, le basal-bolus assure l'équilibre.</div>
+      </details>`;
+    })()}
+  </div>
+  ${renderAdo(h)}`;
+}
+
+function renderDiabInsuline(h){
+  const {seg, section, row, field, box, line} = h;
+  const sub = state.dbInsSub;
+  const v = dbGlyVal();
+  const b = dbBin(v);
+  const t = state.dbType;
+  const u = state.dbUnit==='mmol' ? 'mmol/L' : 'g/L';
+  const poids = parseFloat(state.poids) || 0;
+  const r1 = x => Math.round(x*10)/10;
+  const fmt = x => String(r1(x)).replace('.',',');
+  const glyInput = `
+    <div class="grid grid-2" style="grid-template-columns:1fr 1fr; align-items:end;">
+      ${field('f-db-gly','Glycémie',state.dbGly,u)}
+      <div class="field"><span class="field-label">Unité</span>${seg('dbunit', state.dbUnit, [{v:'gl',label:'g/L'},{v:'mmol',label:'mmol/L'}])}</div>
+    </div>
+    ${b!=null && sub==='ivse' ? `<div class="subtext" style="margin-top:6px;">Classe : ${DB_BIN_LABEL[b]}</div>` : ''}`;
+  const subs = [{v:'ivse',label:'IVSE'},{v:'sc',label:'SC basal-bolus'},{v:'relais',label:'Relais IVSE → SC'},{v:'hypo',label:'Hypo / hyper'}];
+  let content = '';
+
+  if (sub === 'ivse'){
+    const on = state.dbIvseOn;
+    const d = parseFloat(String(state.dbDebit).replace(',','.'));
+    let res = '';
+    if (b==null) res = `<div class="info-box">${ICONS.info}<span>Saisir la glycémie.</span></div>`;
+    else if (!on){
+      const r = DB_IVSE_INIT[b];
+      const deb = t==='dt1' ? r.d1 : r.d2;
+      const needType = (b===3 || b===4) && !t;
+      res = box('Initiation de l\'IVSE', b<=1 ? 'var(--red)' : 'var(--teal)', b<=1 ? 'var(--redDim)' : 'var(--tealDim)', `
+        <div class="grid grid-3" style="margin-bottom:10px;">
+          <div class="stat"><div class="lbl">Bolus IVD</div><div class="val">${r.bolus} UI</div></div>
+          <div class="stat"><div class="lbl">Débit</div><div class="val">${needType ? '?' : deb} UI/h</div>${(b===3||b===4)?`<div class="sub">DT1 : 1 · DT2 : 0</div>`:''}</div>
+          <div class="stat"><div class="lbl">Contrôle</div><div class="val" style="font-size:18px;">${r.ctl}</div></div>
+        </div>
+        ${r.g30 ? line(`<strong>G30 % : ${r.g30}</strong>`) : ''}
+        ${r.med ? line('<strong>Prévenir le médecin</strong> ; rechercher une cétose ; pas d\'apport glucosé systématique.') : ''}
+        ${needType ? line('Préciser le type de diabète.') : ''}`);
+    } else {
+      const r = DB_IVSE_ADAPT[b];
+      let nd = '', txt = '';
+      if (r.stop){ nd = 'Arrêt'; txt = `Reprise à <strong>½ débit</strong> quand la glycémie dépasse ${t==='dt1' ? '5,5 mmol/L (1 g/L) chez le DT1' : t ? '10 mmol/L (1,8 g/L) chez le DT2' : '5,5 mmol/L (DT1) ou 10 mmol/L (DT2)'}${!isNaN(d) ? ` : ${fmt(d/2)} UI/h` : ''}.`; }
+      else if (r.bolus6){ nd = !isNaN(d) ? `${fmt(d)} UI/h` : 'inchangé'; txt = '<strong>Bolus de 6 UI IVD et prévenir le médecin</strong> ; rechercher une cétose.'; }
+      else if (r.delta===0){ nd = !isNaN(d) ? `${fmt(d)} UI/h` : 'Idem'; txt = 'Pas de modification.'; }
+      else { nd = !isNaN(d) ? `${fmt(Math.max(0, d + r.delta))} UI/h` : `${r.delta>0?'+':''}${r.delta} UI/h`; txt = `${r.delta>0?'+':''}${r.delta} UI/h${!isNaN(d) && d + r.delta <= 0 ? ' → débit nul' : ''}.`; }
+      res = box('Adaptation du débit', b<=1 ? 'var(--red)' : 'var(--teal)', b<=1 ? 'var(--redDim)' : 'var(--tealDim)', `
+        <div class="grid grid-2" style="margin-bottom:10px;">
+          <div class="stat"><div class="lbl">Nouveau débit</div><div class="val">${nd}</div></div>
+          <div class="stat"><div class="lbl">Contrôle</div><div class="val" style="font-size:18px;">${r.ctl}</div></div>
+        </div>
+        ${line(txt)}
+        ${r.g30 ? line(`<strong>G30 % : ${r.g30}</strong>`) : ''}
+        ${!isNaN(d) && d > 4 ? line('<strong>Débit &gt; 4 UI/h</strong> : pas de relais SC possible.') : ''}`);
+    }
+    if (b!=null) res += why(on
+      ? "Le débit s'ajuste à l'écart à la cible : on augmente d'autant plus que la glycémie est haute. En hypoglycémie, on arrête et on resucre, puis on reprend à la moitié du débit, puisque le besoin était surestimé. Le DT1 reprend plus tôt (dès 5,5 mmol/L) car il ne peut pas rester sans insuline. Contrôles rapprochés quand la glycémie est basse ou que le débit change."
+      : "Le débit de départ est proportionnel à la glycémie, avec un bolus au-delà de 1,8 g/L pour corriger plus vite. Chez le DT1, 1 UI/h même en zone normale : sans insuline de base, il fait une acidocétose. Chez le DT2 en zone normale, on attend et on contrôle.");
+    content = `
+      ${glyInput}
+      ${section('Situation')}
+      ${seg('dbivseon', on ? 'on' : 'off', [{v:'off',label:'Initiation'},{v:'on',label:'IVSE en cours'}])}
+      ${on ? `<div style="margin-top:12px;">${field('f-db-debit','Débit actuel',state.dbDebit,'UI/h')}</div>` : ''}
+      ${res}
+      ${section('Modalités')}
+      ${row('Préparation', 'Analogue rapide 1 UI/mL dans NaCl 0,9 % ; robinet proximal sur KTC ou VVP.')}
+      ${row('Où', 'Unités de soins critiques ou bloc seulement. <strong>Jamais en hospitalisation conventionnelle.</strong>')}
+      ${row('Apport glucosé', 'Au bloc : G10 % 40 mL/h systématique, sauf glycémie &gt; 16,5 mmol/L (3 g/L). En réanimation, la nutrition apporte le glucose : si elle est interrompue, G10 % 40 mL/h.')}
+      ${row('Kaliémie', 'Objectif 4–4,5 mmol/L.', '/4 h si stable, sinon à chaque changement de débit')}
+      ${row('Arrêt et relais SC', 'Dès que les glycémies sont stabilisées et ≤ 10 mmol/L (1,8 g/L), si alimentation orale, ou à la sortie de SSPI / soins critiques. Pas de relais si débit &gt; 4 UI/h.')}
+      <details style="margin-top:10px;"><summary class="row-item" style="cursor:pointer; list-style:none;"><div><div class="t">Tableau complet du protocole</div><div class="s">Toucher pour afficher</div></div></summary>
+      <div style="overflow-x:auto;"><table>
+        <thead><tr><th>Glycémie</th><th>Initiation</th><th>Adaptation</th><th>Contrôle</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">&lt; 0,4 g/L (2,2)</td><td>0 · G30 2 amp</td><td>Arrêt · G30 2 amp · médecin</td><td>15 min</td></tr>
+          <tr><td class="strong">0,4–0,6 (2,2–3,3)</td><td>0 · G30 1 amp</td><td>Arrêt · G30 1 amp</td><td>30 min</td></tr>
+          <tr><td class="strong">0,6–0,9 (3,3–5)</td><td>0</td><td>−1 UI/h</td><td>1 h</td></tr>
+          <tr><td class="strong">0,9–1,1 (5–6)</td><td>DT1 1 UI/h · DT2 0</td><td>−1 UI/h</td><td>1 h</td></tr>
+          <tr><td class="strong">1,1–1,8 (6–10)</td><td>DT1 1 UI/h · DT2 0</td><td>Idem</td><td>2 h</td></tr>
+          <tr><td class="strong">1,8–2,5 (10–14)</td><td>Bolus 3 UI + 2 UI/h</td><td>+1 UI/h</td><td>1 h</td></tr>
+          <tr><td class="strong">2,5–3 (14–16,5)</td><td>Bolus 4 UI + 3 UI/h</td><td>+2 UI/h</td><td>1 h</td></tr>
+          <tr><td class="strong">≥ 3 (≥ 16,5)</td><td>Bolus 6 UI + 4 UI/h · médecin</td><td>Bolus 6 UI · médecin</td><td>1 h</td></tr>
+        </tbody></table></div>
+      <div class="subtext" style="margin-top:6px;">Après arrêt pour hypoglycémie : reprise à ½ débit quand glycémie &gt; 5,5 mmol/L (DT1) ou &gt; 10 mmol/L (DT2).</div>
+      </details>`;
+  }
+
+  if (sub === 'sc'){
+    const alim = state.dbAlim;
+    const basal = poids ? Math.min(30, Math.round(0.3*poids)) : null;
+    const bolusRepas = poids ? Math.round(0.1*poids) : null;
+    const corr = dbCorrection(v);
+    const repasTxt = alim==='po' ? `${bolusRepas ?? '—'} UI SC avant chaque repas (8 h, 12 h, 20 h), quelle que soit la glycémie` :
+      alim==='poi' ? `${bolusRepas!=null ? Math.round(bolusRepas/2) : '—'} UI SC avant chaque repas (moitié de dose : apports insuffisants)` :
+      'Pas de bolus « repas » (NE/NP continue ou à jeun)';
+    content = `
+      ${field('f-db-poids','Poids',state.poids,'kg')}
+      ${section('Alimentation')}
+      ${seg('dbalim', alim, [{v:'po',label:'Orale complète'},{v:'poi',label:'Orale insuffisante'},{v:'cont',label:'NE/NP continue, à jeun'}])}
+      ${box('Prescription de départ', 'var(--teal)', 'var(--tealDim)', `
+        <div class="grid grid-2" style="margin-bottom:10px;">
+          <div class="stat"><div class="lbl">Insuline lente à 20 h</div><div class="val">${basal ?? '—'} UI</div><div class="sub">0,3 UI/kg/j · max 30 UI à l'initiation</div></div>
+          <div class="stat"><div class="lbl">Bolus repas</div><div class="val">${alim==='cont' ? '0' : alim==='poi' ? (bolusRepas!=null ? Math.round(bolusRepas/2) : '—') : (bolusRepas ?? '—')} UI</div><div class="sub">${alim==='cont' ? 'pas de repas' : '× 3/j, 0,1 UI/kg'}${alim==='poi'?' ÷ 2':''}</div></div>
+        </div>
+        ${line(repasTxt)}
+        ${t==='dt1' || t==='dt2i' ? line('Patient déjà sous insuline : préférer sa <strong>dose habituelle</strong> de lente (ou ½ dose IVSE des 24 dernières heures, onglet Relais).') : ''}`)}
+      ${why("Un adulte a besoin d'environ 0,5–0,6 UI/kg/j d'insuline, dont la moitié en basale : 0,3 UI/kg/j de lente et 3 bolus de 0,1 UI/kg. La dose de départ est plafonnée à 30 UI pour limiter le risque d'hypoglycémie. Sans repas (NE ou NP continue, jeûne), pas de bolus repas. Le bolus correcteur rattrape une glycémie haute avant le repas ; la lente s'ajuste sur la glycémie à jeun, qui reflète son effet de la nuit.")}
+      ${section('Bolus correcteur (analogue rapide, à ajouter au bolus du repas)')}
+      ${glyInput}
+      ${corr ? `<div class="row-item" style="border:1px solid ${corr.u>=6 || v < dbT('h33') ? 'var(--red)' : 'var(--teal)'}; margin-top:10px;"><div><div class="t">${corr.txt}</div></div></div>` : ''}
+      <div style="overflow-x:auto; margin-top:8px;"><table>
+        <thead><tr><th>Glycémie</th><th>Bolus correcteur</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">&lt; 0,6 g/L (3,3)</td><td>1 amp G30 % IV ou 15 g de sucre PO</td></tr>
+          <tr><td class="strong">0,6–1,8 (3,3–10)</td><td>0</td></tr>
+          <tr><td class="strong">1,8–2,2 (10–12)</td><td>3 UI SC</td></tr>
+          <tr><td class="strong">2,2–3 (12–16,5)</td><td>4 UI SC</td></tr>
+          <tr><td class="strong">≥ 3 (≥ 16,5)</td><td>6 UI SC + recherche de cétose</td></tr>
+        </tbody></table></div>
+      ${section('Adaptation de la lente (glycémie à jeun du lendemain)')}
+      <div class="chips">
+        <span class="chip" style="cursor:default;">&lt; 5 mmol/L (0,9 g/L) : −2 UI</span>
+        <span class="chip" style="cursor:default;">5–10 : idem</span>
+        <span class="chip" style="cursor:default;">&gt; 10 mmol/L (1,8 g/L) : +2 UI</span>
+      </div>
+      ${row('Glycémies', 'Préprandiales à 8 h, 12 h, 20 h (+ 16 h, 0 h, 4 h si déséquilibre important).', '/4 h à l\'initiation ou si déséquilibre, sinon /8 h')}`;
+  }
+
+  if (sub === 'relais'){
+    const d = parseFloat(String(state.dbDebit).replace(',','.'));
+    const tot = parseFloat(String(state.dbDose24).replace(',','.'));
+    const insPrev = t==='dt1' || t==='dt2i';
+    const stop = state.dbStopH;
+    const FR = { h0:[0.75,'3/4 de la dose','à 20 h le soir même'], h6:[0.5,'1/2 dose','à 20 h le soir même'], h14:[0.25,'1/4 de dose','à 20 h le soir même'], h16:[1,'dose de 20 h','à 20 h le jour suivant'] };
+    let ci = [];
+    if (!isNaN(d) && d > 4) ci.push('Débit IVSE &gt; 4 UI/h : <strong>pas de relais</strong>, poursuivre l\'IVSE.');
+    if (!isNaN(d) && d <= 0.5 && t==='dt2') ci.push('Débit ≤ 0,5 UI/h chez un patient non insulinotraité : <strong>pas de relais SC</strong>, bolus correcteurs seuls.');
+    const basalJ = !isNaN(tot) && tot>0 ? Math.min(30, Math.round(tot/2)) : (poids ? Math.min(30, Math.round(0.3*poids)) : null);
+    const basalSrc = !isNaN(tot) && tot>0 ? `½ de ${fmt(tot)} UI${Math.round(tot/2)>30?' (plafonné à 30 UI)':''}` : '0,3 UI/kg/j (dose IVSE inconnue)';
+    const repas = !isNaN(tot) && tot>0 ? Math.round(tot/2/3) : (poids ? Math.round(0.1*poids) : null);
+    const init = basalJ!=null && stop ? Math.round(basalJ*FR[stop][0]) : null;
+    content = `
+      <div class="grid grid-2" style="grid-template-columns:1fr 1fr;">
+        ${field('f-db-debit','Débit IVSE actuel',state.dbDebit,'UI/h')}
+        ${field('f-db-dose24','Dose IVSE sur 24 h',state.dbDose24,'UI','si connue')}
+      </div>
+      ${field('f-db-poids','Poids',state.poids,'kg')}
+      ${section('Heure d\'arrêt de l\'IVSE')}
+      <div class="chips">${[['h0','0 h – 6 h'],['h6','6 h – 14 h'],['h14','14 h – 16 h'],['h16','16 h – 0 h']].map(([k,l])=>`<button class="chip ${stop===k?'active':''}" data-act="dbstop" data-val="${k}">${l}</button>`).join('')}</div>
+      ${ci.length ? `<div class="warn-box" style="background:var(--redDim); color:var(--text);">${ICONS.alert}<span>${ci.join('<br>')}</span></div>` : ''}
+      ${!ci.length ? box('Relais', 'var(--teal)', 'var(--tealDim)', `
+        <div class="grid grid-2" style="margin-bottom:10px;">
+          <div class="stat"><div class="lbl">Lente maintenant</div><div class="val">${init ?? '—'} UI</div><div class="sub">${stop ? FR[stop][1] : 'choisir l\'heure'}</div></div>
+          <div class="stat"><div class="lbl">Lente ensuite</div><div class="val">${basalJ ?? '—'} UI</div><div class="sub">${stop ? FR[stop][2] : '20 h'}</div></div>
+        </div>
+        ${line(`Dose de lente : ${basalSrc}${insPrev ? ' ; ou dose habituelle du patient' : ''}.`)}
+        ${line(`Bolus repas si alimentation orale : <strong>${repas ?? '—'} UI</strong> avant chaque repas (${!isNaN(tot) && tot>0 ? '½ dose IVSE/24 h ÷ 3' : '0,1 UI/kg'}), + bolus correcteurs (onglet SC).`)}
+        ${line('<strong>Pas de délai</strong> entre l\'arrêt de l\'IVSE et l\'injection de la lente (la lente est faite en SSPI).')}`) : ''}
+      ${!ci.length ? why("Environ la moitié des besoins d'insuline est basale : la lente reprend la moitié de la dose IVSE des 24 h, et l'autre moitié sert aux repas. La lente met plusieurs heures à agir, d'où l'injection sans délai à l'arrêt de l'IVSE et une fraction de dose selon l'heure pour couvrir jusqu'à 20 h. Un débit &gt; 4 UI/h signe des besoins trop élevés ou instables pour la voie SC. Chez un patient non insulinotraité à ≤ 0,5 UI/h, les besoins sont minimes : les corrections suffisent.") : ''}
+      ${section('Conditions')}
+      ${row('Indications', 'Glycémies stabilisées ≤ 10 mmol/L (1,8 g/L) ; reprise de l\'alimentation orale (non obligatoire) ; débit ≤ 4 UI/h.')}
+      ${row('Contre-indications', 'Débit &gt; 4 UI/h ; besoins en insuline non stabilisés.')}
+      ${t==='dt1' ? row('DT1', 'Reprise du schéma antérieur adapté (ou de la pompe). Ne jamais laisser le patient sans insuline basale.', '', 'var(--red)') : ''}`;
+  }
+
+  if (sub === 'hypo'){
+    const hypo = v!=null && v < dbT('h33');
+    const hyper = v!=null && v >= dbT('n165');
+    content = `
+      ${glyInput}
+      ${hypo ? box('Hypoglycémie', 'var(--red)', 'var(--redDim)', line('Conscient, voie orale possible : 3 morceaux de sucre ou 20 cL de jus de fruit.') + line(`Inconscient ou sans voie orale : <strong>${v < dbT('h22') ? '2 ampoules de G30 % IVD (6 g)' : '1 ampoule de G30 % IVD (3 g)'}</strong>.`) + line('Contrôle à 15 min ; si toujours &lt; 0,6 g/L, recommencer et prévenir le médecin.')) : ''}
+      ${hyper ? box('Hyperglycémie ≥ 3 g/L', 'var(--amber)', 'var(--amberDim)', line('Rechercher une cétose (cétonémie plutôt que cétonurie). Cétonémie &lt; 0,5 : 6 UI SC ; 0,5–1,5 : 10 UI SC ; &gt; 1,5 : rechercher une acidose, USC pour IVSE.')) : ''}
+      ${hypo ? why("Le cerveau dépend du glucose : on resucre immédiatement, par la bouche si le patient est conscient, sinon en IV. Contrôle à 15 min, car un seul resucrage peut ne pas suffire (surtout sous sulfamide ou insuline lente).") : ''}
+      ${hyper ? why("Au-delà de 3 g/L, il faut chercher une carence en insuline, qui se traduit par une cétose. Cétonémie modérée : dose d'insuline plus forte (10 UI). Au-delà de 1,5 mmol/L, c'est une acidocétose débutante : il faut l'IVSE en USC.") : ''}
+      ${section('Hypoglycémie &lt; 0,6 g/L (3,3 mmol/L)')}
+      <div style="overflow-x:auto;"><table>
+        <thead><tr><th>Situation</th><th>Traitement</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Conscient (&lt; 0,6 g/L)</td><td>3 morceaux de sucre ou 20 cL de jus de fruit</td></tr>
+          <tr><td class="strong">Inconscient, 0,4–0,6 g/L</td><td>1 ampoule G30 % IVD</td></tr>
+          <tr><td class="strong">Inconscient, &lt; 0,4 g/L (2,2 mmol/L)</td><td>2 ampoules G30 % IVD</td></tr>
+        </tbody></table></div>
+      ${row('Contrôle à 15 min', '≥ 0,6 g/L : nouveau contrôle à 1 h. &lt; 0,6 g/L : recommencer et prévenir le médecin.')}
+      ${section('Hyperglycémie ≥ 3 g/L (16,5 mmol/L) : rechercher une cétose')}
+      <div style="overflow-x:auto;"><table>
+        <thead><tr><th>Cétose</th><th>Conduite</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">Cétonémie &lt; 0,5 mmol/L (cétonurie 0)</td><td>6 UI SC d'analogue rapide ; glycémie à H4</td></tr>
+          <tr><td class="strong">0,5–1,5 mmol/L (1 croix)</td><td>10 UI SC ; glycémie et cétose à H4</td></tr>
+          <tr><td class="strong" style="color:var(--red);">&gt; 1,5 mmol/L (≥ 2 croix)</td><td style="color:var(--red);">Rechercher une acidose ; USC pour insuline IVSE</td></tr>
+        </tbody></table></div>
+      ${section('iSGLT2 arrêté depuis moins de 3 jours : cétonémie')}
+      <div style="overflow-x:auto;"><table>
+        <thead><tr><th>Cétonémie</th><th>Conduite</th></tr></thead>
+        <tbody>
+          <tr><td class="strong">&lt; 0,5 mmol/L</td><td>Cétonémie à H12 ; si glycémie ≥ 3 g/L, CAT ci-dessus</td></tr>
+          <tr><td class="strong">0,5–1,5 mmol/L</td><td>Selon la glycémie : 1,5–2,2 g/L (8–12) : <strong>4 UI SC + 15 g de glucose</strong> ; 2,2–3 g/L : 6 UI SC ; ≥ 3 g/L : 10 UI SC. Glycémie et cétonémie à H4</td></tr>
+          <tr><td class="strong" style="color:var(--red);">&gt; 1,5 mmol/L</td><td style="color:var(--red);">Rechercher une acidose ; USC pour insuline IVSE</td></tr>
+        </tbody></table></div>
+      <div class="info-box">${ICONS.info}<span>Sous iSGLT2 : acidocétose possible <strong>avec une glycémie normale</strong>. Doser la cétonémie devant toute acidose métabolique.</span></div>`;
+  }
+
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.syringe}</div>
+      <div><h2>Insulinothérapie</h2><p class="subtext">Protocoles SFAR/SFD · analogue rapide + insuline lente</p></div></div>
+    <div class="chips" style="margin-bottom:14px;">${subs.map(o=>`<button class="chip ${sub===o.v?'active':''}" data-act="dbsub" data-val="${o.v}">${o.label}</button>`).join('')}</div>
+    ${content}
+  </div>`;
+}
+
 /* ---------------- MAIN RENDER + EVENTS ---------------- */
 function render(){
   const app = document.getElementById('app');
@@ -1415,6 +2248,27 @@ function bindEvents(){
   if (fRatio) fRatio.addEventListener('input', e=>{ state.kcalRatio = parseFloat(e.target.value); renderPartial(); });
   const fSri = document.getElementById('f-sri');
   if (fSri) fSri.addEventListener('change', e=>{ state.sriRisk = e.target.checked; renderPartial(); });
+  // Diabète
+  const dbSet = (act, fn) => document.querySelectorAll(`[data-act="${act}"]`).forEach(el=>el.addEventListener('click', ()=>{ fn(el.dataset.val); renderPartial(); }));
+  dbSet('dbsec', v=>{ state.dbSec = v; });
+  dbSet('dbtype', v=>{ state.dbType = state.dbType===v ? '' : v; });
+  dbSet('dbchir', v=>{ state.dbChir = state.dbChir===v ? '' : v; });
+  dbSet('dbttt', v=>{ state.dbTtt[v] = !state.dbTtt[v]; });
+  dbSet('dbunit', v=>{ state.dbUnit = v; });
+  dbSet('dbivseon', v=>{ state.dbIvseOn = v==='on'; });
+  dbSet('dbsub', v=>{ state.dbInsSub = v; });
+  dbSet('dbalim', v=>{ state.dbAlim = v; });
+  dbSet('dbstop', v=>{ state.dbStopH = state.dbStopH===v ? '' : v; });
+  dbSet('dbpost', v=>{ state.dbPostMode = state.dbPostMode===v ? '' : v; });
+  dbSet('dbtoggle', v=>{ state[v] = !state[v]; });
+  dbSet('egcont', v=>{ state.egContenu = state.egContenu===v ? '' : v; if (state.egContenu!=='liquide') state.egGrade=''; });
+  document.querySelectorAll('details[data-ado]').forEach(d=>d.addEventListener('toggle', ()=>{ state.adoOpen[d.dataset.ado] = d.open; }));
+  dbSet('eggrade', v=>{ state.egGrade = state.egGrade===v ? '' : v; });
+  [['eg-tech','egOpenTech'],['eg-interp','egOpenInterp']].forEach(([id,key])=>{ const d = document.getElementById(id); if (d) d.addEventListener('toggle', ()=>{ if (d.open !== state[key]){ state[key] = d.open; renderPartial(); } }); });
+  [['f-db-hba1c','dbHba1c'],['f-eg-age','egAge'],['f-eg-poids','poids'],['f-eg-ap','egAP'],['f-eg-cc','egCC'],['f-eg-csa','egCSA'],['f-db-gly','dbGly'],['f-db-debit','dbDebit'],['f-db-dose24','dbDose24'],['f-db-clcr','dbClcr'],['f-db-basale','dbBasale'],['f-db-poids','poids']].forEach(([id,key])=>{
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', e=>{ state[key] = e.target.value; debouncedRenderPartial(); });
+  });
 }
 
 // Reconstruire l'écran immédiatement après une saisie déstabilise le clavier virtuel
