@@ -251,7 +251,7 @@ const state = {
   checked: {},
   microMode: "",
   survMode: "", survChecked: {},
-  poPoidsHab: "", poAlb: "", poDelai: "6m", poInterv: "", poNonOnco: false, poFdrList: {}, poFdrOpen: false, poMuscle: false, poCfs: 0, poCfsOpen: false, poASA: false, poDiabete: false, poSansSel: false, poCnoRenal: false, poCnoDysph: false, poCnoConc: false, poCnoLact: false, poApportsNeg: false,
+  poPoidsHab: "", poAlb: "", poDelai: "6m", poInterv: "", poNonOnco: false, poFdrList: {}, poFdrOpen: false, poMuscle: false, poCfs: 0, poCfsOpen: false, poASA: false, poDiabete: false, poSansSel: false, poCnoRenal: false, poCnoDysph: false, poCnoConc: false, poCnoLact: false, poApportsNeg: false, poPrehabInterv: "", poAge65: false,
   soluteSituation: "",
   // Diabète
   dbSec: "preop", dbType: "", dbChir: "", dbTtt: {}, dbHba1c: "", dbGly: "", dbUnit: "gl", dbIvseOn: false, dbDebit: "", dbInsSub: "ivse", dbAlim: "po", dbDose24: "", dbStopH: "", dbPostMode: "", egAge: "", egAP: "", egCC: "", egCSA: "", egContenu: "", egGrade: "", egOpenTech: false, adoOpen: {}, egOpenInterp: false, nphVolet: "", nphProfil: "", nphAge: false, nphIR: false, nphApports: false, nphDecr: false, nphCort: "", nphCortDose: "", insTabOpen: false, nphNeDebit: "", nphSol: 0, dbRepAlim: false, dbRep12: false, dbClcr: "", dbBasale: "",
@@ -1103,6 +1103,33 @@ const PREOP_INTERV = {
   ],
   autres: [["digestive","Autre chirurgie digestive"], ["cardiaque","Chirurgie cardiaque"], ["autre","Autre chirurgie non digestive"]]
 };
+// Chirurgies à risque intermédiaire (1–5 %) : RFE SFAR/HAS 2026, tableau 1 (d'après ESC/ESAIC 2022)
+const PREHAB_INTERM = [
+  ["carot","Carotidienne : asymptomatique (endartériectomie ou stenting), symptomatique par endartériectomie"],
+  ["evar","Réparation endovasculaire d'anévrisme aortique"],
+  ["orl","Chirurgie de la tête ou du cou"],
+  ["intrap","Intrapéritonéale : splénectomie, cure de hernie hiatale, cholécystectomie, chirurgie colorectale"],
+  ["thorax","Intrathoracique non majeure"],
+  ["neuro","Neurologique ou orthopédique majeure (hanche, rachis)"],
+  ["angio","Angioplastie artérielle périphérique"],
+  ["rein","Transplantation rénale"],
+  ["urogyn","Urologique ou gynécologique majeure"]
+];
+function prehabEval(ev){
+  const iv = state.poInterv;
+  const high = PREOP_INTERV.risque.some(x=>x[0]===iv) || PREOP_INTERV.risqueND.some(x=>x[0]===iv);
+  const pi = state.poPrehabInterv;
+  const niveau = high ? 'élevé' : (pi==='faible' ? 'faible' : (pi ? 'intermédiaire' : null));
+  const age = (ev && ev.age70) || state.poAge65;
+  const f = [];
+  if (age) f.push('âge ≥ 65–70 ans');
+  if (state.poCfs>=5) f.push(`fragilité (CFS ${state.poCfs})`);
+  if (state.poASA) f.push('ASA ≥ 3');
+  if (ev && (ev.denutri || ev.denutriGN)) f.push('dénutrition');
+  if (state.poMuscle) f.push('sarcopénie');
+  const indic = niveau==='élevé' || niveau==='intermédiaire';
+  return { high, niveau, facteurs:f, indic, renf: indic && f.length>0 };
+}
 function preopEval(){
   const t = parseFloat(state.taille)||0, p = parseFloat(state.poids)||0, ph = parseFloat(state.poPoidsHab)||0, alb = parseFloat(state.poAlb)||0;
   const age70 = !!state.poFdrList.age;
@@ -1166,7 +1193,8 @@ function renderPreop(){
   const digestive = PREOP_INTERV.risque.some(x=>x[0]===iv) || iv === "digestive" || iv === "perfo";
   const nFdr = PREOP_FDR_LIST.filter(f=>state.poFdrList[f.id]).length;
   const g = ev ? (cardiac ? (ev.cardSev.length ? { t:"Dénutrition sévère", s:"Chirurgie cardiaque", cat:"Report de la chirurgie (hors urgence) selon le rapport bénéfice/risque, prise en charge spécialisée avec nutrition entérale ou parentérale.", color:"var(--red)", dim:"var(--redDim)" } : ev.card.length ? { t:"Supplémentation", s:"Chirurgie cardiaque : ≥ 1 critère SFAR", cat:"Compléments hyperprotéiques 2 à 3/j (≥ 18 g de protéines par dose) pendant 5 à 10 jours avant la chirurgie.", color:"var(--amber)", dim:"var(--amberDim)" } : { t:"Pas de critère", s:"Chirurgie cardiaque", cat:"Pas de supplémentation systématique.", color:"var(--teal)", dim:"var(--tealDim)" }) : GN_CAT[ev.gn]) : null;
-  const prehab = ev && (ev.denutri || ev.denutriGN || ev.age70 || (state.poCfs>=5) || state.poASA || state.poMuscle);
+  const PH = ev ? prehabEval(ev) : null;
+  const prehab = PH && PH.indic;
   const section = (title) => `<div class="field-label" style="margin:18px 0 8px; color:var(--teal);">${title}</div>`;
   return `
   <div class="card">
@@ -1215,20 +1243,11 @@ function renderPreop(){
       </div>`).join('')}
     </details>
 
-    ${section('4 · Autres éléments')}
+    ${section('4 · Sarcopénie')}
     <div class="chips">
       ${chip('poMuscle','Sarcopénie : force ou masse musculaire réduite')}
-      ${chip('poASA','Score ASA ≥ 3')}
     </div>
-    <details ${state.poCfsOpen?'open':''} id="po-cfs-details" style="margin-top:10px;">
-      <summary class="row-item" style="cursor:pointer; list-style:none;"><div><div class="t">Clinical Frailty Scale : ${state.poCfs ? `${state.poCfs} · ${CFS[state.poCfs-1][1]}${state.poCfs>=5 ? ' → fragile' : ''}` : 'non renseignée'}</div><div class="s">État habituel, 2 semaines avant la maladie actuelle · fragile si ≥ 5 · toucher pour ${state.poCfsOpen?'replier':'choisir'}</div></div><div class="badgeval" style="color:var(--teal); background:var(--tealDim);">${state.poCfsOpen?'▲':'▼'}</div></summary>
-      ${CFS.map(([n,l,d])=>`
-      <div class="checkrow ${state.poCfs===n?'checked':''}" data-act="pocfs" data-val="${n}">
-        <input type="radio" ${state.poCfs===n?'checked':''} readonly>
-        <div><div class="t">${n} · ${l}</div><div class="s">${d}</div></div>
-      </div>`).join('')}
-    </details>
-    <div class="subtext" style="margin-top:6px;">Sarcopénie = critère phénotypique HAS (force de préhension, vitesse de marche, masse musculaire au scanner L3, impédancemétrie, DEXA). Fragilité (CFS ≥ 5), ASA ≥ 3, âge ≥ 65–70 ans et dénutrition/sarcopénie = critères de la RFE 2026 (figure 2) pour proposer une préhabilitation.</div>
+    <div class="subtext" style="margin-top:6px;">Critère phénotypique HAS de dénutrition (force de préhension, vitesse de marche, masse musculaire au scanner L3, impédancemétrie, DEXA) ; compte aussi pour l'intensité de la ${go('préhabilitation', {tab:'preop', id:'c-prehab'})}.</div>
 
     ${!ev ? `<div class="info-box">${ICONS.info}<span>Renseigner la taille et le poids actuel.</span></div>` : !iv ? `<div class="info-box">${ICONS.info}<span>Sélectionner l'intervention pour obtenir le groupe nutritionnel.</span></div>` : `
     <div class="grid grid-2" style="margin-top:18px;">
@@ -1250,6 +1269,50 @@ function renderPreop(){
     `}
   </div>
 
+  ${(() => { const P = prehabEval(ev); const cfsTxt = state.poCfs ? `${state.poCfs} · ${CFS[state.poCfs-1][1]}${state.poCfs>=5 ? ' → fragile' : ''}` : 'non renseignée';
+    const res = !P.niveau ? `<div class="info-box">${ICONS.info}<span>Choisir l'intervention (liste ci-dessus ou menu des chirurgies à risque intermédiaire).</span></div>`
+      : !P.indic ? `<div class="row-item" style="border:1px solid var(--borderLight);"><div><div class="t">Pas d'indication systématique</div><div class="s">Chirurgie à risque faible${P.facteurs.length ? ' ; facteurs de risque présents (' + P.facteurs.join(', ') + ') : préhabilitation à discuter au cas par cas' : ''}.</div></div></div>`
+      : `<div class="row-item" style="border:1px solid ${P.renf?'var(--amber)':'var(--teal)'}; background:${P.renf?'var(--amberDim)':'var(--tealDim)'};"><div><div class="t" style="color:${P.renf?'var(--amber)':'var(--teal)'};">Préhabilitation ${P.renf ? 'renforcée, multimodale' : 'standard'}</div><div class="s" style="color:var(--text);">Chirurgie à risque ${P.niveau}${P.renf ? ' · patient à haut risque : ' + P.facteurs.join(', ') : ' · pas de facteur de risque patient'}.</div></div></div>`;
+    return `
+  <div class="card" id="c-prehab">
+    <div class="section-title"><div class="icon-box">${ICONS.activity}</div>
+      <div><h2>Préhabilitation</h2><p class="subtext">RFE SFAR/HAS 2026, R1.2.1 (grade 2)</p></div></div>
+    ${section('Indication')}
+    <div style="font-size:13px; line-height:1.6;">Toute <strong>chirurgie programmée à risque intermédiaire ou élevé</strong> : programme stratifié sur le risque du patient, incluant une prise en charge nutritionnelle, pour réduire les complications postopératoires, notamment infectieuses.</div>
+    ${section('Risque chirurgical')}
+    ${P.high ? `<div class="row-item"><div><div class="t">Chirurgie à risque élevé</div><div class="s">D'après l'intervention choisie ci-dessus.</div></div></div>` : `
+    <select id="f-po-prehab" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--borderLight); background:var(--elevated); color:var(--text); font-family:var(--fontBody); font-size:14px;">
+      <option value="" ${!state.poPrehabInterv?'selected':''}>— Chirurgie à risque intermédiaire ? —</option>
+      <optgroup label="Risque intermédiaire (1–5 %)">${PREHAB_INTERM.map(([v,l])=>`<option value="${v}" ${state.poPrehabInterv===v?'selected':''}>${l}</option>`).join('')}</optgroup>
+      <option value="faible" ${state.poPrehabInterv==='faible'?'selected':''}>Aucune : chirurgie à risque faible</option>
+    </select>
+    <div class="subtext" style="margin-top:6px;">Classification ESC/ESAIC 2022 reprise par la RFE 2026 (tableau 1) : risque à 30 jours de décès cardiovasculaire, d'infarctus ou d'AVC selon le type de chirurgie.</div>`}
+    ${section('Facteurs patients devant faire intensifier la préhabilitation')}
+    <div class="chips">
+      ${(ev && ev.age70) ? `<span class="chip active" style="cursor:default;">Âge &gt; 70 ans (facteurs de risque)</span>` : chip('poAge65','Âge ≥ 65–70 ans')}
+      ${chip('poASA','Score ASA ≥ 3')}
+      ${chip('poMuscle','Sarcopénie')}
+      ${ev && (ev.denutri || ev.denutriGN) ? `<span class="chip active" style="cursor:default;">Dénutrition (calculée)</span>` : ''}
+    </div>
+    <details ${state.poCfsOpen?'open':''} id="po-cfs-details" style="margin-top:10px;">
+      <summary class="row-item" style="cursor:pointer; list-style:none;"><div><div class="t">Clinical Frailty Scale : ${cfsTxt}</div><div class="s">État habituel, 2 semaines avant la maladie actuelle · fragile si ≥ 5 · toucher pour ${state.poCfsOpen?'replier':'choisir'}</div></div><div class="badgeval" style="color:var(--teal); background:var(--tealDim);">${state.poCfsOpen?'▲':'▼'}</div></summary>
+      ${CFS.map(([n,l,d])=>`
+      <div class="checkrow ${state.poCfs===n?'checked':''}" data-act="pocfs" data-val="${n}">
+        <input type="radio" ${state.poCfs===n?'checked':''} readonly>
+        <div><div class="t">${n} · ${l}</div><div class="s">${d}</div></div>
+      </div>`).join('')}
+    </details>
+    <div style="margin-top:14px;">${res}</div>
+    ${P.indic ? `
+    ${section('Contenu du programme')}
+    <div class="row-item"><div><div class="t">Nutrition</div><div class="s">Dépistage et prise en charge de la dénutrition : CNO selon le ${go('groupe nutritionnel', {tab:'preop', id:'c-gn'})}, nutrition artificielle si dénutrition sévère.</div></div></div>
+    <div class="row-item"><div><div class="t">Exercice physique</div><div class="s">Aérobie et renforcement musculaire, adaptés aux capacités du patient.</div></div></div>
+    <div class="row-item"><div><div class="t">Comorbidités</div><div class="s">Équilibration (diabète, anémie, cardiopathie…), sevrage tabagique et alcoolique.</div></div></div>
+    ${P.renf ? `<div class="row-item"><div><div class="t">Programme renforcé</div><div class="s">Prise en charge structurée et multimodale, supervisée, avec soutien psychologique ; même une chirurgie à risque intermédiaire représente un stress majeur chez ce patient.</div></div></div>` : ''}
+    <div class="subtext" style="margin-top:6px;">Périmètre de la RFE : 4 à 6 semaines avant l'intervention.</div>` : ''}
+    ${why("La RFE recommande la préhabilitation pour toute chirurgie programmée à risque intermédiaire ou élevé : c'est le type de chirurgie qui pose l'indication. Les facteurs du patient (fragilité, altération de la réserve fonctionnelle, dénutrition ou sarcopénie, ASA ≥ III, âge ≥ 65–70 ans) définissent les patients à haut risque, chez qui elle est « particulièrement pertinente » et doit être plus intensive. Les essais montrent surtout une baisse des complications, notamment infectieuses, sans effet démontré sur la mortalité.")}
+  </div>`; })()}
+
   ${ev && iv ? `
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.pill}</div>
@@ -1257,7 +1320,7 @@ function renderPreop(){
     ${(() => {
       const needCno = cardiac ? ev.card.length > 0 : ev.gn >= 2;
       const nCno = cardiac ? (ev.cardSev.length ? 'NE / NP' : ev.card.length ? '2 à 3/j' : '—') : ({1:'—',2:'2/j',3:'3/j',4:'Renutrition'})[ev.gn];
-      const prehabWhy = [ev.age70?'âge':'', (state.poCfs>=5)?`CFS ${state.poCfs}`:'', state.poASA?'ASA ≥ 3':'', (ev.denutri||ev.denutriGN)?'dénutrition':'', state.poMuscle?'sarcopénie':''].filter(Boolean).join(', ');
+      const prehabWhy = PH.renf ? 'renforcée : ' + PH.facteurs.join(', ') : 'chirurgie à risque ' + PH.niveau;
       const tile = (lbl, val, sub, color, dim) => `<div class="stat" style="background:${dim}; border:1px solid ${color}; "><div class="lbl" style="color:${color};">${lbl}</div><div class="val" style="color:${color}; font-size:20px;">${val}</div><div class="sub">${sub}</div></div>`;
       const on = ['var(--teal)','var(--tealDim)'], off = ['var(--textFaint)','var(--elevated)'];
       const tags = [['Hypercaloriques',true],['Hyperprotidiques',true],['Index glycémique faible',state.poDiabete],['Sans sel',state.poSansSel],['Pauvres en K et P (insuffisance rénale)',state.poCnoRenal],['Texture adaptée (crème, eau gélifiée)',state.poCnoDysph],['Concentrés, petit volume (2 kcal/mL)',state.poCnoConc],['Sans lactose',state.poCnoLact]].filter(t=>t[1]);
@@ -1267,7 +1330,7 @@ function renderPreop(){
     ${why((cardiac ? "En chirurgie cardiaque, la dénutrition augmente les complications et la mortalité ; une supplémentation courte (5–10 jours) améliore l'état nutritionnel avant l'agression." : "La dénutrition préopératoire augmente les infections, les fistules et la mortalité. Plus le patient est dénutri et la chirurgie lourde, plus la préparation doit être intense (CNO, puis nutrition artificielle).") + " Préhabilitation : augmenter la réserve fonctionnelle (muscle, capacité cardiorespiratoire) des patients fragiles avant l'agression. Charge glucidique : limite l'insulinorésistance et le catabolisme liés au jeûne.")}
     <div class="grid grid-2" style="margin:12px 0;">
       ${tile('CNO', nCno, needCno ? (cardiac ? '≥ 18 g de protéines/dose, 5 à 10 j' : 'avant la chirurgie') : 'pas de CNO', ...(needCno ? on : off))}
-      ${tile('Préhabilitation', prehab ? 'Oui' : 'Non', prehab ? prehabWhy : 'pas de critère', ...(prehab ? on : off))}
+      ${tile('Préhabilitation', prehab ? (PH.renf ? 'Renforcée' : 'Oui') : (PH && PH.niveau ? 'Non' : '?'), prehab ? prehabWhy : (PH && PH.niveau ? 'chirurgie à risque faible' : 'préciser le risque chirurgical'), ...(prehab ? on : off))}
       ${tile('Charge glucidique', state.poDiabete ? 'Si équilibré' : '200 + 200 mL', 'jus de pomme : veille au soir, puis 2 h avant', ...on)}
       ${tile('Diététicien', 'Oui', 'tout le parcours', ...on)}
     </div>
@@ -1286,7 +1349,7 @@ function renderPreop(){
       <div class="subtext" style="margin-top:6px;">Varier les textures et les goûts (boissons lactées ou fruitées, crèmes, potages) pour l'observance ; à prendre entre les repas.</div>
     </div>` : `<div class="chips" style="margin-bottom:8px;">${adapt('poDiabete','Diabète')}</div>`}
     ${cardiac ? `<div class="row-item"><div><div class="t">Chirurgie cardiaque : jeûne et boisson (RAAC 2021, grade 2+)</div><div class="s">Jeûne limité à 6 h pour les solides et 2 h pour les liquides clairs, avec une boisson glucidique préopératoire.</div></div></div>` : ''}
-    ${prehab ? `<div class="row-item"><div><div class="t">Préhabilitation</div><div class="s">Programme stratifié sur le risque : exercice physique, équilibration des comorbidités, stratégie nutritionnelle (RFE 2026, grade 2).</div></div></div>` : ''}
+    ${prehab ? `<div class="row-item"><div><div class="t">Préhabilitation ${PH.renf ? 'renforcée' : ''}</div><div class="s">Programme adapté au risque : nutrition, exercice, équilibration des comorbidités. ${go('Détail', {tab:'preop', id:'c-prehab'})}</div></div></div>` : ''}
     ${ev.denutri || ev.denutriGN || (ev.perte >= 10) ? `<div class="row-item"><div><div class="t">Bilan si amaigrissement important</div><div class="s">Albumine, préalbumine, ± vitamines B1, B9, B12, C, A, D, E.</div></div></div>` : ''}
     <div class="row-item"><div><div class="t">Charge glucidique</div><div class="s">${state.poDiabete ? 'Diabète : pas de charge glucidique si le diabète est déséquilibré ; sinon ' : ''}200 mL de jus de pomme la veille au soir, 200 mL 2 h avant la chirurgie.</div></div></div>`;
     })()}
@@ -1294,7 +1357,7 @@ function renderPreop(){
     <div class="info-box">${ICONS.info}<span><strong>Post-opératoire</strong> : reprise orale ou artificielle la plus précoce possible, cible 20–25 kcal/kg/j et 1–1,3 g/kg/j de protéines atteinte progressivement (${go('Calculateur, phase « Post-opératoire »', {tab:'calc'})}).</span></div>
   </div>` : ''}
 
-  <div class="card">
+  <div class="card" id="c-gn">
     <div class="section-title"><div class="icon-box">${ICONS.info}</div>
       <div><h2>Rappel : grades nutritionnels</h2><p class="subtext">SFAR 2010 · fiche du protocole</p></div></div>
     ${(() => {
@@ -2515,6 +2578,7 @@ function bindEvents(){
   if (cfsDet) cfsDet.addEventListener('toggle', ()=>{ if (cfsDet.open !== state.poCfsOpen){ state.poCfsOpen = cfsDet.open; renderPartial(); } });
   const poDet = document.getElementById('po-fdr-details');
   if (poDet) poDet.addEventListener('toggle', ()=>{ if (poDet.open !== state.poFdrOpen){ state.poFdrOpen = poDet.open; renderPartial(); } });
+  { const el = document.getElementById('f-po-prehab'); if (el) el.addEventListener('change', e=>{ state.poPrehabInterv = e.target.value; renderPartial(); }); }
   const fPoInterv = document.getElementById('f-po-interv');
   if (fPoInterv) fPoInterv.addEventListener('change', e=>{ state.poInterv = e.target.value; renderPartial(); });
   document.querySelectorAll('[data-act="podelai"]').forEach(el=>el.addEventListener('click', ()=>{ state.poDelai = el.dataset.val; renderPartial(); }));
