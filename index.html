@@ -157,23 +157,45 @@ const RENAL = {
 
 const EN_PRODUCTS = [
   { situation:"Défaillance aiguë (choc / hypoxémie)", produit:"Fresubin Intensive", detail:"Hypocalorique / Hyperprotidique", why:"Hypocalorique et hyperprotidique : apporte des protéines sans dépasser le plafond calorique de la phase aiguë." },
-  { situation:"Phase stabilisée, constipation, diabète", produit:"Nutrison Prot NRJ Multifibres", detail:"Hypercalorique / Hyperprotidique avec fibres", why:"Hypercalorique et hyperprotidique pour atteindre la cible une fois stabilisé ; les fibres mixtes régularisent le transit et ralentissent l'absorption du glucose." },
+  { situation:"Phase stabilisée, constipation, diabète", produit:"Nutrison Protein Plus Energy Multi Fibre", detail:"Hypercalorique / Hyperprotidique avec fibres", why:"Hypercalorique et hyperprotidique pour atteindre la cible une fois stabilisé ; les fibres mixtes régularisent le transit et ralentissent l'absorption du glucose." },
   { situation:"Diarrhée sous NE", produit:"Sondalis T Energy", detail:"Gomme de guar", why:"La gomme de guar, fibre soluble, est fermentée dans le côlon en acides gras à chaîne courte qui nourrissent la muqueuse et réduisent la diarrhée." },
-  { situation:"Restriction hydrique (RH)", produit:"Sondalis 2 kcal Fibres", detail:"Hypercalorique / Hyperosmolaire", why:"2 kcal/mL : même apport calorique pour un volume moindre." },
+  { situation:"Restriction hydrique (RH)", produit:"Sondalis HP 2 kcal Fibre", detail:"Hypercalorique / Hyperosmolaire", why:"2 kcal/mL : même apport calorique pour un volume moindre." },
   { situation:"Malabsorptions (grêle court, MICI, etc.)", produit:"Peptamen HN", detail:"Semi-élémentaire", why:"Protéines hydrolysées (peptides) et TCM, absorbés même quand la digestion ou la surface d'absorption sont réduites : à envisager en cas de malabsorption ou de diarrhée persistante malgré les fibres (ASPEN 2016, avis d'experts ; pas de bénéfice démontré sur la diarrhée par rapport aux solutés standards)." },
-  { situation:"Intolérance digestive avec nécessité HC/HP et fibres", produit:"Fresubin Megareal Fibres", detail:"Hypercalorique / Hyperprotidique avec fibres" , why:"Osmolarité basse (285 mOsm/L) et fibres : mieux toléré sur le plan digestif, tout en restant hypercalorique et hyperprotidique." }
+  { situation:"Intolérance digestive avec nécessité HC/HP et fibres", produit:"Fresubin Megareal Fibres", detail:"Hypercalorique / Hyperprotidique avec fibres" , why:"Osmolarité basse (285 mOsm/L, proche de l'osmolarité physiologique) et fibres : mieux toléré sur le plan digestif, tout en restant hypercalorique et hyperprotidique. Riche en oméga-3 d'huile de poisson (EPA 0,18 g et DHA 0,11 g pour 100 mL, rapport oméga-6/oméga-3 de 1,7), aux propriétés anti-inflammatoires. Source : fiche technique Fresenius Kabi." },
+  { situation:"NE post-pylorique / jéjunostomie", produit:"Fresubin Megareal Fibres", detail:"Proche de l'isotonie (285 mOsm/L), hypercalorique / hyperprotidique · débit continu à la pompe, jamais en bolus", why:"Sur une sonde post-pylorique ou une jéjunostomie, le soluté arrive directement dans le grêle, sans l'estomac qui sert normalement de réservoir et dilue le soluté. Un soluté hyperosmolaire attire alors l'eau dans la lumière : diarrhée osmotique, crampes, distension, voire dumping. Le Megareal est le moins osmolaire des solutés du service (285 mOsm/L, contre 350 à 555 pour les autres) tout en restant hypercalorique et hyperprotidique. Administration en continu à la pompe, avec montée progressive du débit. Choix fondé sur la physiologie : les recommandations (ESPEN, ASPEN, RFE 2026) ne désignent pas de soluté précis pour la voie post-pylorique." }
 ];
 
+// Composition des solutés (fiches techniques fabricants ; RCP base publique des médicaments / ANSM pour la NP), vérifiée en octobre 2026
+const NE_COMPO = [
+  // [nom, kcal, prot, glucides, sucres, lipides, fibres, osm]
+  ["Fresubin Megareal Fibre",140,6.9,15,1,5.3,1.5,285],
+  ["Peptamen HN",133,6.6,15.6,null,4.9,null,350],
+  ["Sondalis T Energy",155,6,18.3,1.6,5.9,2.2,389],
+  ["Nutrison Protein Plus Energy Multi Fibre",150,7.5,16.9,null,5.8,1.5,"350–390"],
+  ["Sondalis HP 2 kcal Fibre",200,10,20,1.5,8.5,2,395],
+  ["Fresubin Intensive",122,10,12.9,8,3.2,0.6,555]
+];
+const NP_COMPO = [
+  // [nom, kcal totales, kcal non protéiques, AA g, glucose g, lipides g, émulsion, électrolytes, osm, voie] pour 1000 mL
+  ["Periolimel N4E",700,600,25.3,75,30,"olive-soja","oui",760,"périphérique ou centrale"],
+  ["Perikabiven",700,625,23.6,67.5,35.4,"soja","oui",750,"périphérique ou centrale"],
+  ["Smofkabiven Protéine",889,627,65.5,84.7,28.9,"SMOF (soja, TCM, olive, poisson)","quasi aucun",1200,"centrale"],
+  ["Olimel N12",950,640,75.9,73.3,35,"olive-soja","non",1130,"centrale"],
+  ["Olimel N12E",950,640,75.9,73.3,35,"olive-soja","oui",1270,"centrale"],
+  ["Olimel N7E",1140,960,44.3,140,40,"olive-soja","oui",1360,"centrale"],
+  ["Smofkabiven E",1100,900,51,127,38,"SMOF (soja, TCM, olive, poisson)","oui",1500,"centrale"],
+  ["Reanutriflex Omega E",1180,956,56,144,40,"TCM 50 %, soja 40 %, oméga-3 10 %","oui",1545,"centrale"]
+];
 const EN_SANS_FIBRE_NOTE = "Régime sans résidus (poussée de MICI, post-opératoire immédiat d'anastomose digestive) : choisir la variante sans fibre du soluté habituel (Nutrison Prot NRJ, Fresubin original, Fresubin 2 kcal, etc.).";
 
 const NP_PRODUCTS = [
-  { situation:"Phase aiguë", produit:"Olimel N12 / Smofkabiven Prot", detail:"Hypocalorique / Hyperprotidique, sans électrolyte", why:"Plus riche en protéines et moins calorique, sans électrolytes : les ions sont ajustés à part selon le ionogramme, souvent instable en phase aiguë." },
+  { situation:"Phase aiguë", produit:"Olimel N12 / Smofkabiven Protéine", detail:"Hypocalorique / Hyperprotidique, sans électrolyte", why:"Plus riche en protéines et moins calorique, sans électrolytes : les ions sont ajustés à part selon le ionogramme, souvent instable en phase aiguë." },
   { situation:"Phase stabilisée", produit:"Smofkabiven E / Olimel N7E", detail:"Hypercalorique / Hyperprotidique, avec électrolytes", why:"Plus calorique pour atteindre la cible ; électrolytes inclus, la situation ionique étant stable." },
   { situation:"Sur voie veineuse périphérique", produit:"Periolimel N4E / Perikabiven", detail:"< 900 mosM — hypocalorique / hypoprotidique" , why:"Osmolarité ≤ 850 mOsm/L (ESPEN ; 900 selon l'ASPEN), tolérée par une veine périphérique (au-delà : risque de phlébite). Apports faibles en contrepartie : solution transitoire." }
 ];
 
 const LIPID_PROFILES = [
-  { nom:"Réanutriflex", profil:"Soja (phytostérols) 50 % / TCM 50 %", omega3:false },
+  { nom:"Reanutriflex Omega", profil:"TCM 50 % / Soja 40 % / Poisson (oméga-3) 10 %", omega3:true },
   { nom:"Olimel", profil:"Olive 80 % / Soja 20 %", omega3:false },
   { nom:"Smofkabiven", profil:"Soja 30 % / TCM 30 % / Olive 25 % / Poisson 15 %", omega3:true }
 ];
@@ -228,12 +250,12 @@ const MICRO_SPECIFIQUES = [
 // Source : annexe "Débits" du protocole de nutrition NAR 2026 (calculateur du service).
 const DEBIT_PRODUCTS = {
   enterale: [
-    { id: "fresubin_intensive", nom: "Fresubin Intensive", kcalPerMl: 1.22, protPer100ml: 10, osmolarite: 600, note: "Défaillance aiguë" },
-    { id: "nutrison_pem", nom: "Nutrison Prot NRJ Multifibres", kcalPerMl: 1.5, protPer100ml: 7.5, osmolarite: 390, note: "Phase stabilisée" },
+    { id: "fresubin_intensive", nom: "Fresubin Intensive", kcalPerMl: 1.22, protPer100ml: 10, osmolarite: 555, note: "Défaillance aiguë" },
+    { id: "nutrison_pem", nom: "Nutrison Protein Plus Energy Multi Fibre", kcalPerMl: 1.5, protPer100ml: 7.5, osmolarite: 390, note: "Phase stabilisée" },
     { id: "sondalis_t", nom: "Sondalis T Energy", kcalPerMl: 1.55, protPer100ml: 6, osmolarite: 389, note: "Diarrhée sous NE" },
-    { id: "sondalis_2kcal", nom: "Sondalis 2 kcal Fibres", kcalPerMl: 2.0, protPer100ml: 10, osmolarite: 395, note: "Restriction hydrique (RH)" },
+    { id: "sondalis_2kcal", nom: "Sondalis HP 2 kcal Fibre", kcalPerMl: 2.0, protPer100ml: 10, osmolarite: 395, note: "Restriction hydrique (RH)" },
     { id: "peptamen_hn", nom: "Peptamen HN", kcalPerMl: 1.33, protPer100ml: 6.6, osmolarite: 350, note: "Malabsorptions" },
-    { id: "fresubin_megareal", nom: "Fresubin Megareal Fibres", kcalPerMl: 1.4, protPer100ml: 6.9, osmolarite: 285, note: "Intolérance digestive avec nécessité HC/HP et fibres" }
+    { id: "fresubin_megareal", nom: "Fresubin Megareal Fibres (post-pylorique / jéjunostomie)", kcalPerMl: 1.4, protPer100ml: 6.9, osmolarite: 285, note: "Intolérance digestive avec nécessité HC/HP et fibres ; NE post-pylorique / jéjunostomie (débit continu à la pompe)" }
   ],
   parenterale: [
     { id: "olimel_n12", nom: "Olimel N12", kcalPerMl: 0.95, protPer100ml: 7.6, osmolarite: 1130, note: "Phase aiguë, besoins protéiques accrus, sans électrolytes (VVC)" },
@@ -516,6 +538,7 @@ function renderCalc(){
     ${step('', "<strong>Pas de nutrition</strong> si défaillance non contrôlée : choc non contrôlé (hyperlactatémie / hypoperfusion persistante, vasopresseurs croissants), hypoxémie ou hypercapnie sévère non stabilisée, acidose métabolique persistante.")}
     ${step('', "<strong>Contre-indications à la NE</strong> : hémorragie digestive haute non contrôlée, ischémie intestinale suspectée ou avérée, occlusion, syndrome du compartiment abdominal, fistule digestive à haut débit sans accès distal.")}
     ${step('', "<strong>Voie</strong> : NE ou NP indifféremment à cible égale. <strong>Choc : pas d'association NE + NP.</strong> Une fois stabilisé, NP complémentaire possible si la NE ne permet pas d'atteindre la cible (intolérance).")}
+    ${step('', "<strong>Extubation</strong> : l'absence de jeûne ne doit pas empêcher ni retarder une extubation en réanimation ; pas d'arrêt systématique de la NE avant l'extubation (SRLF 2025).")}
     ${step('', "<strong>Surveillance</strong> : K, phosphate, Mg <strong>tous les jours de J1 à J5</strong> de la nutrition. Si NP ou propofol à dose élevée : bilan hépatique ×2/semaine et triglycérides ×1/semaine ; si TG &gt; 4,5 mmol/L, réduire ou suspendre les lipides / le propofol.")}
     <div class="info-box" style="margin-top:4px;">${ICONS.info}<span><strong>Apports non nutritionnels</strong> (≈ 3–5 kcal/kg/j en phase initiale) : propofol 1,1 kcal/mL (1 % comme 2 % → préférer le 2 %), glucose 4 kcal/g (1 L : G2,5 % = 100, G5 % = 200, G10 % = 400, G30 % = 1200 kcal), citrate 0,59 kcal/mmol ≈ 3 kcal/g (≈ 200–250 kcal/j).</span></div>
   </div>
@@ -578,9 +601,15 @@ function renderSolutes(){
     ${EN_PRODUCTS.map(p=>`
       <div class="row-item">
         <div><div class="t">${p.situation}</div><div class="s">${p.detail}</div></div>
-        <div class="badgeval" style="color:var(--teal); background:var(--tealDim);">${p.produit}</div>
+        <div class="badgeval" style="color:var(--teal); background:var(--tealDim); white-space:normal; max-width:48%; line-height:1.35;">${p.produit}</div>
       </div>`).join('')}
     <div class="info-box">${ICONS.info}<span>${EN_SANS_FIBRE_NOTE}</span></div>
+    <div class="field-label" style="margin:18px 0 8px; color:var(--teal);">Composition des solutés entéraux (pour 100 mL)</div>
+    <div style="overflow-x:auto;"><table style="font-size:12px;">
+      <thead><tr><th>Soluté</th><th>kcal</th><th>Prot. g</th><th>Gluc. g (sucres)</th><th>Lip. g</th><th>Fibres g</th><th>mOsm</th></tr></thead>
+      <tbody>${[...NE_COMPO].sort((a,b)=>a[1]-b[1]).map(r=>{ const n=x=>x==null?'—':String(x).replace('.',','); return `<tr><td class="strong">${r[0]}</td><td>${r[1]}</td><td>${n(r[2])}</td><td>${n(r[3])}${r[4]!=null?` (${n(r[4])})`:''}</td><td>${n(r[5])}</td><td>${r[6]!=null?n(r[6]):'—'}</td><td>${r[7]}</td></tr>`; }).join('')}</tbody>
+    </table></div>
+    <div class="subtext" style="margin-top:6px;">Classés par apport calorique. Osmolarité physiologique ≈ 300 mOsm/L : plus le soluté est osmolaire, moins il est toléré en post-pylorique (diarrhée osmotique, dumping). Fiches techniques fabricants (Fresenius Kabi, Nestlé Health Science, Nutricia/VIDAL).</div>
   </div>
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.syringe}</div>
@@ -588,7 +617,7 @@ function renderSolutes(){
     ${NP_PRODUCTS.map(p=>`
       <div class="row-item">
         <div><div class="t">${p.situation}</div><div class="s">${p.detail}</div></div>
-        <div class="badgeval" style="color:var(--blue); background:var(--blueDim);">${p.produit}</div>
+        <div class="badgeval" style="color:var(--blue); background:var(--blueDim); white-space:normal; max-width:48%; line-height:1.35;">${p.produit}</div>
       </div>`).join('')}
     <div class="field-label" style="margin:18px 0 10px;">Profils lipidiques</div>
     <table>
@@ -597,7 +626,13 @@ function renderSolutes(){
         ${LIPID_PROFILES.map(l=>`<tr><td class="strong">${l.nom}</td><td>${l.profil}</td><td>${l.omega3?'<span style="color:var(--teal);font-weight:600;">Oui</span>':'—'}</td></tr>`).join('')}
       </tbody>
     </table>
-    <div class="info-box">Réduire la charge en phytostérols améliore la tolérance hépatique (↓ cholestase) : Olimel et Smofkabiven sont mieux tolérés que Réanutriflex. Un ratio oméga-6/oméga-3 faible améliore le profil inflammatoire : Smofkabiven &gt; Olimel &gt; Réanutriflex.</div>
+    <div class="info-box">Moins de soja = moins de phytostérols, donc meilleure tolérance hépatique (moins de cholestase) : Olimel (soja 20 %) et Smofkabiven (soja 30 %) plutôt que Reanutriflex Omega (soja 40 %). Oméga-3 d'huile de poisson, au profil moins inflammatoire : Smofkabiven (15 %) et Reanutriflex Omega (10 %) ; Olimel n'en contient pas.</div>
+    <div class="field-label" style="margin:18px 0 8px; color:var(--teal);">Composition des mélanges de NP (pour 100 mL)</div>
+    <div style="overflow-x:auto;"><table style="font-size:12px;">
+      <thead><tr><th>Mélange</th><th>kcal</th><th>AA g</th><th>Gluc. g</th><th>Lip. g</th><th>mOsm</th></tr></thead>
+      <tbody>${[...NP_COMPO].sort((a,b)=>a[1]-b[1]).map(r=>{ const d=x=>String(Math.round(x)/10).replace('.',','); return `<tr><td class="strong">${r[0]}<div style="font-weight:400; color:var(--textFaint); font-size:11.5px;">${r[9]} · électrolytes : ${r[7]}</div></td><td>${d(r[1])}<div style="color:var(--textFaint); font-size:11.5px;">(${d(r[2])})</div></td><td>${d(r[3])}</td><td>${d(r[4])}</td><td>${d(r[5])}</td><td>${r[8]}</td></tr>`; }).join('')}</tbody>
+    </table></div>
+    <div class="subtext" style="margin-top:6px;">kcal totales pour 100 mL (non protéiques entre parenthèses) ; osmolarité en mOsm/L. Classés par apport calorique. Voie périphérique possible si ≤ 850–900 mOsm/L (Periolimel N4E, Perikabiven). Le glucose apporte 4 kcal/g : c'est l'essentiel des calories glucidiques à surveiller (hyperglycémie). RCP (base publique des médicaments, ANSM) ; valeurs recalculées à partir des poches pour Perikabiven et Reanutriflex.</div>
   </div>`;
 }
 
@@ -779,7 +814,7 @@ function renderCompl(){
     <div class="section-title"><div class="icon-box">${ICONS.alert}</div>
       <div><h2>Constipation</h2><p class="subtext">&lt; 3 selles / semaine</p></div></div>
     ${step(1,"Éliminer un fécalome (TR).")}
-    ${step(2,"Soluté à base de fibres mixtes (gomme de guar, amidon, cellulose, pectine) en 1<sup>re</sup> intention : Nutrison Prot NRJ Multifibres.")}
+    ${step(2,"Soluté à base de fibres mixtes (gomme de guar, amidon, cellulose, pectine) en 1<sup>re</sup> intention : Nutrison Protein Plus Energy Multi Fibre.")}
     ${step(3,"<strong>Massages abdominaux protocolisés</strong> (" + go('protocole ci-dessous', {tab:'compl', id:'c-massage'}) + "), en l'absence de contre-indication.")}
     ${step(4,"Laxatifs curatifs (<strong>pas de laxatif prophylactique systématique</strong>) : <strong>macrogol</strong> 20 g matin, <strong>trimébutine</strong> (Debridat) 100 mg x3–6/j, <strong>bisacodyl</strong> (Dulcolax) 10 mg matin, pruneaux matin/midi ou jus de pruneaux 200 mL matin/midi ; <strong>naloxégol</strong> (Moventig) 25 mg matin ou <strong>méthylnaltrexone</strong> (Relistor) SC 12 mg/2j si constipation sous morphiniques (pas en systématique).")}
     ${step(5,"Si insuffisant : <strong>Gastrografine</strong> 100 mL une fois, PO ou SNG (ASP inutile).")}
@@ -1921,7 +1956,7 @@ function renderDiabSituations(h){
 
 /* ---------------- INSULINES : TABLEAU + NPH ---------------- */
 // Teneur en glucides des solutés entéraux du service (g/100 mL, fiches fabricants)
-const NE_GLUC = [["Fresubin Intensive",12.9],["Nutrison Protein Plus Energy",16.9],["Sondalis HP 2 kcal Fibre",20],["Peptamen HN",15.6],["Fresubin Megareal Fibre",15],["Sondalis Energy Fibre",19.3]];
+const NE_GLUC = [["Fresubin Intensive",12.9],["Nutrison Protein Plus Energy",16.9],["Sondalis HP 2 kcal Fibre",20],["Peptamen HN",15.6],["Fresubin Megareal Fibre",15],["Sondalis T Energy",18.3]];
 const INSULINES = [
   ["Analogues rapides", "Lispro (Humalog), aspart (NovoRapid), glulisine (Apidra)", "10–20 min", "0,5–3 h", "2–5 h", "0 à 15 min avant le repas ; bolus et correction. <strong>IV autorisée</strong> par les RCP (IVSE)."],
   ["Analogues ultrarapides", "Aspart (Fiasp), lispro (Lyumjev)", "Plus précoce (≈ 5–10 min plus tôt)", "1–3 h", "3–5 h", "0 à 2 min avant le repas, ou jusqu'à 20 min après son début. IV : Fiasp ; Lyumjev U100 en flacon seulement."],
