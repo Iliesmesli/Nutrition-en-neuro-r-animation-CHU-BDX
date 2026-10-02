@@ -96,7 +96,8 @@
   .row-item{display:flex; align-items:center; justify-content:space-between; gap:12px; border-radius:10px; padding:12px; background:var(--elevated); margin-bottom:8px;}
   .row-item .t{font-size:14px; font-weight:500;}
   .row-item .s{font-size:12.5px; line-height:1.5; color:var(--textFaint); margin-top:2px;}
-  .row-item .badgeval{font-size:13px; font-weight:600; font-family:var(--fontDisplay); padding:6px 10px; border-radius:8px; text-align:right; flex-shrink:0;}
+  .row-item .badgeval{font-size:13px; font-weight:600; font-family:var(--fontDisplay); padding:6px 10px; border-radius:8px; text-align:right; flex-shrink:1; max-width:50%; white-space:normal; overflow-wrap:break-word; line-height:1.35;}
+  .row-item > div:first-child{min-width:0;}
 
   table{width:100%; border-collapse:collapse; font-size:13px;}
   th{text-align:left; color:var(--textFaint); font-weight:600; padding-bottom:8px; font-size:12px; text-transform:uppercase;}
@@ -289,6 +290,10 @@ const state = {
 };
 
 /* ---------------- HELPERS ---------------- */
+// Saisie numérique : virgule acceptée, valeurs hors bornes physiologiques ignorées (0 = non renseigné)
+const numIn = (v, min, max) => { const x = parseFloat(String(v ?? '').replace(',', '.')); return (isFinite(x) && x >= min && x <= max) ? x : 0; };
+const TAILLE_MIN = 100, TAILLE_MAX = 250, POIDS_MIN = 20, POIDS_MAX = 400;
+const rd = (n, d=0) => String(round(n, d)).replace('.', ','); // affichage à la française
 const round = (n, d=0) => { const f = Math.pow(10,d); return Math.round(n*f)/f; };
 const calcIMC = (poids, tailleCm) => { const t = tailleCm/100; return poids/(t*t); };
 // Poids : RFE SFAR/HAS 2026 — poids réel sec (antérieur à l'épisode) ; si IMC > 30 : poids ajusté
@@ -367,8 +372,8 @@ const TABS = [
 
 /* ---------------- SHARED: cibles nutritionnelles ---------------- */
 function getTargets(){
-  const tailleN = parseFloat(state.taille)||0;
-  const poidsN = parseFloat(state.poids)||0;
+  const tailleN = numIn(state.taille, TAILLE_MIN, TAILLE_MAX);
+  const poidsN = numIn(state.poids, POIDS_MIN, POIDS_MAX);
   const phase = PHASES[state.phaseKey];
   const renal = RENAL[state.renal];
   const result = (tailleN && poidsN) ? calcPoidsNutritionnel(poidsN, tailleN) : null;
@@ -387,7 +392,7 @@ function getTargets(){
 function renderCalc(){
   const { phase, renal, renalActive, result, kcalPerKg, protPerKg, kcalTarget, protTarget, nn, kcalNutri } = getTargets();
   const progression = result ? buildProgression(kcalPerKg, state.sriRisk) : [];
-  const fmtRange = (min,max,dec=1) => min===max ? `${round(min,dec)}` : `${round(min,dec)}–${round(max,dec)}`;
+  const fmtRange = (min,max,dec=1) => min===max ? `${rd(min,dec)}` : `${rd(min,dec)}–${rd(max,dec)}`;
   const le = p => p.plafond ? '≤ ' : '';
   const protRangeShown = !renalActive && phase.protMin!==phase.protMax;
   const poids = result ? result.poidsNutritionnel : null;
@@ -417,13 +422,14 @@ function renderCalc(){
       <label class="field"><span class="field-label">Poids réel sec</span>
         <div class="input-wrap"><input type="number" step="0.5" id="f-poids" value="${state.poids}"><span class="unit">kg</span></div></label>
     </div>
+    ${!result && (String(state.taille).trim() || String(state.poids).trim()) ? `<div class="warn-box" style="background:var(--amberDim); color:var(--text);">${ICONS.alert}<span>Valeur non plausible ou incomplète : taille ${TAILLE_MIN}–${TAILLE_MAX} cm, poids ${POIDS_MIN}–${POIDS_MAX} kg.</span></div>` : ''}
     ${result ? `
     <div class="grid grid-3" style="margin-top:18px;">
-      <div class="stat"><div class="lbl">IMC</div><div class="val">${round(result.imc,1)}</div></div>
-      <div class="stat"><div class="lbl">Poids idéal (25 × T²)</div><div class="val">${round(result.pi,1)} <span style="font-size:13px;">kg</span></div></div>
+      <div class="stat"><div class="lbl">IMC</div><div class="val">${rd(result.imc,1)}</div></div>
+      <div class="stat"><div class="lbl">Poids idéal (25 × T²)</div><div class="val">${rd(result.pi,1)} <span style="font-size:13px;">kg</span></div></div>
       <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
         <div class="lbl" style="color:var(--teal);">Poids nutritionnel${result.ajuste?' (ajusté)':''}</div>
-        <div class="val" style="color:var(--teal);">${round(result.poidsNutritionnel,1)} <span style="font-size:13px;">kg</span></div>
+        <div class="val" style="color:var(--teal);">${rd(result.poidsNutritionnel,1)} <span style="font-size:13px;">kg</span></div>
       </div>
     </div>` : ''}
     ${result && result.ajuste ? `<div class="subtext" style="margin-top:10px;">Poids ajusté = poids idéal + 0,25 × (poids réel − poids idéal)</div>` : ''}
@@ -450,20 +456,20 @@ function renderCalc(){
     </div>
     ${(phase.kcalMin!==phase.kcalMax || protRangeShown) ? `
     <label class="field" style="margin-bottom:18px; display:block;">
-      <span class="field-label">Position dans la fourchette${phase.kcalMin!==phase.kcalMax ? ` (${phase.kcalMin}–${phase.kcalMax} kcal/kg/j)` : ''}${protRangeShown ? ` (${phase.protMin}–${phase.protMax} g/kg/j)` : ''}</span>
+      <span class="field-label">Position dans la fourchette${phase.kcalMin!==phase.kcalMax ? ` (${phase.kcalMin}–${phase.kcalMax} kcal/kg/j)` : ''}${protRangeShown ? ` (${rd(phase.protMin,2)}–${rd(phase.protMax,2)} g/kg/j)` : ''}</span>
       <input type="range" id="f-ratio" min="0" max="1" step="0.01" value="${state.kcalRatio}">
     </label>` : ''}
     ${result ? `
     <div class="grid grid-2">
       <div class="stat" style="background:${phase.dim}; border:1px solid ${phase.color}44;">
         <div class="lbl" style="color:${phase.color};">${phase.plafond?'Plafond calorique':'Cible calorique'} (total)</div>
-        <div class="val" style="color:${phase.color};">${round(kcalTarget)} <span style="font-size:13px;">kcal/j</span></div>
-        <div class="sub">${le(phase)}${round(kcalPerKg,1)} kcal/kg/j${phase.kcalMin!==phase.kcalMax ? ` (plage ${phase.kcalMin}–${phase.kcalMax})` : ''}</div>
+        <div class="val" style="color:${phase.color};">${rd(kcalTarget)} <span style="font-size:13px;">kcal/j</span></div>
+        <div class="sub">${le(phase)}${rd(kcalPerKg,1)} kcal/kg/j${phase.kcalMin!==phase.kcalMax ? ` (plage ${phase.kcalMin}–${phase.kcalMax})` : ''}</div>
       </div>
       <div class="stat" style="background:${phase.dim}; border:1px solid ${phase.color}44;">
         <div class="lbl" style="color:${phase.color};">${phase.plafond?'Plafond protéique':'Cible protéique'}</div>
-        <div class="val" style="color:${phase.color};">${round(protTarget)} <span style="font-size:13px;">g/j</span></div>
-        <div class="sub">${le(phase)}${round(protPerKg,2)} g/kg/j${protRangeShown ? ` (plage ${phase.protMin}–${phase.protMax})` : ''}${renalActive ? ` (${renal.label})` : ''}</div>
+        <div class="val" style="color:${phase.color};">${rd(protTarget)} <span style="font-size:13px;">g/j</span></div>
+        <div class="sub">${le(phase)}${rd(protPerKg,2)} g/kg/j${protRangeShown ? ` (plage ${rd(phase.protMin,2)}–${rd(phase.protMax,2)})` : ''}${renalActive ? ` (${renal.label})` : ''}</div>
       </div>
     </div>` : ''}
     ${result ? why(({aigue:"En phase de choc, le foie produit lui-même du glucose, et les apports ne freinent pas cette production : nourrir davantage expose à la suralimentation (hyperglycémie, surcharge) sans bénéfice démontré. Dans NUTRIREA-3, des apports bas en phase aiguë ont été associés à une récupération plus rapide qu'une cible standard. D'où un plafond ≤ 10 kcal/kg/j et ≤ 0,4 g/kg/j, apports non nutritionnels compris.",stabilisee:"La production endogène de glucose diminue et la tolérance s'améliore : on augmente par paliers, avec 20 kcal/kg/j et 0,9 g/kg/j comme plafonds pour ne pas basculer dans la suralimentation.",rehabilitation:"Phase anabolique : les apports servent alors à reconstruire le muscle, surtout s'ils sont associés à la mobilisation. Les cibles deviennent des objectifs à atteindre, et non plus des plafonds.",postop:"Après une chirurgie, l'agression est moins intense qu'en choc : la cible est d'emblée de 20–25 kcal/kg/j et 1–1,3 g/kg/j, atteinte progressivement pour limiter le catabolisme postopératoire."})[state.phaseKey] + (renalActive ? (state.renal==='ira' ? ' <br>IRA sans EER : les protéines produisent de l\'urée que le rein n\'élimine plus ; dans EFFORT Protein, des apports protéiques élevés étaient associés à une évolution moins favorable en cas d\'IRA.' : ' <br>EER : les acides aminés passent dans l\'effluent (environ 10–20 g/j en EERc, plus 5–10 g/j de peptides et protéines : ESPEN 2024), d\'où une cible protéique plus haute.') : '')) : ''}
@@ -480,7 +486,7 @@ function renderCalc(){
           <button data-act="propofolConc" data-val="2" class="${state.propofolConc==2?'active':''}">2 %</button>
         </div>
         <div class="input-wrap"><input type="number" inputmode="decimal" id="f-propofol" value="${state.propofolDebit}" placeholder="0"><span class="unit">mL/h</span></div>
-        ${parseFloat(state.propofolDebit)>0 ? `<div class="subtext" style="margin-top:6px;">= ${round(parseFloat(state.propofolDebit)*10*state.propofolConc)} mg/h${state.propofolConc==1 ? ' · en 2 % : moitié moins de calories à dose égale' : ''}</div>` : ''}
+        ${parseFloat(state.propofolDebit)>0 ? `<div class="subtext" style="margin-top:6px;">= ${rd(parseFloat(state.propofolDebit)*10*state.propofolConc)} mg/h${state.propofolConc==1 ? ' · en 2 % : moitié moins de calories à dose égale' : ''}</div>` : ''}
       </div>
       <div class="grid grid-2" style="grid-template-columns:1fr 1fr; gap:10px;">
         ${nnField('f-g25','G 2,5 %',state.g25,'mL/j','0')}
@@ -497,11 +503,11 @@ function renderCalc(){
     <div class="subtext" style="margin-top:6px;">Qsg × dose × 1,44 × 0,5 (50 % du citrate épuré dans l'effluent) × 0,59 kcal/mmol</div>` : `<div class="subtext" style="margin-top:10px;">Citrate : sélectionner « EERc » dans Fonction rénale.</div>`}
     ${result ? `
     <div class="grid grid-2" style="margin-top:18px;">
-      <div class="stat"><div class="lbl">Non nutritionnel</div><div class="val">${round(nn.total)} <span style="font-size:13px;">kcal/j</span></div>
-        <div class="sub">${round(nn.total/poids,1)} kcal/kg/j${nn.total>0 ? ` · propofol ${round(nn.propofol)}, glucose ${round(nn.glucose)}${state.renal==='eerc' ? `, citrate ${round(nn.citrate)}` : ''}` : ''}</div></div>
+      <div class="stat"><div class="lbl">Non nutritionnel</div><div class="val">${rd(nn.total)} <span style="font-size:13px;">kcal/j</span></div>
+        <div class="sub">${rd(nn.total/poids,1)} kcal/kg/j${nn.total>0 ? ` · propofol ${rd(nn.propofol)}, glucose ${rd(nn.glucose)}${state.renal==='eerc' ? `, citrate ${rd(nn.citrate)}` : ''}` : ''}</div></div>
       <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);"><div class="lbl" style="color:var(--teal);">Nutrition à prescrire</div>
-        <div class="val" style="color:var(--teal);">${round(kcalNutri)} <span style="font-size:13px;">kcal/j</span></div>
-        <div class="sub">${round(kcalNutri/poids,1)} kcal/kg/j · repris dans l'onglet Débits</div></div>
+        <div class="val" style="color:var(--teal);">${rd(kcalNutri)} <span style="font-size:13px;">kcal/j</span></div>
+        <div class="sub">${rd(kcalNutri/poids,1)} kcal/kg/j · repris dans l'onglet Débits</div></div>
     </div>
     ${why("Le propofol (émulsion lipidique, 1,1 kcal/mL), le glucose (4 kcal/g) et le citrate (0,59 kcal/mmol) apportent de vraies calories. Si on ne les déduit pas, on dépasse le plafond sans le savoir : c'est la principale cause de suralimentation en phase aiguë.")}
     ${nn.total>0 && nn.total>=kcalTarget ? `<div class="warn-box" style="background:var(--amberDim); color:var(--amber);">${ICONS.alert}<span>Les apports non nutritionnels atteignent ${phase.plafond?'le plafond':'la cible'} : <strong>différer le support nutritionnel</strong> et réduire ces apports si possible (propofol 2 %).</span></div>` : ''}
@@ -520,7 +526,7 @@ function renderCalc(){
         return `<div class="bar-col">
           <div class="bar-track"><div class="bar-fill" style="height:${pct}%; background:${color};"></div></div>
           <div class="bar-day">J${row.day}</div>
-          <div class="bar-val">${round(row.kcal)}</div>
+          <div class="bar-val">${rd(row.kcal)}</div>
         </div>`;
       }).join('')}
     </div>
@@ -685,7 +691,7 @@ function microPlan(){
   if (c.cotrimoxazole) add("Acide folique", "5 mg/j", "Pendant toute la durée du cotrimoxazole");
   if (c.escarre) add("Zinc", "10–30 mg/j", "Escarre sévère / cicatrisation difficile");
   if (c.cirrhose){
-    const pn = (()=>{ const t=parseFloat(state.taille)||0, pr=parseFloat(state.poids)||0; return (t&&pr) ? calcPoidsNutritionnel(pr,t).poidsNutritionnel : null; })();
+    const pn = (()=>{ const t=numIn(state.taille, TAILLE_MIN, TAILLE_MAX), pr=numIn(state.poids, POIDS_MIN, POIDS_MAX); return (t&&pr) ? calcPoidsNutritionnel(pr,t).poidsNutritionnel : null; })();
     add("Zinc (élément) PO", "0,5–1 mg/kg/j pendant 3–4 mois" + (pn ? ` (${Math.round(pn*0.5)}–${Math.round(pn)} mg/j)` : ""), "Cirrhose : seulement si carence confirmée ou suspectée", true);
     notes.push("<strong>Cirrhose – suspecter une carence en zinc</strong> devant : dysgueusie ou agueusie, anorexie, lésions cutanées (dermatite autour de la bouche, du nez et des extrémités), alopécie, retard de cicatrisation, diarrhée, infections répétées. Confirmer par un zinc plasmatique interprété avec la CRP et l'albumine (abaissé par l'hypoalbuminémie). Le zinc n'améliore pas l'encéphalopathie hépatique.");
   }
@@ -901,7 +907,7 @@ function renderDebit(){
     <label class="field" style="margin-bottom:16px; display:block;">
       <span class="field-label">Soluté</span>
       <select id="f-debit-produit" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--borderLight); background:var(--elevated); color:var(--text); font-family:var(--fontBody); font-size:14px;">
-        ${products.map(p => `<option value="${p.id}" ${p.id===product.id?'selected':''}>${p.nom} — ${p.kcalPerMl} kcal/mL, ${p.protPer100ml} g prot/100mL</option>`).join('')}
+        ${products.map(p => `<option value="${p.id}" ${p.id===product.id?'selected':''}>${p.nom} — ${rd(p.kcalPerMl,2)} kcal/mL, ${rd(p.protPer100ml,1)} g prot/100 mL</option>`).join('')}
       </select>
       <div class="subtext" style="margin-top:6px;">${product.note} · Osmolarité ${product.osmolarite} mOsm/L</div>
     </label>`;
@@ -915,7 +921,7 @@ function renderDebit(){
       <label class="field" style="margin-bottom:14px; display:block;">
         <span class="field-label">Cible calorique (kcal/j)</span>
         <div class="input-wrap"><input type="number" id="f-debit-kcal" value="${state.debitKcalManuel !== "" ? state.debitKcalManuel : (kcalTarget ? round(kcalTarget) : "")}" placeholder="${kcalTarget ? round(kcalTarget) : 'Renseigner la cible dans Calculateur'}"><span class="unit">kcal/j</span></div>
-        <div class="subtext" style="margin-top:6px;">${kcalTarget ? `Pré-rempli depuis l'${go('onglet Calculateur', {tab:'calc', id:'c-nn'})} : nutrition à prescrire, apports non nutritionnels déduits (${round(kcalTarget)} kcal/j)` : "Renseigner taille/poids dans l'onglet Calculateur pour pré-remplir"}</div>
+        <div class="subtext" style="margin-top:6px;">${kcalTarget ? `Pré-rempli depuis l'${go('onglet Calculateur', {tab:'calc', id:'c-nn'})} : nutrition à prescrire, apports non nutritionnels déduits (${rd(kcalTarget)} kcal/j)` : "Renseigner taille/poids dans l'onglet Calculateur pour pré-remplir"}</div>
       </label>
       <label class="field" style="margin-bottom:16px; display:block;">
         <span class="field-label">Mode d'administration</span>
@@ -929,7 +935,7 @@ function renderDebit(){
     const scenarios = [];
     if (kcalManuel && !isNaN(kcalManuel) && kcalManuel > 0){
       const withNN = state.debitKcalManuel === "" && nn.total > 0;
-      scenarios.push({ kcal:kcalManuel, titre: withNN ? `Apports non nutritionnels déduits (${round(nn.total)} kcal/j)` : '', main:true });
+      scenarios.push({ kcal:kcalManuel, titre: withNN ? `Apports non nutritionnels déduits (${rd(nn.total)} kcal/j)` : '', main:true });
       if (withNN && kcalBrut > 0) scenarios.push({ kcal:kcalBrut, titre:'Sans tenir compte des apports non nutritionnels', main:false });
     }
     const statBox = (lbl, val, unit, main) => `
@@ -941,24 +947,24 @@ function renderDebit(){
       const volumeTotal = sc.kcal / product.kcalPerMl;
       const proteinesJ = volumeTotal * (product.protPer100ml/100);
       const proteinesKg = poidsNutri ? proteinesJ/poidsNutri : null;
-      const head = sc.titre ? `<div class="field-label" style="margin:${sc.main?'8px':'22px'} 0 6px; ${sc.main?'color:var(--teal);':''}">${sc.titre} · ${round(sc.kcal)} kcal/j</div>` : '';
+      const head = sc.titre ? `<div class="field-label" style="margin:${sc.main?'8px':'22px'} 0 6px; ${sc.main?'color:var(--teal);':''}">${sc.titre} · ${rd(sc.kcal)} kcal/j</div>` : '';
       if (state.debitDureeType === "continu"){
         resultsHtml += head + `
         <div class="grid grid-2" style="margin-top:8px;">
-          ${statBox('Volume total', round(volumeTotal), 'mL/j', sc.main)}
-          ${statBox('Débit continu (24 h)', round(volumeTotal/24,1), 'mL/h', sc.main)}
-          ${statBox('Protéines apportées', round(proteinesJ,1), 'g/j', false)}
-          ${statBox('Protéines / kg', proteinesKg ? round(proteinesKg,2) : '—', 'g/kg/j', false)}
+          ${statBox('Volume total', rd(volumeTotal), 'mL/j', sc.main)}
+          ${statBox('Débit continu (24 h)', rd(volumeTotal/24,1), 'mL/h', sc.main)}
+          ${statBox('Protéines apportées', rd(proteinesJ,1), 'g/j', false)}
+          ${statBox('Protéines / kg', proteinesKg ? rd(proteinesKg,2) : '—', 'g/kg/j', false)}
         </div>`;
       } else {
         const volumeAdmin = volumeTotal / 3;
         resultsHtml += head + `
         ${sc.main ? '<div class="subtext" style="margin-bottom:10px;">3 administrations par jour, chacune sur 3 h</div>' : ''}
         <div class="grid grid-2" style="margin-top:8px;">
-          ${statBox('Volume par administration', round(volumeAdmin), 'mL / 3h', sc.main)}
-          ${statBox('Débit horaire', round(volumeAdmin/3,1), 'mL/h', sc.main)}
-          ${statBox('Volume total', round(volumeTotal), 'mL/j', false)}
-          ${statBox('Protéines apportées', round(proteinesJ,1), 'g/j', false)}
+          ${statBox('Volume par administration', rd(volumeAdmin), 'mL / 3h', sc.main)}
+          ${statBox('Débit horaire', rd(volumeAdmin/3,1), 'mL/h', sc.main)}
+          ${statBox('Volume total', rd(volumeTotal), 'mL/j', false)}
+          ${statBox('Protéines apportées', rd(proteinesJ,1), 'g/j', false)}
         </div>`;
       }
     });
@@ -974,7 +980,7 @@ function renderDebit(){
       // paliers uniques (évite les doublons quand plusieurs jours partagent le même palier)
       const paliers = [...new Set(progression.map(r => round(r.kcal,2)))];
       resultsHtml += `
-      <div class="field-label" style="margin:20px 0 10px;">Débits par palier de progression (${state.sriRisk ? 'protocole SRI' : 'progression standard'})${nn.total>0 ? ` · apports non nutritionnels : ${round(nn.total)} kcal/j` : ''}</div>
+      <div class="field-label" style="margin:20px 0 10px;">Débits par palier de progression (${state.sriRisk ? 'protocole SRI' : 'progression standard'})${nn.total>0 ? ` · apports non nutritionnels : ${rd(nn.total)} kcal/j` : ''}</div>
       <div style="overflow-x:auto;">
       ${nn.total>0 ? `
       <table>
@@ -985,7 +991,7 @@ function renderDebit(){
               const volume = kcalJ / product.kcalPerMl;
               const debit = state.debitDureeType==='continu' ? volume/24 : volume/9;
               const prot = volume * (product.protPer100ml/100);
-              return `<strong>${round(debit,1)} mL/h</strong>${state.debitDureeType==='continu' ? '' : ` (${round(volume/3)} mL/3h)`}<br><span class="subtext">${round(kcalJ)} kcal · ${round(prot,1)} g prot</span>`;
+              return `<strong>${rd(debit,1)} mL/h</strong>${state.debitDureeType==='continu' ? '' : ` (${rd(volume/3)} mL/3h)`}<br><span class="subtext">${rd(kcalJ)} kcal · ${rd(prot,1)} g prot</span>`;
             };
             return `<tr>
               <td class="strong">${palier} kcal/kg/j</td>
@@ -1008,11 +1014,11 @@ function renderDebit(){
             const prot = volume * (product.protPer100ml/100);
             return `<tr>
               <td class="strong">${palier} kcal/kg/j</td>
-              <td>${round(kcalJ)}</td>
-              <td>${round(debitContinu,1)} mL/h</td>
-              <td>${round(volumeAdmin)} mL</td>
-              <td>${round(debitDiscontinu,1)} mL/h</td>
-              <td>${round(prot,1)} g/j</td>
+              <td>${rd(kcalJ)}</td>
+              <td>${rd(debitContinu,1)} mL/h</td>
+              <td>${rd(volumeAdmin)} mL</td>
+              <td>${rd(debitDiscontinu,1)} mL/h</td>
+              <td>${rd(prot,1)} g/j</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -1056,24 +1062,24 @@ function renderDebit(){
         ${state.debitDureeType==='discontinu' ? `
         <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
           <div class="lbl" style="color:var(--teal);">Volume par administration</div>
-          <div class="val" style="color:var(--teal);">${round(volumeAdmin)} <span style="font-size:13px;">mL / 3h</span></div>
+          <div class="val" style="color:var(--teal);">${rd(volumeAdmin)} <span style="font-size:13px;">mL / 3h</span></div>
         </div>` : ``}
         <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
           <div class="lbl" style="color:var(--teal);">Volume total</div>
-          <div class="val" style="color:var(--teal);">${round(volumeTotal)} <span style="font-size:13px;">mL/j</span></div>
+          <div class="val" style="color:var(--teal);">${rd(volumeTotal)} <span style="font-size:13px;">mL/j</span></div>
         </div>
         <div class="stat" style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);">
           <div class="lbl" style="color:var(--teal);">Apport calorique</div>
-          <div class="val" style="color:var(--teal);">${round(kcalJ)} <span style="font-size:13px;">kcal/j</span></div>
-          <div class="sub">${kcalKg ? round(kcalKg,1)+' kcal/kg/j' : ''}</div>
+          <div class="val" style="color:var(--teal);">${rd(kcalJ)} <span style="font-size:13px;">kcal/j</span></div>
+          <div class="sub">${kcalKg ? rd(kcalKg,1)+' kcal/kg/j' : ''}</div>
         </div>
         <div class="stat">
           <div class="lbl">Protéines apportées</div>
-          <div class="val">${round(proteinesJ,1)} <span style="font-size:13px;">g/j</span></div>
+          <div class="val">${rd(proteinesJ,1)} <span style="font-size:13px;">g/j</span></div>
         </div>
         <div class="stat">
           <div class="lbl">Protéines / kg</div>
-          <div class="val">${proteinesKg ? round(proteinesKg,2) : '—'} <span style="font-size:13px;">g/kg/j</span></div>
+          <div class="val">${proteinesKg ? rd(proteinesKg,2) : '—'} <span style="font-size:13px;">g/kg/j</span></div>
         </div>
       </div>`;
     }
@@ -1166,7 +1172,7 @@ function prehabEval(ev){
   return { high, niveau, facteurs:f, indic, renf: indic && f.length>0 };
 }
 function preopEval(){
-  const t = parseFloat(state.taille)||0, p = parseFloat(state.poids)||0, ph = parseFloat(state.poPoidsHab)||0, alb = parseFloat(state.poAlb)||0;
+  const t = numIn(state.taille, TAILLE_MIN, TAILLE_MAX), p = numIn(state.poids, POIDS_MIN, POIDS_MAX), ph = numIn(state.poPoidsHab, POIDS_MIN, POIDS_MAX), alb = numIn(state.poAlb, 5, 60);
   const age70 = !!state.poFdrList.age;
   if (!t || !p) return null;
   const imc = p/((t/100)**2);
@@ -1180,10 +1186,10 @@ function preopEval(){
   const nonOnco = digestive && state.poNonOnco;
   // HAS
   const pheno = [], severe = [];
-  if (imc < (age70 ? 22 : 18.5)) pheno.push(`IMC ${round(imc,1)} &lt; ${age70 ? 22 : 18.5} kg/m²`);
+  if (imc < (age70 ? 22 : 18.5)) pheno.push(`IMC ${rd(imc,1)} &lt; ${age70 ? 22 : 18.5} kg/m²`);
   if (ph){
-    if (d==="1m" && perte >= 5) pheno.push(`perte de poids ${round(perte,1)} % en 1 mois (≥ 5 %)`);
-    if (d!=="1m" && perte >= 10) pheno.push(`perte de poids ${round(perte,1)} % ${d==="6m" ? "en 6 mois" : "par rapport au poids habituel"} (≥ 10 %)`);
+    if (d==="1m" && perte >= 5) pheno.push(`perte de poids ${rd(perte,1)} % en 1 mois (≥ 5 %)`);
+    if (d!=="1m" && perte >= 10) pheno.push(`perte de poids ${rd(perte,1)} % ${d==="6m" ? "en 6 mois" : "par rapport au poids habituel"} (≥ 10 %)`);
   }
   if (state.poMuscle) pheno.push("réduction de la force ou de la masse musculaire");
   if (age70 ? imc < 20 : imc <= 17) severe.push(`IMC ${age70 ? '&lt; 20' : '≤ 17'} kg/m²`);
@@ -1284,12 +1290,12 @@ function renderPreop(){
     </div>
     <div class="subtext" style="margin-top:6px;">Critère phénotypique HAS de dénutrition (force de préhension, vitesse de marche, masse musculaire au scanner L3, impédancemétrie, DEXA) ; compte aussi pour l'intensité de la ${go('préhabilitation', {tab:'preop', id:'c-prehab'})}.</div>
 
-    ${!ev ? `<div class="info-box">${ICONS.info}<span>Renseigner la taille et le poids actuel.</span></div>` : !iv ? `<div class="info-box">${ICONS.info}<span>Sélectionner l'intervention pour obtenir le groupe nutritionnel.</span></div>` : `
+    ${!ev ? `<div class="info-box">${ICONS.info}<span>Renseigner la taille et le poids actuel (taille ${TAILLE_MIN}–${TAILLE_MAX} cm, poids ${POIDS_MIN}–${POIDS_MAX} kg).</span></div>` : !iv ? `<div class="info-box">${ICONS.info}<span>Sélectionner l'intervention pour obtenir le groupe nutritionnel.</span></div>` : `
     <div class="grid grid-2" style="margin-top:18px;">
       <div class="stat" style="${ev.denutri ? 'background:var(--amberDim); border:1px solid rgba(242,169,59,.35);' : 'background:var(--tealDim); border:1px solid rgba(47,217,196,.3);'}">
         <div class="lbl" style="color:${ev.denutri?'var(--amber)':'var(--teal)'};">Dénutrition (HAS)</div>
         <div class="val" style="color:${ev.denutri?'var(--amber)':'var(--teal)'}; font-size:22px;">${ev.denutri ? (ev.severite==='sévère' ? 'Sévère' : 'Modérée') : 'Non'}</div>
-        <div class="sub">IMC ${round(ev.imc,1)}${ev.perte ? ` · perte ${round(ev.perte,1)} %` : ''}</div>
+        <div class="sub">IMC ${rd(ev.imc,1)}${ev.perte ? ` · perte ${rd(ev.perte,1)} %` : ''}</div>
       </div>
       <div class="stat" style="border:1px solid ${g.color}66;">
         <div class="lbl" style="color:${g.color};">${cardiac ? "Chirurgie cardiaque" : "Groupe nutritionnel"}</div>
@@ -1520,7 +1526,16 @@ const DB_TTT = [
 // Seuils [mmol/L, g/L] des fiches SFAR/SFD
 const DB_T = { h22:[2.2,0.4], h33:[3.3,0.6], n5:[5,0.9], n6:[6,1.1], n10:[10,1.8], n12:[12,2.2], n14:[14,2.5], n165:[16.5,3] };
 function dbT(k){ return DB_T[k][state.dbUnit==='mmol' ? 0 : 1]; }
-function dbGlyVal(){ const v = parseFloat(String(state.dbGly).replace(',','.')); return isNaN(v) || v<=0 ? null : v; }
+// Bornes de plausibilité : au-delà, probable erreur d'unité (ex. 10 saisi en g/L) -> pas de conduite calculée
+const DB_GLY_MAX = { gl:6, mmol:35 };
+function dbGlyRaw(){ const v = parseFloat(String(state.dbGly).replace(',','.')); return isNaN(v) ? null : v; }
+function dbGlyVal(){ const v = dbGlyRaw(); return v==null || v<=0 || v > DB_GLY_MAX[state.dbUnit==='mmol'?'mmol':'gl'] ? null : v; }
+function dbGlyWarn(){
+  const v = dbGlyRaw(); if (v==null) return '';
+  const gl = state.dbUnit!=='mmol';
+  const msg = v<=0 ? 'Glycémie nulle ou négative : vérifier la saisie.' : v > DB_GLY_MAX[gl?'gl':'mmol'] ? (gl ? `${String(v).replace('.',',')} g/L n'est pas plausible : valeur en mmol/L ? Changer l'unité.` : `${String(v).replace('.',',')} mmol/L n'est pas plausible : vérifier la saisie.`) : '';
+  return msg ? `<div class="warn-box" style="background:var(--amberDim); color:var(--text);">${ICONS.alert}<span>${msg}</span></div>` : '';
+}
 function dbFmt(k){ const [m,g] = DB_T[k]; return state.dbUnit==='mmol' ? `${String(m).replace('.',',')} mmol/L` : `${String(g).replace('.',',')} g/L`; }
 function dbBin(v){
   if (v==null) return null;
@@ -1716,9 +1731,10 @@ function egCalc(){
   const age = num(state.egAge), poids = num(state.poids), ap = num(state.egAP), cc = num(state.egCC);
   let csa = num(state.egCSA);
   if (csa==null && ap!=null && cc!=null) csa = Math.PI * ap * cc / 4; // cm²
-  if (csa==null || age==null) return { csa };
+  if (csa!=null && (csa<=0 || csa>60)) csa = null; // CSA plausible 0–60 cm²
+  if (csa==null || age==null || age<14 || age>110) return { csa };
   const vol = Math.max(0, 27 + 14.6*csa - 1.28*age);
-  return { csa, vol, perkg: poids ? vol/poids : null };
+  return { csa, vol, perkg: (poids && poids>=POIDS_MIN && poids<=POIDS_MAX) ? vol/poids : null };
 }
 function egDecision(){
   const c = state.egContenu, g = state.egGrade, calc = egCalc();
@@ -1901,6 +1917,7 @@ function renderDiabSituations(h){
       ${field('f-db-gly','Glycémie',state.dbGly,u)}
       <div class="field"><span class="field-label">Unité</span>${seg('dbunit', state.dbUnit, [{v:'gl',label:'g/L'},{v:'mmol',label:'mmol/L'}])}</div>
     </div>
+    ${dbGlyWarn()}
     ${hypo ? box('Hypoglycémie', 'var(--red)', 'var(--redDim)', line('Conscient, voie orale possible : 3 morceaux de sucre ou 20 cL de jus de fruit.') + line(`Inconscient ou sans voie orale : <strong>${v < dbT('h22') ? '2 ampoules de G30 % IVD (6 g)' : '1 ampoule de G30 % IVD (3 g)'}</strong>.`) + line('Contrôle à 15 min ; si toujours &lt; 0,6 g/L, recommencer et prévenir le médecin.')) + why("Le cerveau dépend du glucose : on resucre immédiatement, par la bouche si le patient est conscient, sinon en IV. Contrôle à 15 min, car un seul resucrage peut ne pas suffire (surtout sous sulfamide ou insuline lente).") : ''}
     ${hyper ? box('Hyperglycémie ≥ 3 g/L', 'var(--amber)', 'var(--amberDim)', line('Rechercher une cétose (cétonémie plutôt que cétonurie) : conduite selon le tableau ci-dessous.')) + why("Au-delà de 3 g/L, il faut chercher une carence en insuline, qui se traduit par une cétose. Cétonémie modérée : dose d'insuline plus forte (10 UI). Au-delà de 1,5 mmol/L, c'est une acidocétose débutante : il faut l'IVSE en USC.") : ''}
     ${v!=null && !hypo && !hyper ? `<div class="info-box">${ICONS.info}<span>Glycémie entre 0,6 et 3 g/L : pas de conduite d'urgence. Bolus correcteur selon le ${go('tableau du basal-bolus', {tab:'diab', sec:'ins', sub:'sc', id:'c-correction'})}.</span></div>` : ''}
@@ -1993,7 +2010,7 @@ function renderInsulinesTable(h){
 
 function renderNph(h){
   const {section, row, field, box, line} = h;
-  const poids = parseFloat(state.poids) || 0;
+  const poids = numIn(state.poids, POIDS_MIN, POIDS_MAX);
   const tot = parseFloat(String(state.dbDose24).replace(',','.'));
   const f = x => String(Math.round(x)).replace('.',',');
   const v = state.nphVolet;
@@ -2394,7 +2411,7 @@ function renderDiabInsuline(h){
   const b = dbBin(v);
   const t = state.dbType;
   const u = state.dbUnit==='mmol' ? 'mmol/L' : 'g/L';
-  const poids = parseFloat(state.poids) || 0;
+  const poids = numIn(state.poids, POIDS_MIN, POIDS_MAX);
   const r1 = x => Math.round(x*10)/10;
   const fmt = x => String(r1(x)).replace('.',',');
   const glyInput = `
@@ -2402,7 +2419,8 @@ function renderDiabInsuline(h){
       ${field('f-db-gly','Glycémie',state.dbGly,u)}
       <div class="field"><span class="field-label">Unité</span>${seg('dbunit', state.dbUnit, [{v:'gl',label:'g/L'},{v:'mmol',label:'mmol/L'}])}</div>
     </div>
-    ${b!=null && sub==='ivse' ? `<div class="subtext" style="margin-top:6px;">Classe : ${DB_BIN_LABEL[b]}</div>` : ''}`;
+    ${b!=null && sub==='ivse' ? `<div class="subtext" style="margin-top:6px;">Classe : ${DB_BIN_LABEL[b]}</div>` : ''}
+    ${dbGlyWarn()}`;
   const subs = [{v:'ivse',label:'IVSE'},{v:'sc',label:'SC basal-bolus'},{v:'relais',label:'Relais IVSE → SC'},{v:'nph',label:'NPH'}];
   let content = '';
 
@@ -2430,7 +2448,7 @@ function renderDiabInsuline(h){
       if (r.stop){ nd = 'Arrêt'; txt = `Reprise à <strong>½ débit</strong> quand la glycémie dépasse ${t==='dt1' ? '5,5 mmol/L (1 g/L) chez le DT1' : t ? '10 mmol/L (1,8 g/L) chez le DT2' : '5,5 mmol/L (DT1) ou 10 mmol/L (DT2)'}${!isNaN(d) ? ` : ${fmt(d/2)} UI/h` : ''}.`; }
       else if (r.bolus6){ nd = !isNaN(d) ? `${fmt(d)} UI/h` : 'inchangé'; txt = '<strong>Bolus de 6 UI IVD et prévenir le médecin</strong> ; rechercher une cétose.'; }
       else if (r.delta===0){ nd = !isNaN(d) ? `${fmt(d)} UI/h` : 'Idem'; txt = 'Pas de modification.'; }
-      else { nd = !isNaN(d) ? `${fmt(Math.max(0, d + r.delta))} UI/h` : `${r.delta>0?'+':''}${r.delta} UI/h`; txt = `${r.delta>0?'+':''}${r.delta} UI/h${!isNaN(d) && d + r.delta <= 0 ? ' → débit nul' : ''}.`; }
+      else { nd = !isNaN(d) ? `${fmt(Math.max(0, d + r.delta))} UI/h` : `${r.delta>0?'+':'−'}${Math.abs(r.delta)} UI/h`; txt = `${r.delta>0?'+':'−'}${Math.abs(r.delta)} UI/h${!isNaN(d) && d + r.delta <= 0 ? ' → débit nul' : ''}.`; }
       res = box('Adaptation du débit', b<=1 ? 'var(--red)' : 'var(--teal)', b<=1 ? 'var(--redDim)' : 'var(--tealDim)', `
         <div class="grid grid-2" style="margin-bottom:10px;">
           <div class="stat"><div class="lbl">Nouveau débit</div><div class="val">${nd}</div></div>
