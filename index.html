@@ -267,7 +267,7 @@ const DEBIT_PRODUCTS = {
 
 /* ---------------- STATE ---------------- */
 const state = {
-  tab: "calc",
+  tab: "flash", flashVoie: "ne",
   taille: 170, poids: 75, phaseKey: "stabilisee", kcalRatio: 1, sriRisk: false, renal: "normale",
   // Apports non nutritionnels
   propofolConc: 1, propofolDebit: "", g25: "", g5: "", g10: "", g30: "", citQsg: "", citDose: "",
@@ -346,6 +346,7 @@ const ICONS = {
   clip: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/></svg>',
   eye: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
   drop: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.7C9 6.6 6 10 6 14a6 6 0 0 0 12 0c0-4-3-7.4-6-11.3z"/></svg>',
+  zap: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
   syringe: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0-1-1-1-2.5 0-3.4L15.6 5.6"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/></svg>'
 };
 
@@ -359,6 +360,7 @@ const FUN_LOGO_SVG = `<svg viewBox="0 0 40 40" width="34" height="34" xmlns="htt
 </svg>`;
 
 const TABS = [
+  { key:"flash", label:"Flash", icon:ICONS.zap },
   { key:"calc", label:"Calculateur", icon:ICONS.calc },
   { key:"preop", label:"Pré-op", icon:ICONS.clip },
   { key:"solutes", label:"Solutés", icon:ICONS.flask },
@@ -537,14 +539,16 @@ function renderCalc(){
     ${state.sriRisk ? `<div class="warn-box" style="background:var(--amberDim); color:var(--amber);">${ICONS.alert}<span>Corriger K, phosphate, Mg avant de débuter. 10 kcal/kg/j pendant 1 à 3 jours, puis +5 kcal/kg/j toutes les 24–48 h : cible atteinte en 7 à 10 jours. Thiamine (B1) 200–300 mg/j.</span></div>` : ''}
   </div>
 
-  <div class="card">
+  <div class="card" id="c-gen">
     <div class="section-title"><div class="icon-box">${ICONS.info}</div>
       <div><h2>Généralités</h2><p class="subtext">Initiation, contre-indications, voies, surveillance</p></div></div>
     ${step('', "<strong>Initiation</strong> dans les 48 h suivant l'admission, en l'absence de contre-indication.")}
     ${step('', "<strong>Pas de nutrition</strong> si défaillance non contrôlée : choc non contrôlé (hyperlactatémie / hypoperfusion persistante, vasopresseurs croissants), hypoxémie ou hypercapnie sévère non stabilisée, acidose métabolique persistante.")}
     ${step('', "<strong>Contre-indications à la NE</strong> : hémorragie digestive haute non contrôlée, ischémie intestinale suspectée ou avérée, occlusion, syndrome du compartiment abdominal, fistule digestive à haut débit sans accès distal.")}
-    ${step('', "<strong>Voie</strong> : NE ou NP indifféremment à cible égale. <strong>Choc : pas d'association NE + NP.</strong> Une fois stabilisé, NP complémentaire possible si la NE ne permet pas d'atteindre la cible (intolérance).")}
+    ${step('', "<strong>Voie</strong> : orale si possible. Sinon, NE ou NP : pas de supériorité de l'une sur la mortalité à cible égale (RFE SFAR/HAS 2026, grade 1). Choix selon la faisabilité, la fonction digestive, la tolérance, le risque infectieux et le coût : <strong>NE si le tube digestif est fonctionnel</strong>, NP si la NE est contre-indiquée ou insuffisante.")}
+    ${step('', "<strong>Choc : ne pas associer NE et NP pour atteindre la cible</strong> (R2.3.5, grade 1). Une fois stabilisé, association possible si la NE ne suffit pas (intolérance).")}
     ${step('', "<strong>Extubation</strong> : l'absence de jeûne ne doit pas empêcher ni retarder une extubation en réanimation ; pas d'arrêt systématique de la NE avant l'extubation (SRLF 2025).")}
+    ${step('', "<strong>Liquide gastrique</strong> : l'estomac reçoit physiologiquement ≈ 1 L/j de salive et produit ≈ 1,5 L/j de sécrétions, soit ≈ 600 mL toutes les 6 h, en plus de la NE. Avec la NE (ex. 60 mL/h = 360 mL), ≈ 1 L entre dans l'estomac en 6 h : un résidu &gt; 500 mL/6 h, seuil retenu par l'ESPEN 2023 pour suspendre la NE, signifie que la moitié de ce volume n'a pas été vidangée, donc une vidange très ralentie : situation inquiétante, à rechercher sur la clinique (vomissements, distension), car la RFE 2026 ne recommande pas de mesurer le résidu.")}
     ${step('', "<strong>Surveillance</strong> : K, phosphate, Mg <strong>tous les jours de J1 à J5</strong> de la nutrition. Si NP ou propofol à dose élevée : bilan hépatique ×2/semaine et triglycérides ×1/semaine ; si TG &gt; 4,5 mmol/L, réduire ou suspendre les lipides / le propofol.")}
     <div class="info-box" style="margin-top:4px;">${ICONS.info}<span><strong>Apports non nutritionnels</strong> (≈ 3–5 kcal/kg/j en phase initiale) : propofol 1,1 kcal/mL (1 % comme 2 % → préférer le 2 %), glucose 4 kcal/g (1 L : G2,5 % = 100, G5 % = 200, G10 % = 400, G30 % = 1200 kcal), citrate 0,59 kcal/mmol ≈ 3 kcal/g (≈ 200–250 kcal/j).</span></div>
   </div>
@@ -805,6 +809,8 @@ function renderCompl(){
     ${step(3,"Si récidive : nouvelle pause de 2 h + prokinétiques — <strong>érythromycine 100–250 mg x3/j IVL</strong> (3–7 mg/kg/j) et/ou <strong>métoclopramide 10 mg x3/j IVL</strong>, <strong>pendant 48–72 h</strong> (tachyphylaxie). Mesurer le QT avant introduction.")}
     ${step(4,"Si échec des prokinétiques : sonde post-pylorique ou jéjunale (risque de distension abdominale, ischémie mésentérique).")}
     <div class="info-box">Décubitus ventral : pas d'arrêt de la NE, 20 kcal/kg/j maximum, lit proclive 20–30°.</div>
+    <div class="info-box">${ICONS.info}<span><strong>Pas de mesure du résidu gastrique</strong> (RFE SFAR/HAS 2026, R2.7.2, grade 2) : la tolérance s'évalue sur la clinique (vomissements, régurgitations, distension abdominale). Repères physiologiques : ${go('Généralités', {tab:'calc', id:'c-gen'})}.</span></div>
+    ${why("La surveillance systématique du résidu gastrique ne réduit ni les pneumopathies, ni la durée de ventilation, ni la mortalité (essai de Reignier, 449 patients, et méta-analyses) ; elle fait seulement un peu moins de vomissements. En revanche, elle fait interrompre la NE à tort et empêche d'atteindre les cibles énergétiques et protéiques. L'estomac reçoit chaque jour plus d'un litre de sécrétions en plus de la NE : un « résidu » de quelques centaines de mL est donc attendu et ne signe pas une intolérance.")}
   </div>
   <div class="card">
     <div class="section-title"><div class="icon-box">${ICONS.alert}</div>
@@ -1098,7 +1104,150 @@ function renderDebit(){
   </div>`;
 }
 
-const PANELS = { calc:renderCalc, solutes:renderSolutes, micro:renderMicro, debit:renderDebit, compl:renderCompl, sri:renderSri, surv:renderSurv, preop:renderPreop, diab:renderDiab };
+/* ---------------- RENDER: FLASH (tout le patient sur un écran) ---------------- */
+// Reprend les fonctions des autres onglets (getTargets, buildProgression, microPlan, survPlan) : aucune règle propre à cet onglet.
+const FLASH_VOIES = [
+  { v:'ne', label:'NE' }, { v:'np', label:'NP' }, { v:'po_low', label:'Orale insuffisante' }, { v:'po_ok', label:'Orale suffisante' }
+];
+function flashPlan(){
+  const T = getTargets();
+  const voie = state.flashVoie || 'ne';
+  const artificielle = voie==='ne' || voie==='np';
+  const dv = voie==='np' ? 'parenterale' : 'enterale';
+  const products = DEBIT_PRODUCTS[dv];
+  const product = artificielle ? (products.find(p => p.id === state.debitProduitId) || products[0]) : null;
+  const pn = T.result ? T.result.poidsNutritionnel : null;
+  const cont = state.debitDureeType !== 'discontinu';
+  const debitFor = kcal => { const vol = kcal / product.kcalPerMl; return { vol, debit: cont ? vol/24 : vol/9, prot: vol*product.protPer100ml/100 }; };
+  const cible = product && pn ? debitFor(T.kcalNutri) : null;
+  const prog = pn ? buildProgression(T.kcalPerKg, state.sriRisk).map(r => {
+    const kcal = Math.max(0, r.kcal*pn - T.nn.total);
+    return { ...r, kcalJ: kcal, d: product ? debitFor(kcal) : null };
+  }) : [];
+  // micronutriments et surveillance : mêmes règles que les onglets dédiés, avec les situations déduites de la saisie
+  const save = { microMode: state.microMode, checked: state.checked, survMode: state.survMode, survChecked: state.survChecked };
+  const neMin = prog.length ? Math.min(...prog.map(r => r.kcalJ)) : (T.kcalNutri||0);
+  state.microMode = voie==='np' ? 'np' : voie==='ne' ? (neMin >= 1500 ? 'ne_high' : 'ne_low') : voie;
+  state.checked = { ...save.checked, sri: state.sriRisk, eerc: state.renal==='eerc' };
+  state.survMode = voie==='np' ? 'np' : voie==='ne' ? 'ne' : 'po';
+  state.survChecked = { ...save.survChecked, sririsk: state.sriRisk, eerc: state.renal==='eerc', ira: state.renal==='ira' };
+  const micro = microPlan(), surv = survPlan();
+  Object.assign(state, save);
+  if (voie==='ne' && state.renal!=='eerc' && neMin < 1500 && (T.kcalNutri||0) >= 1500) micro.items.forEach(i => { if (i.nom==='Cernevit' || i.nom==='Nutryelt') i.dose += ' tant que NE < 1500 kcal/j'; });
+  const protPct = cible && T.protTarget ? cible.prot / T.protTarget * 100 : null;
+  const protKg = cible && pn ? cible.prot / pn : null;
+  const protExces = T.phase.plafond && protKg != null && protKg > T.protPerKg * 1.1;
+  return { T, voie, artificielle, dv, products, product, pn, cont, cible, prog, micro, surv, protPct, protKg, protExces };
+}
+const flashTxt = h => String(h).replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, '').replace(/&gt;/g,'>').replace(/&lt;/g,'<').replace(/&amp;/g,'&').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();
+function flashSynthese(F){
+  const { T } = F; if (!F.pn) return '';
+  const ph = T.phase, le = ph.plafond ? '≤ ' : '';
+  const voieTxt = { ne:'nutrition entérale', np:'nutrition parentérale', po_low:'alimentation orale insuffisante', po_ok:'alimentation orale suffisante' }[F.voie];
+  const L = [];
+  L.push(`NUTRITION (${new Date().toLocaleDateString('fr-FR')})`);
+  L.push(`Poids nutritionnel ${rd(F.pn,1)} kg (${T.result.ajuste ? 'poids ajusté, IMC ' + rd(T.result.imc,1) : 'poids réel sec, IMC ' + rd(T.result.imc,1)}). Phase : ${ph.label.toLowerCase()}. Fonction rénale : ${T.renal.label.charAt(0).toLowerCase() + T.renal.label.slice(1)}. Risque de SRI : ${state.sriRisk ? 'oui' : 'non'}.`);
+  L.push(`Cible : ${le}${rd(T.kcalPerKg,1)} kcal/kg/j (${rd(T.kcalTarget)} kcal/j) et ${le}${rd(T.protPerKg,2)} g/kg/j de protéines (${rd(T.protTarget)} g/j).` + (T.nn.total > 0 ? ` Apports non nutritionnels déduits : ${rd(T.nn.total)} kcal/j, soit ${rd(T.kcalNutri)} kcal/j à prescrire.` : ''));
+  if (F.artificielle && F.cible){
+    L.push(`Prescription : ${voieTxt}, ${F.product.nom.replace(' (post-pylorique / jéjunostomie)','')}, ${F.cont ? 'continu 24 h' : '3 × 3 h/j'} : ${rd(F.cible.debit,1)} mL/h à la cible (${F.cont ? '' : rd(F.cible.vol/3) + ' mL par administration, '}${rd(F.cible.prot)} g de protéines/j).`);
+    const grp = []; F.prog.forEach(r => { const g = grp[grp.length-1]; if (g && g.kcal===r.kcal) g.last = r.day; else grp.push({ first:r.day, last:r.day, kcal:r.kcal, debit:r.d.debit, prot:r.d.prot }); });
+    L.push('Progression : ' + grp.map((g,i) => `${i===grp.length-1 && grp.length>1 ? 'J'+g.first+' et après' : 'J'+g.first+(g.last!==g.first ? '–J'+g.last : '')} ${rd(g.kcal)} kcal/kg/j (${rd(g.debit,1)} mL/h ; ${rd(g.prot)} g de protéines/j)`).join(' → ') + '. Palier suivant seulement si bonne tolérance.');
+  } else {
+    L.push(`Voie : ${voieTxt}.`);
+  }
+  if (F.micro && F.micro.items.length){
+    const its = F.micro.items.filter(x => x.nom !== 'Sélénium');
+    const cer = its.find(x => x.nom==='Cernevit'), nut = its.find(x => x.nom==='Nutryelt');
+    const parts = [];
+    if (cer && nut){ const suf = ' tant que NE < 1500 kcal/j'; const dc = flashTxt(cer.dose), dn = flashTxt(nut.dose); const strip = x => x.endsWith(suf) ? x.slice(0,-suf.length) : x; const both = (F.voie==='ne' && state.renal!=='eerc') || (dc.endsWith(suf) && dn.endsWith(suf)); parts.push(`Cernevit ${both ? strip(dc) : dc} et Nutryelt ${both ? strip(dn) : dn}${both ? suf : ''}`); }
+    its.filter(x => x!==cer && x!==nut).forEach(x => parts.push(`${x.nom} ${flashTxt(x.dose)}${x.opt ? ' (optionnel : ' + flashTxt(x.why).replace(/^Si /,'si ').replace(/[()]/g,'') + ')' : ''}`));
+    if (parts.length) L.push('Micronutriments : ' + parts.join(' ; ') + '.');
+  }
+  L.push('Selon l\'appli nutrition NAR 2026 (RFE SFAR/HAS 2026).');
+  return L.join('\n');
+}
+function renderFlash(){
+  const F = flashPlan(); const { T } = F;
+  const chip = (act, val, cur, label) => `<button class="chip ${cur===val?'active':''}" data-act="${act}" data-val="${val}">${label}</button>`;
+  const section = t => `<div class="field-label" style="margin:16px 0 8px; color:var(--teal);">${t}</div>`;
+  const stat = (lbl, val, sub, main) => `<div class="stat" ${main?'style="background:var(--tealDim); border:1px solid rgba(47,217,196,.3);"':''}><div class="lbl" ${main?'style="color:var(--teal);"':''}>${lbl}</div><div class="val" style="font-size:16px; ${main?'color:var(--teal);':''}">${val}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`;
+  const ph = T.phase, le = ph.plafond ? '≤ ' : '';
+  const synth = flashSynthese(F);
+  const sec = s => s.replace(/"/g,'&quot;');
+  return `
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.zap}</div>
+      <div><h2>Patient</h2><p class="subtext">Saisie unique · le reste est calculé avec les règles des autres onglets</p></div></div>
+    <div class="grid grid-2" style="grid-template-columns:1fr 1fr;">
+      <label class="field"><span class="field-label">Taille</span><div class="input-wrap"><input type="number" id="f-taille" value="${state.taille}"><span class="unit">cm</span></div></label>
+      <label class="field"><span class="field-label">Poids réel sec</span><div class="input-wrap"><input type="number" step="0.5" id="f-poids" value="${state.poids}"><span class="unit">kg</span></div></label>
+    </div>
+    ${!T.result ? `<div class="warn-box" style="background:var(--amberDim); color:var(--text);">${ICONS.alert}<span>Renseigner une taille (${TAILLE_MIN}–${TAILLE_MAX} cm) et un poids (${POIDS_MIN}–${POIDS_MAX} kg) plausibles.</span></div>` : ''}
+    ${section('État clinique')}
+    <div class="chips">${Object.entries(PHASES).map(([k,p]) => chip('phase', k, state.phaseKey, p.label)).join('')}</div>
+    ${section('Fonction rénale')}
+    <div class="chips">${Object.entries(RENAL).map(([k,r]) => chip('renal', k, state.renal, r.label)).join('')}</div>
+    <div class="chk-wrap" style="margin-top:12px;"><input type="checkbox" id="f-sri" ${state.sriRisk?'checked':''}><span>Risque de SRI (${go('facteurs', {tab:'sri'})})</span></div>
+    ${section('Voie')}
+    <div class="chips">${FLASH_VOIES.map(o => chip('flashvoie', o.v, F.voie, o.label)).join('')}</div>
+    ${F.artificielle ? `
+    <label class="field" style="display:block; margin-top:12px;"><span class="field-label">Soluté</span>
+      <select id="f-debit-produit" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--borderLight); background:var(--elevated); color:var(--text); font-family:var(--fontBody); font-size:14px;">
+        ${F.products.map(p => `<option value="${p.id}" ${p.id===F.product.id?'selected':''}>${p.nom} — ${rd(p.kcalPerMl,2)} kcal/mL</option>`).join('')}
+      </select>
+      <div class="subtext" style="margin-top:6px;">${F.product.note} · ${go('choix du soluté', {tab:'solutes'})}</div></label>
+    <div class="chips" style="margin-top:10px;">${chip('debitDureeType','continu',state.debitDureeType,'Continu 24 h')}${chip('debitDureeType','discontinu',state.debitDureeType,'Discontinu 3 × 3 h')}</div>` : ''}
+    ${T.nn.total > 0 ? `<div class="subtext" style="margin-top:10px;">Apports non nutritionnels saisis dans le ${go('Calculateur', {tab:'calc', id:'c-nn'})} : ${rd(T.nn.total)} kcal/j, déduits de la cible.</div>` : `<div class="subtext" style="margin-top:10px;">Propofol, glucosés, citrate : à saisir dans le ${go('Calculateur', {tab:'calc', id:'c-nn'})} pour les déduire.</div>`}
+  </div>
+  ${T.result ? `
+  <div class="card" data-open>
+    <div class="section-title"><div class="icon-box">${ICONS.calc}</div>
+      <div><h2>Conduite à tenir</h2><p class="subtext">${ph.label} · RFE SFAR/HAS 2026</p></div></div>
+    <div class="grid grid-3">
+      ${stat('Poids nutritionnel', `${rd(F.pn,1)} kg`, T.result.ajuste ? `ajusté (IMC ${rd(T.result.imc,1)})` : `IMC ${rd(T.result.imc,1)}`)}
+      ${stat('Cible calorique', `${rd(T.kcalNutri)} kcal/j`, `${le}${rd(T.kcalPerKg,1)} kcal/kg/j${T.nn.total>0 ? ' · non nutritionnel déduit' : ''}`, true)}
+      ${stat('Cible protéique', `${rd(T.protTarget)} g/j`, `${le}${rd(T.protPerKg,2)} g/kg/j`, true)}
+    </div>
+    ${state.phaseKey==='aigue' ? `<div class="warn-box" style="background:var(--redDim); color:var(--text);">${ICONS.alert}<span><strong>Pas de nutrition si instabilité majeure.</strong> Une seule voie : ne pas associer NE et NP pour atteindre la cible.</span></div>` : ''}
+    ${F.artificielle && F.cible ? `
+    ${section('À la cible')}
+    <div class="grid grid-3">
+      ${stat(F.cont ? 'Débit continu' : 'Débit (3 × 3 h)', `${rd(F.cible.debit,1)} mL/h`, F.cont ? '24 h/24' : `${rd(F.cible.vol/3)} mL par administration`, true)}
+      ${stat('Volume', `${rd(F.cible.vol)} mL/j`, '')}
+      ${stat('Protéines apportées', `${rd(F.cible.prot)} g/j`, F.protPct!=null ? `${rd(F.protPct)} % de la cible` : '')}
+    </div>
+    ${F.protPct!=null && F.protPct < 90 && F.voie==='ne' ? `<div class="info-box">${ICONS.info}<span>Apport protéique inférieur à la cible : soluté plus protéiné, ou Protifar (11 g/sachet) : ${Math.ceil((T.protTarget - F.cible.prot)/11)} sachet(s)/j (${go('détail', {tab:'micro'})}).</span></div>` : ''}
+    ${section(`Progression${state.sriRisk ? ' (risque de SRI)' : ''}`)}
+    <div style="overflow-x:auto;"><table>
+      <thead><tr><th>Jour</th><th>kcal/kg/j</th><th>kcal/j</th><th>Débit</th><th>Protéines</th></tr></thead>
+      <tbody>${F.prog.map(r => `<tr><td class="strong">J${r.day}</td><td>${rd(r.kcal)}</td><td>${rd(r.kcalJ)}</td><td>${rd(r.d.debit,1)} mL/h</td><td>${rd(r.d.prot)} g/j</td></tr>`).join('')}</tbody>
+    </table></div>
+    <div class="subtext" style="margin-top:6px;">Palier suivant seulement si bonne tolérance (K, phosphate, Mg). Réaggravation : retour aux cibles du choc. ${go('Détail', {tab:'calc', id:'c-prog'})}</div>` : ''}
+    ${!F.artificielle ? `<div class="info-box">${ICONS.info}<span>${F.voie==='po_low' ? 'Alimentation orale insuffisante : CNO hypercaloriques hyperprotidiques 1 à 3/j, Protifar si apports protidiques bas, et NE si les apports restent insuffisants.' : 'Alimentation orale suffisante : surveiller les ingesta (plateaux), pesée régulière.'} ${go('Détail', {tab:'micro'})}</span></div>` : ''}
+    ${section('Micronutriments')}
+    ${F.micro.items.map(i => `<div class="row-item"><div><div class="t">${i.nom}${i.opt?' <span style="font-size:12px; color:var(--textFaint);">(optionnel)</span>':''}</div><div class="s">${i.why}</div></div><div class="badgeval" style="color:var(--teal); background:var(--tealDim);">${i.dose}</div></div>`).join('')}
+    ${F.micro.notes.length ? `<div class="subtext">${F.micro.notes.join(' ')}</div>` : ''}
+    ${section('Surveillance')}
+    ${F.surv.items.map(i => `<div class="row-item"><div><div class="t">${i.quoi}</div><div class="s">${i.why}</div></div><div class="badgeval" style="color:var(--teal); background:var(--tealDim);">${i.freq}</div></div>`).join('')}
+    ${F.surv.seuils.length ? `<div class="info-box">${ICONS.info}<span>${F.surv.seuils.join('<br>')}</span></div>` : ''}
+  </div>
+  <div class="card">
+    <div class="section-title"><div class="icon-box">${ICONS.clip}</div>
+      <div><h2>Synthèse patient</h2><p class="subtext">À coller dans l'observation ou les transmissions</p></div></div>
+    <textarea id="flash-synth" readonly style="width:100%; min-height:220px; padding:12px; border-radius:10px; border:1px solid var(--borderLight); background:var(--elevated); color:var(--text); font-family:var(--fontBody); font-size:13px; line-height:1.5; resize:vertical; box-sizing:border-box;">${synth.replace(/</g,'&lt;')}</textarea>
+    <button class="chip active" data-act="flashcopy" style="margin-top:10px; width:100%; justify-content:center; font-size:15px; padding:12px;">Copier la synthèse</button>
+    <div class="subtext" style="margin-top:6px;">Aucune donnée n'est enregistrée ni envoyée : le texte reste sur l'appareil. Vérifier avant de coller.</div>
+  </div>` : ''}`;
+}
+function flashCopy(btn){
+  const ta = document.getElementById('flash-synth'); if (!ta) return;
+  const done = ok => { btn.textContent = ok ? 'Copié ✓' : 'Sélectionner le texte puis copier'; setTimeout(()=>{ btn.textContent = 'Copier la synthèse'; }, 2000); };
+  const fallback = () => { ta.removeAttribute('readonly'); ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); let ok = false; try { ok = document.execCommand('copy'); } catch(e){} ta.setAttribute('readonly',''); done(ok); };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(ta.value).then(()=>done(true), fallback);
+  else fallback();
+}
+
+const PANELS = { flash:renderFlash, calc:renderCalc, solutes:renderSolutes, micro:renderMicro, debit:renderDebit, compl:renderCompl, sri:renderSri, surv:renderSurv, preop:renderPreop, diab:renderDiab };
 
 /* ---------------- RENDER: PRÉ-OPÉRATOIRE ---------------- */
 // Diagnostic et sévérité de la dénutrition : HAS 2019 (< 70 ans) et 2021 (≥ 70 ans), repris par la RFE SFAR/HAS 2026 (Figure 1)
@@ -1875,7 +2024,8 @@ function enhanceCards(){
     card.appendChild(body);
     const chev = document.createElement('span'); chev.className = 'card-chev'; chev.textContent = '▾'; title.appendChild(chev);
     const hasInput = !!body.querySelector('input:not([type=checkbox][readonly]), select, [data-act]:not([data-act="goto"])');
-    const open = state.cardOpen[key] !== undefined ? state.cardOpen[key] : hasInput;
+    const forceOpen = card.hasAttribute('data-open');
+    const open = state.cardOpen[key] !== undefined ? state.cardOpen[key] : (hasInput || forceOpen);
     if (!open) card.classList.add('collapsed');
     title.addEventListener('click', e=>{
       if (e.target.closest('a,button,input,select')) return;
@@ -2621,6 +2771,8 @@ function bindEvents(){
   document.querySelectorAll('[data-act="debitVoie"]').forEach(el=>el.addEventListener('click', ()=>{ state.debitVoie = el.dataset.val; state.debitProduitId = DEBIT_PRODUCTS[state.debitVoie][0].id; render(); }));
   document.querySelectorAll('[data-act="debitDureeType"]').forEach(el=>el.addEventListener('click', ()=>{ state.debitDureeType = el.dataset.val; render(); }));
 
+  document.querySelectorAll('[data-act="flashvoie"]').forEach(el=>el.addEventListener('click', ()=>{ const v = el.dataset.val; state.flashVoie = v; if (v==='ne' || v==='np'){ const dv = v==='np' ? 'parenterale' : 'enterale'; if (state.debitVoie !== dv){ state.debitVoie = dv; state.debitProduitId = DEBIT_PRODUCTS[dv][0].id; } } renderPartial(); }));
+  document.querySelectorAll('[data-act="flashcopy"]').forEach(el=>el.addEventListener('click', ()=>flashCopy(el)));
   const fDebitProduit = document.getElementById('f-debit-produit');
   if (fDebitProduit) fDebitProduit.addEventListener('change', e=>{ state.debitProduitId = e.target.value; renderPartial(); });
   document.querySelectorAll('[data-act="survcheck"]').forEach(el=>el.addEventListener('click', ()=>{ const id = el.dataset.val; state.survChecked[id] = !state.survChecked[id]; renderPartial(); }));
