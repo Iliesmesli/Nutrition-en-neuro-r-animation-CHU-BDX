@@ -57,8 +57,15 @@
   .flash{box-shadow:0 0 0 2px var(--teal); transition:box-shadow .3s;}
   header{margin-bottom:22px;}
 
-  nav{display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:20px; -ms-overflow-style:none; scrollbar-width:none;}
+  .nav-wrap{position:relative; margin-bottom:20px;}
+  nav{display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; -ms-overflow-style:none; scrollbar-width:none; scroll-behavior:smooth;}
   nav::-webkit-scrollbar{display:none;}
+  nav.dragging{scroll-behavior:auto; cursor:grabbing;}
+  /* Flèches de défilement (ordinateur) : visibles seulement s'il reste des onglets de ce côté */
+  .nav-arrow{display:none; position:absolute; top:0; bottom:6px; width:46px; border:none; padding:0; cursor:pointer; color:var(--teal); font-size:22px; font-weight:600; z-index:2;}
+  .nav-arrow.left{left:0; justify-content:flex-start; padding-left:2px; background:linear-gradient(90deg, var(--bg) 45%, transparent);}
+  .nav-arrow.right{right:0; justify-content:flex-end; padding-right:2px; background:linear-gradient(270deg, var(--bg) 45%, transparent);}
+  @media (hover:hover) and (pointer:fine){ .nav-arrow.on{display:flex; align-items:center;} nav{cursor:grab;} }
   .tab-btn{display:flex; align-items:center; gap:6px; padding:10px 14px; border-radius:10px; font-size:14px; font-weight:500;
     font-family:var(--fontBody); background:transparent; color:var(--textMuted); border:1px solid transparent; white-space:nowrap; flex-shrink:0;}
   .tab-btn.active{background:var(--elevated2); color:var(--teal); border-color:var(--borderLight);}
@@ -2737,14 +2744,17 @@ function renderDiabInsuline(h){
 /* ---------------- MAIN RENDER + EVENTS ---------------- */
 function render(){
   const app = document.getElementById('app');
+  { const n = document.querySelector('nav'); if (n) window.__navScroll = n.scrollLeft; }
   app.innerHTML = `
     <header>
       <div class="eyebrow"><span class="badge">NAR 2026</span></div>
       <h1>Assistant nutrition en réanimation</h1>
     </header>
+    <div class="nav-wrap"><button class="nav-arrow left" aria-label="Onglets précédents">‹</button>
     <nav>
       ${TABS.map(t=>`<button class="tab-btn ${state.tab===t.key?'active':''}" data-act="tab" data-val="${t.key}">${t.icon}${t.label}</button>`).join('')}
     </nav>
+    <button class="nav-arrow right" aria-label="Onglets suivants">›</button></div>
     <div id="content">${PANELS[state.tab]()}</div>
     <div class="brand-footer">
       <div class="brand-badge" title="CHU de Bordeaux">
@@ -2758,6 +2768,40 @@ function render(){
   `;
   enhanceCards();
   bindEvents();
+  setupNav();
+}
+
+// Barre d'onglets : défilement à la molette, par glisser ou par flèches sur ordinateur ; au doigt sur téléphone
+function setupNav(){
+  const nav = document.querySelector('nav'); if (!nav) return;
+  const left = document.querySelector('.nav-arrow.left'), right = document.querySelector('.nav-arrow.right');
+  nav.style.scrollBehavior = 'auto';
+  if (window.__navScroll != null) nav.scrollLeft = window.__navScroll;
+  else { const act = nav.querySelector('.tab-btn.active'); if (act && act.offsetLeft + act.offsetWidth > nav.clientWidth) nav.scrollLeft = act.offsetLeft - 40; }
+  nav.style.scrollBehavior = '';
+  const upd = () => { const max = nav.scrollWidth - nav.clientWidth; left.classList.toggle('on', nav.scrollLeft > 4); right.classList.toggle('on', nav.scrollLeft < max - 4); };
+  upd();
+  nav.addEventListener('scroll', upd, { passive:true });
+  window.__navUpd = upd;
+  if (!window.__navWin){ window.__navWin = true; window.addEventListener('resize', () => window.__navUpd && window.__navUpd(), { passive:true }); }
+  const step = () => Math.max(160, nav.clientWidth * 0.6);
+  left.addEventListener('click', () => { nav.scrollLeft -= step(); });
+  right.addEventListener('click', () => { nav.scrollLeft += step(); });
+  // molette verticale -> défilement horizontal, seulement s'il y a de quoi défiler
+  nav.addEventListener('wheel', e => {
+    if (nav.scrollWidth <= nav.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+    const max = nav.scrollWidth - nav.clientWidth;
+    if ((e.deltaY < 0 && nav.scrollLeft <= 0) || (e.deltaY > 0 && nav.scrollLeft >= max)) return;
+    e.preventDefault(); nav.style.scrollBehavior = 'auto'; nav.scrollLeft += e.deltaY; nav.style.scrollBehavior = '';
+  }, { passive:false });
+  // glisser à la souris (sans bloquer le clic sur un onglet)
+  const D = window.__navDrag = window.__navDrag || { down:false, sx:0, sl:0, moved:false };
+  nav.addEventListener('mousedown', e => { if (e.button !== 0) return; D.down = true; D.moved = false; D.sx = e.clientX; D.sl = nav.scrollLeft; });
+  nav.addEventListener('click', e => { if (D.moved){ e.preventDefault(); e.stopPropagation(); D.moved = false; } }, true);
+  if (!window.__navDragWin){ window.__navDragWin = true;
+    window.addEventListener('mousemove', e => { const n = document.querySelector('nav'); if (!D.down || !n) return; const dx = e.clientX - D.sx; if (Math.abs(dx) > 5){ D.moved = true; n.classList.add('dragging'); n.scrollLeft = D.sl - dx; } });
+    window.addEventListener('mouseup', () => { if (!D.down) return; D.down = false; const n = document.querySelector('nav'); if (n) n.classList.remove('dragging'); });
+  }
 }
 
 function bindEvents(){
